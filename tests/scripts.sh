@@ -1,9 +1,10 @@
 #!/bin/bash
 
 # Endpoint URL
-URL="http://localhost:4000/users"
+USER_URL="http://localhost:4000/users"
 ROLE_URL="http://localhost:4000/roles"
 PERMISSION_URL="http://localhost:4000/permissions/add"
+
 # Dados do usuário
 USER_DATA=$(cat <<EOF
 {
@@ -16,57 +17,54 @@ USER_DATA=$(cat <<EOF
 EOF
 )
 
-echo -e "\n"
-# Solicitação POST
-curl -X POST $URL \
+# Dados do papel
+ROLE_DATA=$(cat <<EOF
+{
+  "name": "Admin",
+  "name": "Manager",
+  "name": "User",
+  "name": "Guest"
+}
+EOF
+)
+
+# Start: verifica se o serviço está rodando na porta especificada
+PORT="4000"
+if netstat -tuln | grep -q ":$PORT"; then
+    echo "O serviço está rodando na porta $PORT. \n\n"
+    
+# Faz uma solicitação GET ao endpoint de usuários
+else
+    echo "O serviço não está rodando na porta $PORT. \n\n"
+fi
+
+
+# Criar usuários
+curl -X POST $USER_URL \
     -H "Content-Type: application/json" \
     -d "$USER_DATA"
 
 # Mensagem de sucesso
 echo -e "\n"
-echo "Solicitação para criar usuário enviada!"
-echo -e "\n"
+echo "Solicitação para criar usuário enviada! \n\n"
 
-# Verifica se o serviço está rodando na porta especificada
-PORT="4000"
-if netstat -tuln | grep -q ":$PORT"; then
-    echo "O serviço está rodando na porta $PORT."
-    echo -e "\n"
-    # Faz uma solicitação GET ao endpoint de usuários
     echo "Listando usuários:"
     echo -e "\n"
-    curl -X GET $URL -H "Content-Type: application/json"
-else
-    echo "O serviço não está rodando na porta $PORT."
-fi
-echo -e "\n"
+    curl -X GET $USER_URL -H "Content-Type: application/json"
+    echo -e "\n"
 
-
-# Fazendo a solicitação POST
+# Criar papéis
 curl -X POST $ROLE_URL \
     -H "Content-Type: application/json" \
     -d "$ROLE_DATA"
+echo -e "\n"
 
 # Exibindo mensagem de sucesso
-echo -e "\nSolicitação para criar role e associar permissões enviada!"
+echo "Solicitação para criar role e associar permissões enviada!"
 
-# Fazendo a solicitação POST para criar a role
-echo -e "Criando role 'User'..."
-curl -X POST $ROLE_URL \
-    -H "Content-Type: application/json" \
-    -d "$ROLE_USER_DATA"
-echo -e "\nRole 'User' criada com sucesso!"
-
-# Fazendo a solicitação POST para adicionar permissões à role
+# Adicionar permissões a um papel
 
 
-# Dados da role a ser criada
-ROLE_DATA=$(cat <<EOF
-{
-  "name": "Admin"
-}
-EOF
-)
 
 # Lista de permissões a serem adicionadas
 PERMISSIONS=("CREATE_USER" "DELETE_USER" "UPDATE_USER")
