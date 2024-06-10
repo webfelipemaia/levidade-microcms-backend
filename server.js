@@ -3,11 +3,17 @@ const express = require('express');
 const app = express();
 const cors = require('cors');
 const errorHandler = require('./middleware/error-handler');
-const corsOptions = { origin: "http://localhost:5173" };
 
+const corsOptions ={
+    origin:'http://localhost:8000',
+    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
+    credentials:true,            //access-control-allow-credentials:true
+    optionSuccessStatus:200
+}
+
+app.use(cors(corsOptions));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-app.use(cors(corsOptions));
 
 // api routes
 app.use('/users', require('./controllers/users.controller'));

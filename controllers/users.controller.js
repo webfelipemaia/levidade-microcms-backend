@@ -12,10 +12,17 @@ router.get('/:id', getById);
 router.post('/', createSchema, create);
 router.put('/:id', updateSchema, update);
 router.delete('/:id', _delete);
+router.post('/authenticate',authenticate);
 
 module.exports = router;
 
 // route functions
+
+
+async function authenticate(req, res) {
+    const { email, password } = req.body;
+    console.log(email,password)
+}
 
 function getAll(req, res, next) {
     userService.getAll()
