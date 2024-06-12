@@ -65,12 +65,17 @@ async function getUser(id) {
     return user;
 }
 
-async function authenticate(email, password) {
-    const user = await db.User.findOne({ where: { email } });
-    if (!user || !(await bcrypt.compare(password, user.password))) {
-      throw 'Email or password is incorrect';
-    }
+async function authenticate(email, password){
+    const user = await db.User.findOne({ email });
   
-    const { password: hash, ...userWithoutHash } = user.toJSON();
-    return userWithoutHash;
-  }
+      if (!user) {
+        throw "User not found";
+      }
+  
+      // Check if the provided password matches the stored password
+      if (user.password === password) {
+        return user;
+      } else {
+        throw "Password incorrect";
+      }
+  };
