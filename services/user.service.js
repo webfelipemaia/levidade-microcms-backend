@@ -19,9 +19,12 @@ async function getById(id) {
 }
 
 async function create(params) {
-    // validate
     if (await db.User.findOne({ where: { email: params.email } })) {
-        throw 'Email "' + params.email + '" is already registered';
+        //throw 'Email "' + params.email + '" is already registered';
+        return { 
+            status: "error", 
+            message: 'Email "' + params.email + '" is already registered'
+        }
     }
 
     const user = new db.User(params);
@@ -39,7 +42,11 @@ async function update(id, params) {
     // validate
     const emailChanged = params.email && user.email !== params.email;
     if (emailChanged && await db.User.findOne({ where: { email: params.email } })) {
-        throw 'Email "' + params.email + '" is already registered';
+        //throw 'Email "' + params.email + '" is already registered';
+        return { 
+            status: "error", 
+            message: 'Email "' + params.email + '" is already registered'
+        }
     }
 
     // hash password if it was entered
@@ -61,21 +68,40 @@ async function _delete(id) {
 
 async function getUser(id) {
     const user = await db.User.findByPk(id);
-    if (!user) throw 'User not found';
-    return user;
+    if (!user) {
+        return { 
+            status: "error", 
+            message: "User not found" 
+        }
+    } else {
+        return { 
+            status: "success", 
+            data: user 
+        }
+    }
 }
 
 async function authenticate(email, password){
+    
     const user = await db.User.findOne({ where: {email: `${email}`} });
-  
+
       if (!user) {
-        throw "User not found";
+        return { 
+            status: "error", 
+            message: "User not found" 
+        }
       }
   
-      // Check if the provided password matches the stored password
+      // criar consulta para retornar dados do usuário, exceto password
       if (user.password === password) {
-        return user;
+        return { 
+            status: "success", 
+            data: user 
+        }
       } else {
-        throw "Password incorrect";
+        return { 
+            status: "error", 
+            message: "Password incorrect" 
+        }
       }
   };
