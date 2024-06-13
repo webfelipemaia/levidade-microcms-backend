@@ -66,7 +66,7 @@ async function getUser(id) {
 }
 
 async function authenticate(email, password){
-    const user = await db.User.findOne({ email });
+    const user = await db.User.findOne({ where: {email: `${email}`} });
   
       if (!user) {
         throw "User not found";
