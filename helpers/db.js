@@ -42,5 +42,5 @@ async function initialize() {
     db.RolePermissions = RolePermissions;
 
     // sync all models with database
-    await sequelize.sync({ alter: true });
+    //await sequelize.sync({ alter: true });
 }

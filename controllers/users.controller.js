@@ -46,19 +46,19 @@ function getById(req, res, next) {
 
 function create(req, res, next) {
     userService.create(req.body)
-        .then(() => res.json({ message: 'User created' }))
+        .then(user => res.json(user))
         .catch(next);
 }
 
 function update(req, res, next) {
     userService.update(req.params.id, req.body)
-        .then(() => res.json({ message: 'User updated' }))
+        .then(() => res.json({ status: 'success',  message: 'User updated' }))
         .catch(next);
 }
 
 function _delete(req, res, next) {
     userService.delete(req.params.id)
-        .then(() => res.json({ message: 'User deleted' }))
+        .then(() => res.json({ status: 'success',  message: 'User deleted' }))
         .catch(next);
 }
 

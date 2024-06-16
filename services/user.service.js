@@ -11,7 +11,9 @@ module.exports = {
 };
 
 async function getAll() {
-    return await db.User.findAll();
+    //return await db.User.findAll();
+    const users = await db.User.findAll({ attributes: {exclude:['password']} });
+    return users[0];
 }
 
 async function getById(id) {
@@ -19,20 +21,13 @@ async function getById(id) {
 }
 
 async function create(params) {
+    
     if (await db.User.findOne({ where: { email: params.email } })) {
-        //throw 'Email "' + params.email + '" is already registered';
-        return { 
-            status: "error", 
-            message: 'Email "' + params.email + '" is already registered'
-        }
+        throw 'Email "' + params.email + '" is already registered';
     }
 
-    const user = new db.User(params);
-    
-    // hash password
+    const user = new db.User(params);    
     user.passwordHash = await bcrypt.hash(params.password, 10);
-
-    // save user
     await user.save();
 }
 
@@ -84,24 +79,31 @@ async function getUser(id) {
 async function authenticate(email, password){
     
     const user = await db.User.findOne({ where: {email: `${email}`} });
-
-      if (!user) {
+    var isRegistered = false;
+    
+    if (!user) {
         return { 
             status: "error", 
             message: "User not found" 
         }
-      }
-  
-      // criar consulta para retornar dados do usuário, exceto password
-      if (user.password === password) {
+    }
+      
+    if (user.password === password) isRegistered = true
+    
+    if (isRegistered) {
+        const user = await db.User.findAll(
+             { attributes: {exclude:['password']} },
+             { where: {email: `${email}`} },
+             { limit: 1 }
+        );
         return { 
             status: "success", 
-            data: user 
+            data: user[0]
         }
-      } else {
+    } else {
         return { 
             status: "error", 
             message: "Password incorrect" 
         }
-      }
+    }
   };
