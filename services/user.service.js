@@ -13,7 +13,7 @@ module.exports = {
 async function getAll() {
     //return await db.User.findAll();
     const users = await db.User.findAll({ attributes: {exclude:['password']} });
-    return users[0];
+    return users;
 }
 
 async function getById(id) {
