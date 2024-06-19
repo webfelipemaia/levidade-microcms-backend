@@ -32,26 +32,17 @@ async function create(params) {
 }
 
 async function update(id, params) {
-    const user = await getUser(id);
-
-    // validate
-    const emailChanged = params.email && user.email !== params.email;
-    if (emailChanged && await db.User.findOne({ where: { email: params.email } })) {
-        //throw 'Email "' + params.email + '" is already registered';
-        return { 
-            status: "error", 
-            message: 'Email "' + params.email + '" is already registered'
-        }
-    }
-
-    // hash password if it was entered
-    if (params.password) {
-        params.passwordHash = await bcrypt.hash(params.password, 10);
-    }
-
-    // copy params to user and save
-    Object.assign(user, params);
-    await user.save();
+    await db.User.update(
+        { 
+            name: params.name,
+            lastname: params.lastname
+        },
+        {
+          where: {
+            id: id,
+          },
+        },
+      );
 }
 
 async function _delete(id) {
