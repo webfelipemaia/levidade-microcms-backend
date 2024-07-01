@@ -10,8 +10,7 @@ module.exports = {
     authenticate,
 };
 
-async function getAll() {
-    //return await db.User.findAll();
+async function getAll() {    
     const users = await db.User.findAll({ attributes: {exclude:['password']} });
     return users;
 }
@@ -23,7 +22,7 @@ async function getById(id) {
 async function create(params) {
     
     if (await db.User.findOne({ where: { email: params.email } })) {
-        throw 'Email "' + params.email + '" is already registered';
+        throw { status: 'error', message: 'Email "' + params.email + '" is already registered' };
     }
 
     const user = new db.User(params);    
@@ -32,22 +31,58 @@ async function create(params) {
 }
 
 async function update(id, params) {
-    await db.User.update(
-        { 
-            name: params.name,
-            lastname: params.lastname
+    
+  if (!params.name || !params.lastname) {
+    return { status: "error", message: "Name and lastname are required." };
+  }
+
+  try {
+    const [rowsUpdated] = await db.User.update(
+      { 
+        name: params.name,
+        lastname: params.lastname
+      },
+      {
+        where: {
+          id: id,
         },
-        {
-          where: {
-            id: id,
-          },
-        },
-      );
+      }
+    );
+
+    if (rowsUpdated > 0) {
+      return { status: "success", message: "User updated successfully." };
+    } else {
+      return { status: "error", message: "User not found or no changes made." };
+    }
+  } catch (error) {
+    console.error(error);
+    return { status: "error", message: "An error occurred while updating the user." };
+  }
 }
 
 async function _delete(id) {
-    const user = await getUser(id);
-    await user.destroy();
+
+      try {
+        const result = await db.User.destroy({
+          where: {
+            id: id,
+          },
+        });
+      
+        if (result > 0) {
+            return { 
+                status: "success", 
+                message: "User successfully deleted" 
+            }
+        } else {
+            return {
+                status: "error",
+                message: "No user found with the given criteria"
+            }
+        }
+      } catch (error) {
+        return { status: "error", message: `Error deleting user: ${error}` };
+      }
 }
 
 // helper functions
