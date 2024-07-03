@@ -31,26 +31,26 @@ function getById(req, res, next) {
 
 function create(req, res, next) {
     permissionService.create(req.body)
-        .then(() => res.json({ message: 'Permission created' }))
+        .then(() => res.json({ status: 'success', message: 'Permission created' }))
         .catch(next);
 }
 
 function update(req, res, next) {
     permissionService.update(req.params.id, req.body)
-        .then(() => res.json({ message: 'Permission updated' }))
+        .then(() => res.json({ status: 'success', message: 'Permission updated' }))
         .catch(next);
 }
 
 function _delete(req, res, next) {
     permissionService.delete(req.params.id)
-        .then(() => res.json({ message: 'Permission deleted' }))
+        .then(() => res.json({ status: 'success', message: 'Permission deleted' }))
         .catch(next);
 }
 
 function addPermissionsToRole(req, res, next) {
     const { roleName, permissionName } = req.body;
     permissionService.addPermissionToRole(roleName, permissionName)
-        .then(role => res.json({ message: 'Permission added successfully', role }))
+        .then(role => res.json({status: 'success', message: 'Permission added successfully', role }))
         .catch(next);
 }
 

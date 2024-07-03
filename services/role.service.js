@@ -18,14 +18,15 @@ async function getById(id) {
 }
 
 async function create(params) {
-    // validate
+    
     if (await db.Role.findOne({ where: { name: params.name } })) {
-        throw 'Role "' + params.name + '" is already registered';
+        throw { 
+            status: 'error', 
+            message: params.name + '" is already registered'
+        };
     }
 
     const role = new db.Role(params);
-
-    // save role
     await role.save();
 }
 
@@ -34,31 +35,96 @@ async function update(id, params) {
 
     // validate
     const nameChanged = params.name && role.name !== params.name;
-    if (nameChanged && await db.Role.findOne({ where: { name: params.name } })) {
-        throw 'Role "' + params.name + '" is already registered';
+    if (nameChanged && await db.Role.findOne({ 
+        where: { 
+            name: params.name 
+        } 
+    })) {
+        throw {
+            status: 'error',
+            message: params.name + ' is already registered'
+        };
     }
 
-    // copy params to role and save
-    Object.assign(role, params);
-    await role.save();
+    try {
+        const [rowsUpdated] = await db.User.update(
+          { 
+            name: params.name
+          },
+          {
+            where: {
+              id: id,
+            },
+          }
+        );
+    
+        if (rowsUpdated > 0) {
+          return { status: "success", message: "Role updated successfully." };
+        } else {
+          return { status: "error", message: "Role not found or no changes made." };
+        }
+      } catch (error) {
+        console.error(error);
+        return { status: "error", message: "An error occurred while updating the role." };
+      }
 }
 
 async function _delete(id) {
-    const role = await getRole(id);
-    await role.destroy();
+    try {
+        const result = await db.Role.destroy({
+          where: {
+            id: id,
+          },
+        });
+      
+        if (result > 0) {
+            return { 
+                status: "success", 
+                message: "Role successfully deleted" 
+            }
+        } else {
+            return {
+                status: "error",
+                message: "No role found with the given criteria"
+            }
+        }
+      } catch (error) {
+        return { status: "error", message: `Error deleting role: ${error}` };
+      }
 }
 
 // helper functions
 
 async function getRole(id) {
     const role = await db.Role.findByPk(id);
-    if (!role) throw 'Role not found';
-    return role;
+    if (!role) {
+        return { 
+            status: "error", 
+            message: "Role not found" 
+        }
+    } else {
+        return { 
+            status: "success", 
+            data: user 
+        }
+    }
 }
 
 async function createRoleWithPermissions(params) {
     
-    const role = await db.Role.create({ name: params.name });
+    if (await db.Role.findOne({ where: { name: params.name } })) {
+        throw { 
+            status: 'error', 
+            message: params.name + '" is already registered'
+        };
+    }
+
+    // Create role
+    const role = await db.Role.create(
+        { 
+            name: params.name
+         }
+    );
 
     // Add permissions to role
     const permissions = await db.Permission.findAll({
@@ -68,6 +134,9 @@ async function createRoleWithPermissions(params) {
     });
 
     await role.setPermissions(permissions);
-
-    return role;
+    
+    return { 
+        status: "success", 
+        message: "Role created and permissions added successfully" 
+    }
 }

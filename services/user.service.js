@@ -22,7 +22,10 @@ async function getById(id) {
 async function create(params) {
     
     if (await db.User.findOne({ where: { email: params.email } })) {
-        throw { status: 'error', message: 'Email "' + params.email + '" is already registered' };
+        throw { 
+          status: 'error', 
+          message: 'Email "' + params.email + '" is already registered' 
+        };
     }
 
     const user = new db.User(params);    
@@ -43,20 +46,27 @@ async function update(id, params) {
         lastname: params.lastname
       },
       {
-        where: {
-          id: id,
-        },
+        where: { id: id }
       }
     );
 
     if (rowsUpdated > 0) {
-      return { status: "success", message: "User updated successfully." };
+      return { 
+        status: "success", 
+        message: "User updated successfully." 
+      };
     } else {
-      return { status: "error", message: "User not found or no changes made." };
+      return { 
+        status: "error", 
+        message: "User not found or no changes made." 
+      };
     }
   } catch (error) {
     console.error(error);
-    return { status: "error", message: "An error occurred while updating the user." };
+    return { 
+      status: "error", 
+      message: "An error occurred while updating the user." 
+    };
   }
 }
 
@@ -64,9 +74,7 @@ async function _delete(id) {
 
       try {
         const result = await db.User.destroy({
-          where: {
-            id: id,
-          },
+          where: { id: id },
         });
       
         if (result > 0) {
@@ -81,7 +89,10 @@ async function _delete(id) {
             }
         }
       } catch (error) {
-        return { status: "error", message: `Error deleting user: ${error}` };
+        return { 
+          status: "error", 
+          message: `Error deleting user: ${error}` 
+        };
       }
 }
 

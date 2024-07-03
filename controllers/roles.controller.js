@@ -31,25 +31,40 @@ function getById(req, res, next) {
 
 function create(req, res, next) {
     roleService.create(req.body)
-        .then(() => res.json({ message: 'Role created' }))
+        .then(() => res.json(
+            { 
+                status: 'success', 
+                message: 'Role registered successfully' 
+            }
+        ))
         .catch(next);
 }
 
 function update(req, res, next) {
     roleService.update(req.params.id, req.body)
-        .then(() => res.json({ message: 'Role updated' }))
+        .then(() => res.json(
+            { 
+                status: 'success', 
+                message: 'Role updated' 
+            }
+        ))
         .catch(next);
 }
 
 function _delete(req, res, next) {
     roleService.delete(req.params.id)
-        .then(() => res.json({ message: 'Role deleted' }))
+        .then(() => res.json(
+            { 
+                status: 'success',  
+                message: 'Role deleted' 
+            }
+        ))
         .catch(next);
 }
 
 function createRoleWithPermissions(req, res, next) {
     roleService.createRoleWithPermissions(req.body)
-        .then(role => res.json({ message: 'Role created successfully', role }))
+        .then(role => res.json(role))
         .catch(next);
 }
 
