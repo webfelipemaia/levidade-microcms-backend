@@ -10,7 +10,18 @@ module.exports = {
 };
 
 async function getAll() {
-    return await db.Role.findAll();
+    //return await db.Role.findAll();
+    return await db.Role.findAll({
+        include: [
+          {
+            model: db.Permission,
+            attributes: ["id", "name"],
+            through: {
+              attributes: [],
+            }
+          },
+        ],
+      })
 }
 
 async function getById(id) {
@@ -47,7 +58,7 @@ async function update(id, params) {
     }
 
     try {
-        const [rowsUpdated] = await db.User.update(
+        const [rowsUpdated] = await db.Role.update(
           { 
             name: params.name
           },
@@ -105,7 +116,7 @@ async function getRole(id) {
     } else {
         return { 
             status: "success", 
-            data: user 
+            data: role 
         }
     }
 }
@@ -137,6 +148,6 @@ async function createRoleWithPermissions(params) {
     
     return { 
         status: "success", 
-        message: "Role created and permissions added successfully" 
+        message: "Role created and permissions added successfully                        " 
     }
 }
