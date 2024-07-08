@@ -3,6 +3,7 @@ const db = require('../helpers/db');
 
 module.exports = {
     getAll,
+    getUsersRoles,
     getById,
     create,
     update,
@@ -13,6 +14,21 @@ module.exports = {
 async function getAll() {    
     const users = await db.User.findAll({ attributes: {exclude:['password']} });
     return users;
+}
+
+async function getUsersRoles() {
+
+return await db.User.findAll({
+  include: [
+    {
+      model: db.Role,
+      attributes: ["id", "name"],
+      through: {
+        attributes: [],
+      }
+    },
+  ],
+})
 }
 
 async function getById(id) {
@@ -28,9 +44,41 @@ async function create(params) {
         };
     }
 
+    const role = await db.Role.findOne({ where: { name: params.role } });
+    if (!role) {
+        throw { 
+            status: 'error', 
+            message: 'Role not found' 
+        };
+    }
+
     const user = new db.User(params);    
     user.passwordHash = await bcrypt.hash(params.password, 10);
     await user.save();
+    await user.addRole(role);
+}
+
+async function addRoleToUser(user) {
+    
+  if (await db.User.findOne({ where: { email: user.email } })) {
+      throw { 
+        status: 'error', 
+        message: 'Email "' + user.email + '" is already registered' 
+      };
+  }
+
+  const role = await db.Role.findOne({ where: { name: user.role } });
+  if (!role) {
+      throw { 
+          status: 'error', 
+          message: 'Role not found' 
+      };
+  }
+
+  // Adiciona role to user
+  await user.addRole(role);
+
+  return { status: 'success', message: role };
 }
 
 async function update(id, params) {

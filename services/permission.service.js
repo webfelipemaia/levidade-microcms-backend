@@ -2,6 +2,7 @@ const db = require('../helpers/db');
 
 module.exports = {
     getAll,
+    getPermissionsRoles,
     getById,
     create,
     update,
@@ -11,6 +12,20 @@ module.exports = {
 
 async function getAll() {
     return await db.Permission.findAll();
+}
+
+async function getPermissionsRoles() {
+    return await db.Permission.findAll({
+        include: [
+          {
+            model: db.Role,
+            attributes: ["id", "name"],
+            through: {
+              attributes: [],
+            },
+          },
+        ],
+      })
 }
 
 async function getById(id) {

@@ -10,6 +10,7 @@ const Category = require('../models/category.model');
 const Section = require('../models/section.model');
 const Item = require('../models/item.model');
 const RolePermissions = require('../models/rolePermission.model');
+const UserRoles = require('../models/userRoles.model');
 
 module.exports = db = {};
 
@@ -22,8 +23,8 @@ async function initialize() {
     await connection.query(`CREATE DATABASE IF NOT EXISTS \`${database}\`;`);
 
     // Relationships
-    User.belongsToMany(Role, { through: 'UserRoles' });
-    Role.belongsToMany(User, { through: 'UserRoles' });
+    User.belongsToMany(Role, { through: UserRoles });
+    Role.belongsToMany(User, { through: UserRoles });
     Role.belongsToMany(Permission, { through: RolePermissions });
     Permission.belongsToMany(Role, { through: RolePermissions });
     Document.belongsTo(Category, { foreignKey: 'categoryId' });
@@ -34,6 +35,7 @@ async function initialize() {
     // init models and add them to the exported db object
     db.User = User;
     db.Role = Role;
+    db.UserRoles = UserRoles;
     db.Permission = Permission;
     db.Document = Document;
     db.Category = Category;
@@ -42,5 +44,5 @@ async function initialize() {
     db.RolePermissions = RolePermissions;
 
     // sync all models with database
-    //await sequelize.sync({ alter: true });
+    await sequelize.sync({ alter: true });
 }

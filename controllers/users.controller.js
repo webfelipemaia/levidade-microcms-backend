@@ -7,6 +7,7 @@ const userService = require('../services/user.service');
 // routes
 
 router.get('/', getAll);
+router.get('/roles', getUsersRoles);
 router.get('/:id', getById);
 router.post('/', createSchema, create);
 router.put('/:id', updateSchema, update);
@@ -34,6 +35,12 @@ function register(req, res, next) {
 
 function getAll(req, res, next) {
     userService.getAll()
+        .then(users => res.json(users))
+        .catch(next);
+}
+
+function getUsersRoles(req, res, next) {
+    userService.getUsersRoles()
         .then(users => res.json(users))
         .catch(next);
 }
@@ -71,6 +78,7 @@ function createSchema(req, res, next) {
         confirmPassword: Joi.string().valid(Joi.ref('password')).required(),
         name: Joi.string().required(),
         lastname: Joi.string().required(),
+        role: Joi.string()
     });
     validateRequest(req, next, schema);
 }
@@ -92,7 +100,8 @@ function registerSchema(req, res, next) {
       password: Joi.string().min(6).required(),
       confirmPassword: Joi.string().valid(Joi.ref('password')).required(),
       name: Joi.string().required(),
-      lastname: Joi.string().required()
+      lastname: Joi.string().required(),
+      role: Joi.string()
     });
     validateRequest(req, next, schema);
   }
