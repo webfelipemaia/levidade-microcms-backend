@@ -7,6 +7,7 @@ const permissionService = require('../services/permission.service');
 // routes
 
 router.get('/', getAll);
+router.get('/all', getAllPermissionsRoles);
 router.get('/roles', getPermissionsRoles);
 router.get('/:id', getById);
 router.post('/', createSchema, create);
@@ -24,6 +25,12 @@ function getAll(req, res, next) {
 
 function getPermissionsRoles(req, res, next) {
     permissionService.getPermissionsRoles()
+        .then(permissions => res.json(permissions))
+        .catch(next);
+}
+
+function getAllPermissionsRoles(req, res, next) {
+    permissionService.getAllPermissionsRoles()
         .then(permissions => res.json(permissions))
         .catch(next);
 }

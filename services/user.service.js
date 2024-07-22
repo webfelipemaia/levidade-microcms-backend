@@ -17,18 +17,12 @@ async function getAll() {
 }
 
 async function getUsersRoles() {
-
-return await db.User.findAll({
-  include: [
-    {
-      model: db.Role,
-      attributes: ["id", "name"],
-      through: {
-        attributes: [],
-      }
-    },
-  ],
-})
+  return await db.User.findAll({
+    include: db.Role,
+    through: {
+      attributes: [], 
+    }
+  })
 }
 
 async function getById(id) {
