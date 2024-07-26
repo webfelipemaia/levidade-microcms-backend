@@ -37,11 +37,11 @@ async function initialize() {
     db.Role = Role;
     db.UserRoles = UserRoles;
     db.Permission = Permission;
+    db.RolePermissions = RolePermissions;
     db.Document = Document;
     db.Category = Category;
     db.Section = Section;
     db.Item = Item;
-    db.RolePermissions = RolePermissions;
 
     // sync all models with database
     await sequelize.sync({ alter: true });

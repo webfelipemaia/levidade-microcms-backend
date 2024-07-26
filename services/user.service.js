@@ -38,18 +38,9 @@ async function create(params) {
         };
     }
 
-    const role = await db.Role.findOne({ where: { name: params.role } });
-    if (!role) {
-        throw { 
-            status: 'error', 
-            message: 'Role not found' 
-        };
-    }
-
     const user = new db.User(params);    
     user.passwordHash = await bcrypt.hash(params.password, 10);
     await user.save();
-    await user.addRole(role);
 }
 
 async function addRoleToUser(user) {

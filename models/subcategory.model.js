@@ -9,20 +9,20 @@ const Subcategory = sequelize.define('Subcategory', {
     categoryId: {
         type: DataTypes.INTEGER,
         references: {
-            model: 'Categories',
+            model: 'Category',
             key: 'id'
         },
         allowNull: false
     },
     createdAt: {
         type: DataTypes.DATE,
-        allowNull: false,
-        defaultValue: DataTypes.NOW
+        //allowNull: false,
+        //defaultValue: DataTypes.NOW
     },
     updatedAt: {
         type: DataTypes.DATE,
-        allowNull: false,
-        defaultValue: DataTypes.NOW
+        //allowNull: false,
+        //defaultValue: DataTypes.NOW
     }
 });
 
