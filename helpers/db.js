@@ -9,8 +9,8 @@ const Document = require('../models/document.model');
 const Category = require('../models/category.model');
 const Section = require('../models/section.model');
 const Item = require('../models/item.model');
-const RolePermissions = require('../models/rolePermission.model');
-const UserRoles = require('../models/userRoles.model');
+const RolesPermissions = require('../models/rolesPermissions.model');
+const UsersRoles = require('../models/usersRoles.model');
 
 module.exports = db = {};
 
@@ -23,10 +23,10 @@ async function initialize() {
     await connection.query(`CREATE DATABASE IF NOT EXISTS \`${database}\`;`);
 
     // Relationships
-    User.belongsToMany(Role, { through: UserRoles });
-    Role.belongsToMany(User, { through: UserRoles });
-    Role.belongsToMany(Permission, { through: RolePermissions });
-    Permission.belongsToMany(Role, { through: RolePermissions });
+    User.belongsToMany(Role, { through: 'Users_Roles', foreignKey: 'userId', otherKey: 'roleId', });
+    Role.belongsToMany(User, { through: 'Users_Roles', foreignKey: 'roleId', otherKey: 'userId', });
+    Role.belongsToMany(Permission, { through: 'Roles_Permissions', foreignKey: 'roleId', otherKey: 'permissionId', });
+    Permission.belongsToMany(Role, { through: 'Roles_Permissions', foreignKey: 'permissionId', otherKey: 'roleId', });
     Document.belongsTo(Category, { foreignKey: 'categoryId' });
     Section.belongsTo(Category, { foreignKey: 'categoryId' });
     Section.hasMany(Item, { foreignKey: 'sectionId' });
@@ -35,9 +35,9 @@ async function initialize() {
     // init models and add them to the exported db object
     db.User = User;
     db.Role = Role;
-    db.UserRoles = UserRoles;
+    db.UsersRoles = UsersRoles;
     db.Permission = Permission;
-    db.RolePermissions = RolePermissions;
+    db.RolesPermissions = RolesPermissions;
     db.Document = Document;
     db.Category = Category;
     db.Section = Section;

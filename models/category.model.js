@@ -8,13 +8,9 @@ const Category = sequelize.define('Category', {
   },
   createdAt: {
       type: DataTypes.DATE,
-      //allowNull: false,
-      //defaultValue: DataTypes.NOW
   },
   updatedAt: {
       type: DataTypes.DATE,
-      //allowNull: false,
-      //defaultValue: DataTypes.NOW
   }
 });
 

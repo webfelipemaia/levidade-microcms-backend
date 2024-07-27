@@ -3,6 +3,7 @@ const db = require('../helpers/db');
 module.exports = {
     getAll,
     getRolesPermissions,
+    getAllRolesPermissions,
     getById,
     create,
     update,
@@ -28,6 +29,16 @@ async function getRolesPermissions() {
     })
 }
 
+async function getAllRolesPermissions() {
+  return await db.Role.findAll({
+      include: [
+        {
+          model: db.Permission,
+        },
+      ],
+    })
+}
+
 async function getById(id) {
     return await getRole(id);
 }
@@ -48,19 +59,13 @@ async function create(params) {
 async function update(id, params) {
     const role = await getRole(id);
 
-    // validate
     const nameChanged = params.name && role.name !== params.name;
     if (nameChanged && await db.Role.findOne({ 
         where: { 
             name: params.name 
         } 
     })) {
-        throw {
-            status: 'error',
-            message: params.name + ' is already registered'
-        };
-    }
-
+        
     try {
         const [rowsUpdated] = await db.Role.update(
           { 
@@ -72,16 +77,35 @@ async function update(id, params) {
             },
           }
         );
+
+        if (params.permissions && Array.isArray(params.permissions)) {
+          const permissionIds = await Promise.all(
+              params.permissions.map(async (permissionName) => {
+                  let permission = await db.Permission.findOne({ where: { name: permissionName } });
+                  if (!permission) {
+                      permission = await db.Permission.create({ name: permissionName });
+                  }
+                  return permission.id;
+              })
+          );
+  
+          // Atualizar as permissões do papel
+          await role.setPermissions(permissionIds);
+      }
+  
+      // 4. Salvar as alterações
+      const permissionSaved = await role.save();
     
-        if (rowsUpdated > 0) {
-          return { status: "success", message: "Role updated successfully." };
+        if (rowsUpdated > 0 && permissionSaved) {
+          return { status: "success", message: ["Role updated successfully.","Permission updated successfully"] };
         } else {
-          return { status: "error", message: "Role not found or no changes made." };
+          return { status: "error", message: "Role/Permission not found or no changes made." };
         }
       } catch (error) {
         console.error(error);
         return { status: "error", message: "An error occurred while updating the role." };
       }
+    }
 }
 
 async function _delete(id) {
