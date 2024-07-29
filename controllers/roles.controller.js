@@ -54,6 +54,7 @@ function create(req, res, next) {
 }
 
 function update(req, res, next) {
+    
     roleService.update(req.params.id, req.body)
         .then(() => res.json(
             { 
