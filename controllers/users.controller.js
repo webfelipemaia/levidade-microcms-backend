@@ -86,11 +86,10 @@ function createSchema(req, res, next) {
 function updateSchema(req, res, next) {
     const schema = Joi.object({
         email: Joi.string().email().empty(''),
-        password: Joi.string().min(6).empty(''),
-        confirmPassword: Joi.string().valid(Joi.ref('password')).empty(''),
         name: Joi.string().empty(''),
         lastname: Joi.string().empty(''),
-    }).with('password', 'confirmPassword');
+        roles: Joi.array().empty('')
+    });
     validateRequest(req, next, schema);
 }
 

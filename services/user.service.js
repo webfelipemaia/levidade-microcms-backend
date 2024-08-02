@@ -67,12 +67,14 @@ async function addRoleToUser(user) {
 }
 
 async function update(id, params) {
-    
-  if (!params.name || !params.lastname) {
-    return { status: "error", message: "Name and lastname are required." };
-  }
 
   try {
+
+    if (!params.name || !params.lastname) {
+      return { status: "error", message: "Name and lastname are required." };
+    }
+
+    // Updating user data
     const [rowsUpdated] = await db.User.update(
       { 
         name: params.name,
@@ -83,17 +85,35 @@ async function update(id, params) {
       }
     );
 
-    if (rowsUpdated > 0) {
-      return { 
-        status: "success", 
-        message: "User updated successfully." 
-      };
-    } else {
-      return { 
-        status: "error", 
-        message: "User not found or no changes made." 
-      };
+    // Finding the updated user
+    const user = await db.User.findByPk(id)
+
+    if(!user) {
+      return { status: "error", message: "User not found." };
     }
+
+    // retrieve rolels from user.id
+    const rolesByRoleId = await db.UsersRoles.findAll({
+      where: {
+        userId: user.id
+      }
+    })
+
+    // delete or add a role to user
+    params.roles.forEach((role) => {
+
+      if(role.isChecked === 'unchecked') {
+        user.removeRoles(role.data.id)
+      } else {
+        user.addRoles(role.data.id)
+      }
+    })
+
+    return { 
+      status: "success", 
+      message: "User and roles updated successfully." 
+    };
+    
   } catch (error) {
     console.error(error);
     return { 
