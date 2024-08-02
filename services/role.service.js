@@ -57,31 +57,53 @@ async function create(params) {
 }
 
 async function update(id, params) {
-        
-    try {
-        const rowsUpdated = await db.Role.update(
-          { 
-            name: params.name
+  try {
+      // Updating the role name
+      const rowsUpdated = await db.Role.update(
+        { name: params.name },
+        {
+          where: {
+            id: id,
           },
-          {
-            where: {
-              id: id,
-            },
-          }
-        );
-    
-        if (rowsUpdated) {
-          return { status: "success", message: ["Role updated successfully.","Permission updated successfully"] };
-        } else {
-          return { status: "error", message: "Role/Permission not found or no changes made." };
         }
-        
-      } catch (error) {
-        console.error(error);
-        return { status: "error", message: "An error occurred while updating the role." };
-      }
-}
+      );
+  
+      // Finding the updated role
+      const role = await db.Role.findByPk(id);
+  
+      if (!role) {
+        return { status: "error", message: "Role not found." };
+      }  
 
+      // retrieve permissions from role.id
+      const permissionsByRoleId = await db.RolesPermissions.findAll({
+        where: {
+          roleId: role.id,
+        },
+      });
+      
+      // delete or add a permission to the role
+      params.permissions.forEach((permission) => {
+          
+        if(permission.isChecked === 'unchecked') {
+          role.removePermissions(permission.data.id);
+        } else {
+          role.addPermissions(permission.data.id);
+        }
+
+      })
+  
+      return {
+        status: "success",
+        message: "Role and permissions updated successfully."
+      };
+      
+    } catch (error) {
+      console.error(error);
+      return { status: "error", message: "An error occurred while updating the role." };
+    }
+  }
+    
 async function _delete(id) {
     try {
         const result = await db.Role.destroy({

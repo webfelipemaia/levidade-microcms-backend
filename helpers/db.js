@@ -44,5 +44,5 @@ async function initialize() {
     db.Item = Item;
 
     // sync all models with database
-    await sequelize.sync({ alter: true });
+    await sequelize.sync({ alter: false });
 }

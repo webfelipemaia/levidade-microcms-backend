@@ -11,7 +11,7 @@ router.get('/all', getAllRolesPermissions);
 router.get('/permissions', getRolesPermissions);
 router.get('/:id', getById);
 router.post('/', createSchema, create);
-router.put('/:id', updateSchema, update);
+router.patch('/:id', updateSchema, update);
 router.delete('/:id', _delete);
 router.post('/', createRoleWithPermissions);
 
@@ -54,7 +54,6 @@ function create(req, res, next) {
 }
 
 function update(req, res, next) {
-    
     roleService.update(req.params.id, req.body)
         .then(() => res.json(
             { 
@@ -93,7 +92,8 @@ function createSchema(req, res, next) {
 
 function updateSchema(req, res, next) {
     const schema = Joi.object({
-        name: Joi.string().empty('')
+        name: Joi.string().empty(''),
+        permissions: Joi.array().empty('')
     });
     validateRequest(req, next, schema);
 }
