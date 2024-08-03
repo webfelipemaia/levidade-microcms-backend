@@ -1,5 +1,6 @@
 const { DataTypes } = require('sequelize');
 const sequelize = require('../config/database');
+const Sequelize = require('sequelize')
 
 const Permission = sequelize.define('Permission', {
   name: {
@@ -7,10 +8,18 @@ const Permission = sequelize.define('Permission', {
     allowNull: false,
     unique: true
   },
+  createdAt: {
+      type: DataTypes.DATE,
+      allowNull: true,
+      defaultValue: Sequelize.NOW
+  },
+  updatedAt: {
+      type: DataTypes.DATE,
+      allowNull: true,
+      defaultValue: Sequelize.NOW
+  }
 }, {
-  timestamps: true,
-  createdAt: 'created_at',
-  updatedAt: 'updated_at'
+  sequelize, timestamps: true,
 });
 
 module.exports = Permission;

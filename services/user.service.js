@@ -37,7 +37,7 @@ async function create(params) {
           message: 'Email "' + params.email + '" is already registered' 
         };
     }
-
+    
     const user = new db.User(params);    
     user.passwordHash = await bcrypt.hash(params.password, 10);
     await user.save();

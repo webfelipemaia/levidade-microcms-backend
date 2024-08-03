@@ -1,5 +1,6 @@
 const { DataTypes } = require('sequelize');
 const sequelize = require('../config/database');
+const Sequelize = require('sequelize')
 
 const Category = sequelize.define('Category', {
   name: {
@@ -8,10 +9,16 @@ const Category = sequelize.define('Category', {
   },
   createdAt: {
       type: DataTypes.DATE,
+      allowNull: true,
+      defaultValue: Sequelize.NOW
   },
   updatedAt: {
       type: DataTypes.DATE,
+      allowNull: true,
+      defaultValue: Sequelize.NOW
   }
+}, {
+  sequelize, timestamps: true,
 });
 
 Category.associate = (models) => {

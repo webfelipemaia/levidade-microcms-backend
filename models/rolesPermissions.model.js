@@ -1,6 +1,7 @@
 
 const { DataTypes } = require('sequelize');
 const sequelize = require('../config/database');
+const Sequelize = require('sequelize')
 
 const RolesPermissions = sequelize.define('Roles_Permissions', {
     id: {
@@ -8,14 +9,18 @@ const RolesPermissions = sequelize.define('Roles_Permissions', {
         primaryKey: true,
         autoIncrement: true
     },
-    created_at: {
+    createdAt: {
         type: DataTypes.DATE,
+        allowNull: true,
+        defaultValue: Sequelize.NOW
     },
-    updated_at: {
+    updatedAt: {
         type: DataTypes.DATE,
+        allowNull: true,
+        defaultValue: Sequelize.NOW
     }
 }, {
-    timestamps: false
+    timestamps: true
 });
 
 module.exports = RolesPermissions;

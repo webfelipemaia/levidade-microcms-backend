@@ -1,5 +1,6 @@
 const { DataTypes } = require('sequelize');
 const sequelize = require('../config/database');
+const Sequelize = require('sequelize')
 
 const Subcategory = sequelize.define('Subcategory', {
     name: {
@@ -16,18 +17,16 @@ const Subcategory = sequelize.define('Subcategory', {
     },
     createdAt: {
         type: DataTypes.DATE,
-        //allowNull: false,
-        //defaultValue: DataTypes.NOW
+        allowNull: true,
+        defaultValue: Sequelize.NOW
     },
     updatedAt: {
         type: DataTypes.DATE,
-        //allowNull: false,
-        //defaultValue: DataTypes.NOW
+        allowNull: true,
+        defaultValue: Sequelize.NOW
     }
-});
-
-Subcategory.associate = (models) => {
-    Subcategory.belongsTo(models.Category, { foreignKey: 'categoryId' });
-};
+}, {
+    sequelize, timestamps: true,
+  });
 
 module.exports = Subcategory;

@@ -1,6 +1,7 @@
 const { DataTypes } = require('sequelize');
 const sequelize = require('../config/database');
 const Category = require('./category.model');
+const Sequelize = require('sequelize')
 
 const Section = sequelize.define('Section', {
   title: {
@@ -13,10 +14,18 @@ const Section = sequelize.define('Section', {
   description: {
     type: DataTypes.TEXT,
   },
+  createdAt: {
+      type: DataTypes.DATE,
+      allowNull: true,
+      defaultValue: Sequelize.NOW
+  },
+  updatedAt: {
+      type: DataTypes.DATE,
+      allowNull: true,
+      defaultValue: Sequelize.NOW
+  }
 }, {
-  timestamps: true,
-  createdAt: 'created_at',
-  updatedAt: 'updated_at'
+  sequelize, timestamps: true,
 });
 
 Section.belongsTo(Category, { foreignKey: 'categoryId' });
