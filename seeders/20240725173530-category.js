@@ -2,18 +2,14 @@
 
 /** @type {import('sequelize-cli').Migration} */
 module.exports = {
+  
   async up (queryInterface, Sequelize) {
+    const now = new Date();
     await queryInterface.bulkInsert('Categories', [
-      {
-        name: 'Category 1',
-        createdAt: '2024-07-25 16:00:01',
-        updatedAt: '2024-07-25 16:00:01'
-      },
-      {
-        name: 'Category 2',
-        createdAt: '2024-07-25 16:00:01',
-        updatedAt: '2024-07-25 16:00:01'
-      }
+      { name: 'Categoria Principal', parentId: null, createdAt: now, updatedAt: now },
+      { name: 'Subcategoria 1', parentId: 1, createdAt: now, updatedAt: now },
+      { name: 'Subcategoria 2', parentId: 1, createdAt: now, updatedAt: now },
+      { name: 'Categoria 2', parentId: null, createdAt: now, updatedAt: now },
     ], {});
   },
 

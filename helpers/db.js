@@ -5,8 +5,8 @@ const mysql = require('mysql2/promise');
 const User = require('../models/user.model');
 const Role = require('../models/role.model');
 const Permission = require('../models/permission.model');
-const Document = require('../models/document.model');
 const Category = require('../models/category.model');
+const Document = require('../models/document.model');
 const Section = require('../models/section.model');
 const Item = require('../models/item.model');
 const RolesPermissions = require('../models/rolesPermissions.model');
@@ -27,6 +27,8 @@ async function initialize() {
     Role.belongsToMany(User, { through: 'Users_Roles', foreignKey: 'roleId', otherKey: 'userId', });
     Role.belongsToMany(Permission, { through: 'Roles_Permissions', foreignKey: 'roleId', otherKey: 'permissionId', });
     Permission.belongsToMany(Role, { through: 'Roles_Permissions', foreignKey: 'permissionId', otherKey: 'roleId', });
+    Category.belongsTo(Category, { as: 'parent', foreignKey: 'parentId' });
+    Category.hasMany(Category, { as: 'children', foreignKey: 'parentId' });
     Document.belongsTo(Category, { foreignKey: 'categoryId' });
     Section.belongsTo(Category, { foreignKey: 'categoryId' });
     Section.hasMany(Item, { foreignKey: 'sectionId' });

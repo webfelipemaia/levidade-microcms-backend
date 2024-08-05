@@ -22,6 +22,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use('/users', require('./controllers/users.controller'));
 app.use('/roles', require('./controllers/roles.controller'));
 app.use('/permissions', require('./controllers/permissions.controller'));
+app.use('/categories', require('./controllers/categories.controller'));
 
 // global error handler
 app.use(errorHandler);

@@ -10,6 +10,15 @@ module.exports = {
         autoIncrement: true,
         allowNull: false
       },
+      parentId: {
+        type: Sequelize.INTEGER,
+        allowNull: true,
+        references: {
+            model: 'Categories',
+            key: 'id',
+        },
+        onDelete: 'CASCADE',
+      }, 
       name: {
         type: Sequelize.STRING,
         allowNull: false

@@ -3,6 +3,15 @@ const sequelize = require('../config/database');
 const Sequelize = require('sequelize')
 
 const Category = sequelize.define('Category', {
+  parentId: {
+    type: DataTypes.INTEGER,
+    allowNull: true,
+    references: {
+        model: 'Categories', // Nome da tabela que está sendo referenciada
+        key: 'id',
+    },
+    onDelete: 'CASCADE',
+  }, 
   name: {
       type: DataTypes.STRING,
       allowNull: false
@@ -20,9 +29,5 @@ const Category = sequelize.define('Category', {
 }, {
   sequelize, timestamps: true,
 });
-
-Category.associate = (models) => {
-  Category.hasMany(models.Subcategory, { foreignKey: 'categoryId' });
-};
 
 module.exports = Category;
