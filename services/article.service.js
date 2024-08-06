@@ -9,31 +9,31 @@ module.exports = {
 };
 
 async function getAll() {
-    return await db.Document.findAll();
+    return await db.Article.findAll();
 }
 
 async function getById(id) {
-    return await getDocument(id);
+    return await getArticle(id);
 }
 
 async function create(params) {
-    const document = new db.Document(params);
+    const document = new db.Article(params);
     await document.save();
 }
 
 async function update(id, params) {
-    const document = await getDocument(id);
+    const document = await getArticle(id);
     Object.assign(document, params);
     await document.save();
 }
 
 async function _delete(id) {
-    const document = await getDocument(id);
+    const document = await getArticle(id);
     await document.destroy();
 }
 
-async function getDocument(id) {
-    const document = await db.Document.findByPk(id);
-    if (!document) throw 'Document not found';
+async function getArticle(id) {
+    const document = await db.Article.findByPk(id);
+    if (!document) throw 'Article not found';
     return document;
 }

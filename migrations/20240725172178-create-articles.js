@@ -3,7 +3,7 @@
 /** @type {import('sequelize-cli').Migration} */
 module.exports = {
   async up (queryInterface, Sequelize) {
-    await queryInterface.createTable('Items', {
+    await queryInterface.createTable('Articles', {
       id: {
         type: Sequelize.INTEGER,
         primaryKey: true,
@@ -17,13 +17,18 @@ module.exports = {
       subtitle: {
         type: Sequelize.STRING,
       },
-      description: {
+      body: {
         type: Sequelize.TEXT,
       },
-      sectionId: {
+      status: {
+        type: DataTypes.TINYINT,
+        allowNull: false,
+        defaultValue: 0,
+      },
+      categoryId: {
         type: Sequelize.INTEGER,
         references: {
-          model: 'Sections',
+          model: 'Categories',
           key: 'id'
         },
         onDelete: 'SET NULL'
@@ -42,6 +47,6 @@ module.exports = {
   },
 
   async down (queryInterface, Sequelize) {
-    await queryInterface.dropTable('Items');
+    await queryInterface.dropTable('Articles');
   }
 };

@@ -3,20 +3,22 @@
 /** @type {import('sequelize-cli').Migration} */
 module.exports = {
   async up (queryInterface, Sequelize) {
-    await queryInterface.bulkInsert('Items', [
+    await queryInterface.bulkInsert('Articles', [
       {
-        title: 'Item 1',
+        title: 'Article 1',
         subtitle: 'Subtitle 1',
-        description: 'Description for Item 1',
-        sectionId: 1,
+        body: 'Description for article 1',
+        categoryId: 1,
+        status: 0,
         createdAt: '2024-07-25 16:00:01',
         updatedAt: '2024-07-25 16:00:01'
       },
       {
-        title: 'Item 2',
+        title: 'Lorem ipsum',
         subtitle: 'Subtitle 2',
-        description: 'Description for Item 2',
-        sectionId: 2,
+        body: 'Lorem ipsum dolor site amet',
+        categoryId: 2,
+        status: 0,
         createdAt: '2024-07-25 16:00:01',
         updatedAt: '2024-07-25 16:00:01'
       }
@@ -24,6 +26,6 @@ module.exports = {
   },
 
   async down (queryInterface, Sequelize) {
-    await queryInterface.bulkDelete('Items', null, {});
+    await queryInterface.bulkDelete('Articles', null, {});
   }
 };

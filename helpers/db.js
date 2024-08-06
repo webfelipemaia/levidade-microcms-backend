@@ -6,9 +6,7 @@ const User = require('../models/user.model');
 const Role = require('../models/role.model');
 const Permission = require('../models/permission.model');
 const Category = require('../models/category.model');
-const Document = require('../models/document.model');
-const Section = require('../models/section.model');
-const Item = require('../models/item.model');
+const Article = require('../models/article.model');
 const RolesPermissions = require('../models/rolesPermissions.model');
 const UsersRoles = require('../models/usersRoles.model');
 
@@ -29,22 +27,17 @@ async function initialize() {
     Permission.belongsToMany(Role, { through: 'Roles_Permissions', foreignKey: 'permissionId', otherKey: 'roleId', });
     Category.belongsTo(Category, { as: 'parent', foreignKey: 'parentId' });
     Category.hasMany(Category, { as: 'children', foreignKey: 'parentId' });
-    Document.belongsTo(Category, { foreignKey: 'categoryId' });
-    Section.belongsTo(Category, { foreignKey: 'categoryId' });
-    Section.hasMany(Item, { foreignKey: 'sectionId' });
-    Item.belongsTo(Section, { foreignKey: 'sectionId' });
-
+    Article.belongsTo(Category, { foreignKey: 'categoryId' });
+    
     // init models and add them to the exported db object
     db.User = User;
     db.Role = Role;
     db.UsersRoles = UsersRoles;
     db.Permission = Permission;
     db.RolesPermissions = RolesPermissions;
-    db.Document = Document;
+    db.Article = Article;
     db.Category = Category;
-    db.Section = Section;
-    db.Item = Item;
-
+    
     // sync all models with database
     await sequelize.sync({ alter: false });
 }

@@ -3,7 +3,7 @@ const sequelize = require('../config/database');
 const Category = require('./category.model');
 const Sequelize = require('sequelize')
 
-const Document = sequelize.define('Document', {
+const Article = sequelize.define('Article', {
   title: {
     type: DataTypes.STRING,
     allowNull: false
@@ -11,8 +11,13 @@ const Document = sequelize.define('Document', {
   subtitle: {
     type: DataTypes.STRING,
   },
-  description: {
+  body: {
     type: DataTypes.TEXT,
+  },
+  status: {
+    type: DataTypes.TINYINT,
+    allowNull: false,
+    defaultValue: 0,
   },
   createdAt: {
       type: DataTypes.DATE,
@@ -28,6 +33,6 @@ const Document = sequelize.define('Document', {
   sequelize, timestamps: true,
 });
 
-Document.belongsTo(Category, { foreignKey: 'categoryId' });
+Article.belongsTo(Category, { foreignKey: 'categoryId' });
 
-module.exports = Document;
+module.exports = Article;

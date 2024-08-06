@@ -10,7 +10,7 @@ router.get('/', getAll);
 router.get('/:id', getById);
 router.post('/', createSchema, create);
 router.post('/with-subcategories', createWithSubcategoriesSchema, createWithSubcategories);
-router.patch    ('/:id', updateSchema, update);
+router.patch('/:id', updateSchema, update);
 router.delete('/:id', _delete);
 
 module.exports = router;
