@@ -21,7 +21,7 @@ module.exports = {
         type: Sequelize.TEXT,
       },
       status: {
-        type: DataTypes.TINYINT,
+        type: Sequelize.TINYINT,
         allowNull: false,
         defaultValue: 0,
       },

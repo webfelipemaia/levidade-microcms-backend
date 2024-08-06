@@ -17,23 +17,23 @@ async function getById(id) {
 }
 
 async function create(params) {
-    const document = new db.Article(params);
-    await document.save();
+    const article = new db.Article(params);
+    await article.save();
 }
 
 async function update(id, params) {
-    const document = await getArticle(id);
-    Object.assign(document, params);
-    await document.save();
+    const article = await getArticle(id);
+    Object.assign(article, params);
+    await article.save();
 }
 
 async function _delete(id) {
-    const document = await getArticle(id);
-    await document.destroy();
+    const article = await getArticle(id);
+    await article.destroy();
 }
 
 async function getArticle(id) {
-    const document = await db.Article.findByPk(id);
-    if (!document) throw 'Article not found';
-    return document;
+    const article = await db.Article.findByPk(id);
+    if (!article) throw 'Article not found';
+    return article;
 }
