@@ -11,7 +11,7 @@ router.get('/all', getAllPermissionsRoles);
 router.get('/roles', getPermissionsRoles);
 router.get('/:id', getById);
 router.post('/', createSchema, create);
-router.put('/:id', updateSchema, update);
+router.patch('/:id', updateSchema, update);
 router.delete('/:id', _delete);
 router.post('/add', addPermissionsToRole);
 
