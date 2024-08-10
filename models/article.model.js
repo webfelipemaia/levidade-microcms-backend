@@ -11,10 +11,20 @@ const Article = sequelize.define('Article', {
   subtitle: {
     type: DataTypes.STRING,
   },
+  slug: {
+    type: DataTypes.STRING,
+    allowNull: true,
+    defaultValue: null,
+  },
   body: {
     type: DataTypes.TEXT,
   },
   status: {
+    type: DataTypes.BOOLEAN,
+    allowNull: false,
+    defaultValue: 0,
+  },
+  featured: {
     type: DataTypes.BOOLEAN,
     allowNull: false,
     defaultValue: 0,

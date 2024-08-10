@@ -17,11 +17,21 @@ module.exports = {
       subtitle: {
         type: Sequelize.STRING,
       },
+      slug: {
+        type: Sequelize.STRING,
+        allowNull: true,
+        defaultValue: null,
+      },
       body: {
         type: Sequelize.TEXT,
       },
       status: {
         type: Sequelize.TINYINT,
+        allowNull: false,
+        defaultValue: 0,
+      },
+      featured: {
+        type: Sequelize.BOOLEAN,
         allowNull: false,
         defaultValue: 0,
       },

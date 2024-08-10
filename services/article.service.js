@@ -3,6 +3,7 @@ const db = require('../helpers/db');
 module.exports = {
     getAll,
     getById,
+    getLastRegister,
     create,
     update,
     delete: _delete
@@ -14,6 +15,14 @@ async function getAll() {
 
 async function getById(id) {
     return await getArticle(id);
+}
+
+async function getLastRegister() {
+    const article = await db.Article.findOne({
+        order: [['createdAt', 'DESC']]     
+    });
+    if (!article) throw 'Article not found';
+    return article;
 }
 
 async function create(params) {

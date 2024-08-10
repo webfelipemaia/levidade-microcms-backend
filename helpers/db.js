@@ -9,6 +9,7 @@ const Category = require('../models/category.model');
 const Article = require('../models/article.model');
 const RolesPermissions = require('../models/rolesPermissions.model');
 const UsersRoles = require('../models/usersRoles.model');
+const Status = require('../models/status.model.js')
 
 module.exports = db = {};
 
@@ -37,6 +38,7 @@ async function initialize() {
     db.RolesPermissions = RolesPermissions;
     db.Article = Article;
     db.Category = Category;
+    db.Status = Status;
     
     // sync all models with database
     await sequelize.sync({ alter: false });

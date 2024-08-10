@@ -24,6 +24,7 @@ app.use('/roles', require('./controllers/roles.controller'));
 app.use('/permissions', require('./controllers/permissions.controller'));
 app.use('/categories', require('./controllers/categories.controller'));
 app.use('/articles', require('./controllers/articles.controller'));
+app.use('/status', require('./controllers/status.controller'));
 
 // global error handler
 app.use(errorHandler);

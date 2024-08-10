@@ -7,6 +7,7 @@ const articleService = require('../services/article.service');
 // routes
 
 router.get('/', getAll);
+router.get('/last', getLastRegister);
 router.get('/:id', getById);
 router.post('/', createSchema, create);
 router.put('/:id', updateSchema, update);
@@ -28,7 +29,14 @@ function getById(req, res, next) {
         .catch(next);
 }
 
+function getLastRegister(req, res, next) {
+    articleService.getLastRegister()
+        .then(article => res.json(article))
+        .catch(next);
+}
+
 function create(req, res, next) {
+    console.log(req.body)
     articleService.create(req.body)
         .then(() => res.json({ message: 'Article created' }))
         .catch(next);
@@ -52,8 +60,10 @@ function createSchema(req, res, next) {
     const schema = Joi.object({
         title: Joi.string().required(),
         subtitle: Joi.string().optional(),
+        slug: Joi.string().optional(),
         body: Joi.string().optional(),
-        state: Joi.bool().required(),
+        status: Joi.number().required(),
+        featured: Joi.boolean().required(),
         categoryId: Joi.number().integer().required()
     });
     validateRequest(req, next, schema);
@@ -63,8 +73,10 @@ function updateSchema(req, res, next) {
     const schema = Joi.object({
         title: Joi.string().empty(''),
         subtitle: Joi.string().empty(''),
+        slug: Joi.string().empty(''),
         body: Joi.string().empty(''),
-        body: Joi.bool().required(),
+        status: Joi.number().required(),
+        featured: Joi.boolean().empty(''),
         categoryId: Joi.number().integer().empty('')
     });
     validateRequest(req, next, schema);
