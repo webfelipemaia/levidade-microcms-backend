@@ -20,7 +20,7 @@ const Article = sequelize.define('Article', {
     type: DataTypes.TEXT,
   },
   status: {
-    type: DataTypes.BOOLEAN,
+    type: DataTypes.TINYINT,
     allowNull: false,
     defaultValue: 0,
   },
