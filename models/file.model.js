@@ -1,20 +1,17 @@
 const { DataTypes } = require('sequelize');
 const sequelize = require('../config/database');
-const Sequelize = require('sequelize')
+const Sequelize = require('sequelize');
+const Article = require('./article.model');
 
-const Category = sequelize.define('Category', {
-  parentId: {
-    type: DataTypes.INTEGER,
-    allowNull: true,
-    references: {
-        model: 'Categories',
-        key: 'id',
-    },
-    onDelete: 'CASCADE',
-  }, 
+const File = sequelize.define('File', {
   name: {
-      type: DataTypes.STRING,
-      allowNull: false
+    type: DataTypes.STRING,
+    allowNull: false,
+    unique: true
+  },
+  path: {
+    type: DataTypes.STRING,
+    allowNull: false,
   },
   createdAt: {
       type: DataTypes.DATE,
@@ -30,4 +27,6 @@ const Category = sequelize.define('Category', {
   sequelize, timestamps: true,
 });
 
-module.exports = Category;
+File.belongsTo(Article, { foreignKey: 'id'})
+
+module.exports = File;
