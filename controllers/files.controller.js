@@ -3,9 +3,14 @@ const router = express.Router();
 const Joi = require('joi');
 const validateRequest = require('../middleware/validate-request');
 const fileService = require('../services/file.service ');
+const uploadFile = require("../middleware/upload");
+const fs = require('fs');
 
 // routes
 
+router.post('/upload', upload);
+router.get('/all', getFiles);
+router.get('/:name', download);
 router.get('/', getAll);
 router.get('/last', getLastRegister);
 router.get('/:id', getById);
@@ -54,13 +59,67 @@ function _delete(req, res, next) {
         .catch(next);
 }
 
+async function upload(req, res) {
+    try {
+      await uploadFile(req, res);
+  
+      if (req.file == undefined) {
+        return res.status(400).send({ message: "Please upload a file!" });
+      }
+  
+      res.status(200).send({
+        message: "Uploaded the file successfully: " + req.file.originalname,
+      });
+    } catch (err) {
+      res.status(500).send({
+        message: `Could not upload the file: ${req.file.originalname}. ${err}`,
+      });
+    }
+};
+  
+async function getFiles(req, res, next) {
+    const directoryPath = __basedir + "/storage/";
+
+    fs.readdir(directoryPath, function (err, files) {
+      if (err) {
+        res.status(500).send({
+          message: "Unable to scan files!",
+        });
+      }
+  
+      let fileInfos = [];
+  
+      files.forEach((file) => {
+        fileInfos.push({
+          name: file,
+          url: directoryPath + file,
+        });
+      });
+  
+      res.status(200).send(fileInfos);
+    });
+  }
+  
+function download(req, res, next) {
+    const fileName = req.params.name;
+    const directoryPath = __basedir + "/storage/";
+
+    res.download(directoryPath + fileName, fileName, (err) => {
+        if (err) {
+        res.status(500).send({
+            message: "Could not download the file. " + err,
+        });
+        }
+    });
+  };
+
 // schema functions
 
 function createSchema(req, res, next) {
     const schema = Joi.object({
         name: Joi.string().required(),
         path: Joi.string().optional(),
-        articleId: Joi.number().integer().required()
+        id: Joi.number().integer().required()
     });
     validateRequest(req, next, schema);
 }

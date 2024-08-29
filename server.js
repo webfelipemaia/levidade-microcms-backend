@@ -5,12 +5,15 @@ const app = express();
 const cors = require('cors');
 const errorHandler = require('./middleware/error-handler');
 
+// system settings
 const corsOptions ={
     origin:'http://localhost:8000',
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
     credentials:true,            //access-control-allow-credentials:true
     optionSuccessStatus:200
 }
+
+global.__basedir = __dirname;
 
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
