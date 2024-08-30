@@ -41,7 +41,6 @@ function getLastRegister(req, res, next) {
 }
 
 function create(req, res, next) {
-    console.log(req.body)
     fileService.create(req.body)
         .then(() => res.json({ message: 'File created' }))
         .catch(next);
@@ -60,19 +59,38 @@ function _delete(req, res, next) {
 }
 
 async function upload(req, res) {
-    try {
-      await uploadFile(req, res);
   
+  try {
+      await uploadFile(req, res);
+
       if (req.file == undefined) {
         return res.status(400).send({ message: "Please upload a file!" });
       }
-  
+      
+      console.log(req.file)
+            
+      const { originalname, filename, path } = req.file
+      
+      // Recuperar a parte da string a partir de 'storage'
+      const storagePath = path.split('storage')[1];
+      // Adiciona 'storage' no início para manter a referência completa
+      // Output: 'storage/12b3ee2eeba5232ab5dae111d798ab0b.jpeg'
+      const fullStoragePath = 'storage' + storagePath;
+      // Encontra o índice do último ponto, que indica o início da extensão
+      const dotIndex = fullStoragePath.lastIndexOf('.');
+      // Retorna a parte da string antes do último ponto
+      // Output: 'storage/12b3ee2eeba5232ab5dae111d798ab0b'
+      const renamedPath = fullStoragePath.substring(0, dotIndex);
+      
+      await fileService.create({ name: filename, path: renamedPath });
+           
       res.status(200).send({
-        message: "Uploaded the file successfully: " + req.file.originalname,
+        message: originalname + "was uploaded the file successfully as " + filename,
       });
+      
     } catch (err) {
       res.status(500).send({
-        message: `Could not upload the file: ${req.file.originalname}. ${err}`,
+        message: `Could not upload the file: ${req.file.filename}. ${err}`,
       });
     }
 };
@@ -119,7 +137,7 @@ function createSchema(req, res, next) {
     const schema = Joi.object({
         name: Joi.string().required(),
         path: Joi.string().optional(),
-        id: Joi.number().integer().required()
+        id: Joi.number().integer().optional()
     });
     validateRequest(req, next, schema);
 }

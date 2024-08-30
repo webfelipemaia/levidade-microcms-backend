@@ -5,7 +5,7 @@ module.exports = {
     getById,
     create,
     update,
-    delete: _delete
+    delete: _delete,
 };
 
 async function getAll() {
@@ -16,9 +16,8 @@ async function getById(id) {
     return await getFile(id);
 }
 
-async function create(params) {
-    const file = new db.File(params);
-    await file.save();
+async function create(fileData) {
+    return db.File.create(fileData);
 }
 
 async function update(id, params) {
