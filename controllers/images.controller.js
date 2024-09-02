@@ -3,7 +3,7 @@ const router = express.Router();
 const Joi = require('joi');
 const fs = require('fs');
 const validateRequest = require('../middleware/validate-request');
-const fileService = require('../services/file.service ');
+const imageService = require('../services/image.service ');
 const uploadFile = require("../middleware/upload");
 const { UPLOAD_PATH } = require('../helpers/constants');
 
@@ -11,7 +11,6 @@ const { UPLOAD_PATH } = require('../helpers/constants');
 
 router.post('/upload', upload);
 router.get('/all', getFiles);
-router.get('/:name', download);
 router.get('/', getAll);
 router.get('/last', getLastRegister);
 router.get('/:id', getById);
@@ -24,44 +23,46 @@ module.exports = router;
 // route functions
 
 function getAll(req, res, next) {
-    fileService.getAll()
+    imageService.getAll()
         .then(files => res.json(files))
         .catch(next);
 }
 
 function getById(req, res, next) {
-    fileService.getById(req.params.id)
+    imageService.getById(req.params.id)
         .then(file => res.json(file))
         .catch(next);
 }
 
 function getLastRegister(req, res, next) {
-    fileService.getLastRegister()
+    imageService.getLastRegister()
         .then(file => res.json(file))
         .catch(next);
 }
 
 function create(req, res, next) {
-    fileService.create(req.body)
-        .then(() => res.json({ message: 'File created' }))
+    imageService.create(req.body)
+        .then(() => res.json({ message: 'Image created' }))
         .catch(next);
 }
 
 function update(req, res, next) {
-    fileService.update(req.params.id, req.body)
-        .then(() => res.json({ message: 'File updated' }))
+    imageService.update(req.params.id, req.body)
+        .then(() => res.json({ message: 'Image updated' }))
         .catch(next);
 }
 
 function _delete(req, res, next) {
-    fileService.delete(req.params.id)
-        .then(() => res.json({ message: 'File deleted' }))
+    imageService.delete(req.params.id)
+        .then(() => res.json({ message: 'Image deleted' }))
         .catch(next);
 }
 
 async function upload(req, res) {
   
   try {
+      // a fazer: no middleware upload, modificar para aceitar parâmtetro
+      // para tipo de upload e armazenar os arquivos em seus respectivos diretórios
       await uploadFile(req, res);
 
       if (req.file == undefined) {
@@ -72,18 +73,12 @@ async function upload(req, res) {
             
       const { originalname, filename, path } = req.file
       
-      // Recuperar a parte da string a partir de 'storage'
       const storagePath = path.split('storage')[1];
-      // Adiciona 'storage' no início para manter a referência completa
-      // Output: 'storage/12b3ee2eeba5232ab5dae111d798ab0b.jpeg'
       const fullStoragePath = 'storage' + storagePath;
-      // Encontra o índice do último ponto, que indica o início da extensão
       const dotIndex = fullStoragePath.lastIndexOf('.');
-      // Retorna a parte da string antes do último ponto
-      // Output: 'storage/12b3ee2eeba5232ab5dae111d798ab0b'
       const renamedPath = fullStoragePath.substring(0, dotIndex);
       
-      await fileService.create({ name: filename, path: renamedPath, articleId: 1 });
+      await imageService.create({ name: filename, path: renamedPath, type: 'avatar', userId: 1 });
            
       res.status(200).send({
         message: { 
@@ -100,7 +95,7 @@ async function upload(req, res) {
 };
   
 async function getFiles(req, res, next) {
-    const directoryPath = __basedir + UPLOAD_PATH.ROOT;
+    const directoryPath = __basedir + UPLOAD_PATH.PROFILE;
 
     fs.readdir(directoryPath, function (err, files) {
       if (err) {
@@ -121,19 +116,7 @@ async function getFiles(req, res, next) {
       res.status(200).send(fileInfos);
     });
   }
-  
-function download(req, res, next) {
-    const fileName = req.params.name;
-    const directoryPath = __basedir + UPLOAD_PATH.ROOT;
 
-    res.download(directoryPath + fileName, fileName, (err) => {
-        if (err) {
-        res.status(500).send({
-            message: "Could not download the file. " + err,
-        });
-        }
-    });
-  };
 
 // schema functions
 

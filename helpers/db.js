@@ -30,7 +30,8 @@ async function initialize() {
     Category.belongsTo(Category, { as: 'parent', foreignKey: 'parentId' });
     Category.hasMany(Category, { as: 'children', foreignKey: 'parentId' });
     Article.belongsTo(Category, { foreignKey: 'categoryId' });
-    File.belongsTo(Article,{ foreignKey: 'id'});
+    File.belongsTo(Article, { foreignKey: 'articleId' });
+    // criar relacionamento User/Image
     
     // init models and add them to the exported db object
     db.User = User;

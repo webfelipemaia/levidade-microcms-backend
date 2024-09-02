@@ -2,11 +2,18 @@ const util = require("util");
 const multer = require("multer");
 const path = require('path');
 const crypto = require("crypto");
-const maxSize = 2 * 1024 * 1024;
+const { FILESIZES, UPLOAD_PATH } = require('../helpers/constants');
+
+// definir como parâmetro configurável
+const maxSize = FILESIZES["2 MB"];
+
+
+// a fazer: no middleware upload, modificar para aceitar parâmtetro
+// para tipo de upload e armazenar os arquivos em seus respectivos diretórios
 
 let storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    cb(null, __basedir + "/storage/");
+    cb(null, __basedir + UPLOAD_PATH.ROOT);
   },
   filename: (req, file, cb) => {
     console.log("Original file name: " + file.originalname);
@@ -18,10 +25,15 @@ let storage = multer.diskStorage({
   },
 });
 
+// upload simples
 let uploadFile = multer({
   storage: storage,
   limits: { fileSize: maxSize },
 }).single("file");
 
+// upload múltiplo
+
+
+// export
 let uploadFileMiddleware = util.promisify(uploadFile);
 module.exports = uploadFileMiddleware;

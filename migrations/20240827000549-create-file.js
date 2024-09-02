@@ -19,6 +19,14 @@ module.exports = {
         type: Sequelize.STRING,
         allowNull: false,
       },
+      articleId: {
+        type: Sequelize.INTEGER,
+        references: {
+          model: 'Articles',
+          key: 'id'
+        },
+        onDelete: 'SET NULL'
+      },
       createdAt: {
           type: Sequelize.DATE,
           allowNull: true,

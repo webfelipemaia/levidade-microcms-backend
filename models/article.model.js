@@ -30,14 +30,14 @@ const Article = sequelize.define('Article', {
     defaultValue: 0,
   },
   createdAt: {
-      type: DataTypes.DATE,
-      allowNull: true,
-      defaultValue: Sequelize.NOW
+    type: DataTypes.DATE,
+    allowNull: true,
+    defaultValue: Sequelize.NOW
   },
   updatedAt: {
-      type: DataTypes.DATE,
-      allowNull: true,
-      defaultValue: Sequelize.NOW
+    type: DataTypes.DATE,
+    allowNull: true,
+    defaultValue: Sequelize.NOW
   }
 }, {
   sequelize, timestamps: true,

@@ -3,18 +3,20 @@
 /** @type {import('sequelize-cli').Migration} */
 module.exports = {
   async up (queryInterface, Sequelize) {
-    await queryInterface.bulkInsert('Files', [
+    await queryInterface.bulkInsert('Images', [
       { 
-        name: 'example-image', 
-        path: 'path/to/image/', 
-        articleId: 1,
+        name: 'user-avatar', 
+        path: 'storage/profile/',
+        type: 'avatar',
+        userId: 1,
         createdAt: '2024-07-25 16:00:01', 
         updatedAt: '2024-07-25 16:00:01' 
       },
       { 
-        name: 'second-example-img', 
-        path: 'path/to/second/image/', 
-        articleId: 1,
+        name: 'user-avatar', 
+        path: 'storage/profile/',
+        type: 'image',
+        userId: 1,
         createdAt: '2024-07-25 16:00:01', 
         updatedAt: '2024-07-25 16:00:01' 
       },
@@ -22,6 +24,6 @@ module.exports = {
   },
 
   async down (queryInterface, Sequelize) {
-    await queryInterface.bulkDelete('Files', null, {});
+    await queryInterface.bulkDelete('Images', null, {});
   }
 };
