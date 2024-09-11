@@ -6,7 +6,7 @@ const { FILESIZES, UPLOAD_PATH } = require('../helpers/constants');
 
 // definir como parâmetro configurável
 const maxSize = FILESIZES["2 MB"];
-
+const uploadLimit = 3;
 
 // a fazer: no middleware upload, modificar para aceitar parâmtetro
 // para tipo de upload e armazenar os arquivos em seus respectivos diretórios
@@ -29,7 +29,7 @@ let storage = multer.diskStorage({
 let uploadFile = multer({
   storage: storage,
   limits: { fileSize: maxSize },
-}).single("file");
+}).multiple("file",uploadLimit);
 
 // export
 let uploadFileMiddleware = util.promisify(uploadFile);

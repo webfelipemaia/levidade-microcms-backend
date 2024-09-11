@@ -4,7 +4,7 @@ const Joi = require('joi');
 const fs = require('fs');
 const validateRequest = require('../middleware/validate-request');
 const fileService = require('../services/file.service ');
-const uploadFile = require("../middleware/upload");
+const singleUploadFileMiddleware = require("../middleware/upload");
 const { UPLOAD_PATH } = require('../helpers/constants');
 
 // routes
@@ -62,7 +62,7 @@ function _delete(req, res, next) {
 async function upload(req, res) {
   
   try {
-      await uploadFile(req, res);
+      await singleUploadFileMiddleware(req, res);
 
       if (req.file == undefined) {
         return res.status(400).send({ message: "Please upload a file!" });
@@ -94,7 +94,7 @@ async function upload(req, res) {
       
     } catch (err) {
       res.status(500).send({
-        message: `Could not upload the file: ${req.file.filename}. ${err}`,
+        message: `Could not upload the file: ${req.file}. ${err}`,
       });
     }
 };

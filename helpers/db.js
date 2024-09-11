@@ -11,6 +11,7 @@ const RolesPermissions = require('../models/rolesPermissions.model');
 const UsersRoles = require('../models/usersRoles.model');
 const Status = require('../models/status.model.js');
 const File = require('../models/file.model');
+const Image = require('../models/image.model.js');
 
 module.exports = db = {};
 
@@ -31,7 +32,7 @@ async function initialize() {
     Category.hasMany(Category, { as: 'children', foreignKey: 'parentId' });
     Article.belongsTo(Category, { foreignKey: 'categoryId' });
     File.belongsTo(Article, { foreignKey: 'articleId' });
-    // criar relacionamento User/Image
+    Image.belongsTo(User, { foreignKey: 'userId'});
     
     // init models and add them to the exported db object
     db.User = User;
@@ -43,6 +44,7 @@ async function initialize() {
     db.Category = Category;
     db.Status = Status;
     db.File = File;
+    db.Image = Image;
     
     // sync all models with database
     await sequelize.sync({ alter: false });

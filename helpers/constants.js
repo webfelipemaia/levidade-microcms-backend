@@ -21,6 +21,14 @@ const FILESIZES = {
     "2 GB": 2 * 1024 * 1024 * 1024          // 2 GB em bytes
   };
 
+const FILETYPES = {
+    image: "/jpeg|jpg|png|gif|bmp|tiff/",
+    video: "/avi|wmv|mov|mkv|mp4/",
+    text: "/txt|doc|docx|xls|xlsx|pdf/",
+    audio: "/mp3|wav|aac|ogg|flac/",
+    compressed: "/zip|rar|7z|gz|tar/",
+};
+
 const MESSAGES = {
     ERROR: {
         SERVER: 'An error occurred on the server.',
@@ -33,6 +41,7 @@ const MESSAGES = {
 
 module.exports = {
     FILESIZES,
+    FILETYPES,
     UPLOAD_PATH,
     MESSAGES
 };
