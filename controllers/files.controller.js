@@ -4,7 +4,8 @@ const Joi = require('joi');
 const fs = require('fs');
 const validateRequest = require('../middleware/validate-request');
 const fileService = require('../services/file.service ');
-const singleUploadFileMiddleware = require("../middleware/upload");
+const uploadFile = require("../middleware/upload");
+const multipleUploadFile = require("../middleware/multipleUpload");
 const { UPLOAD_PATH } = require('../helpers/constants');
 
 // routes
@@ -59,10 +60,10 @@ function _delete(req, res, next) {
         .catch(next);
 }
 
-async function upload(req, res) {
+/* async function upload(req, res) {
   
   try {
-      await singleUploadFileMiddleware(req, res);
+      await uploadFile(req, res);
 
       if (req.file == undefined) {
         return res.status(400).send({ message: "Please upload a file!" });
@@ -97,7 +98,59 @@ async function upload(req, res) {
         message: `Could not upload the file: ${req.file}. ${err}`,
       });
     }
-};
+}; */
+
+async function upload(req, res) {
+  try {
+    await multipleUploadFile(req, res);       
+    
+    if (!req.files || !req.files['files'] || req.files['files'].length === 0) {
+      return res.status(400).send({ message: "Please upload at least one file!" });
+    }
+
+    const uploadedFiles = [];
+
+    for (const file of req.files['files']) {
+      const { originalname, filename, path } = file;
+
+      // Retrieve part of string from 'storage'
+      const storagePath = path.split('storage')[1];
+      const fullStoragePath = 'storage' + storagePath;
+
+      // Find the index of the last point to get the path without extension
+      const dotIndex = fullStoragePath.lastIndexOf('.');
+      const renamedPath = fullStoragePath.substring(0, dotIndex);
+
+      // if it is associated with an article or content
+      if(req.body.articleId) {
+        await fileService.create({ 
+          name: filename, 
+          path: renamedPath,
+          articleId: Number(req.body.articleId),
+        });
+      }
+
+      // Adds the processed file to the list of uploaded files
+      uploadedFiles.push({
+        originalname,
+        filename,
+        path: renamedPath,
+        articleId: Number(req.body.articleId)
+      });
+    }
+
+    res.status(200).send({
+      message: `${uploadedFiles.length} files were uploaded and saved successfully.`,
+      files: uploadedFiles
+    });
+
+  } catch (err) {
+    res.status(500).send({
+      message: `Could not upload the files. ${err}`,
+    });
+  }
+}
+
   
 async function getFiles(req, res, next) {
     const directoryPath = __basedir + UPLOAD_PATH.ROOT;

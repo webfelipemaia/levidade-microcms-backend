@@ -4,6 +4,12 @@ const UPLOAD_PATH = {
     PROFILE: '/storage/profile/',           // for files and images associated with a user
 };
 
+const UPLOAD_CONTENT_TYPE = {
+    ARTICLE: 'article',                     // for articles and posts in general
+    PAGE: 'page',                           // for static pages
+    PRODUCT: 'product',                     // for products
+};
+
 const FILESIZES = {
     "250 KB": 250 * 1024,                   // 250 KB em bytes
     "500 KB": 500 * 1024,                   // 500 KB em bytes
@@ -43,5 +49,6 @@ module.exports = {
     FILESIZES,
     FILETYPES,
     UPLOAD_PATH,
+    UPLOAD_CONTENT_TYPE,
     MESSAGES
 };
