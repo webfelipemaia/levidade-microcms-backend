@@ -1,7 +1,6 @@
 const { DataTypes } = require('sequelize');
 const sequelize = require('../config/database');
 const Sequelize = require('sequelize');
-const Article = require('./article.model');
 
 const File = sequelize.define('File', {
   name: {
@@ -12,6 +11,10 @@ const File = sequelize.define('File', {
   path: {
     type: DataTypes.STRING,
     allowNull: false,
+  },
+  type: {
+    type: DataTypes.STRING,
+    allowNull: true,
   },
   createdAt: {
     type: DataTypes.DATE,
@@ -27,7 +30,5 @@ const File = sequelize.define('File', {
 }, {
   sequelize, timestamps: true,
 });
-
-File.belongsTo(Article, { foreignKey: 'articleId' });
 
 module.exports = File;

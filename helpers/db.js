@@ -11,7 +11,8 @@ const RolesPermissions = require('../models/rolesPermissions.model');
 const UsersRoles = require('../models/usersRoles.model');
 const Status = require('../models/status.model.js');
 const File = require('../models/file.model');
-const Image = require('../models/image.model.js');
+const UsersFiles = require('../models/usersFiles.model.js');
+const ArticlesFiles = require('../models/articlesFiles.model.js')
 
 module.exports = db = {};
 
@@ -31,8 +32,11 @@ async function initialize() {
     Category.belongsTo(Category, { as: 'parent', foreignKey: 'parentId' });
     Category.hasMany(Category, { as: 'children', foreignKey: 'parentId' });
     Article.belongsTo(Category, { foreignKey: 'categoryId' });
-    File.belongsTo(Article, { foreignKey: 'articleId' });
-    Image.belongsTo(User, { foreignKey: 'userId'});
+    Article.belongsToMany(File, { through: 'Articles_Files' });
+    File.belongsToMany(Article, { through: 'Articles_Files' });
+    User.belongsToMany(File, { through: 'Articles_Files' });
+    File.belongsToMany(User, { through: 'Articles_Files' });
+
     
     // init models and add them to the exported db object
     db.User = User;
@@ -44,7 +48,8 @@ async function initialize() {
     db.Category = Category;
     db.Status = Status;
     db.File = File;
-    db.Image = Image;
+    db.ArticlesFiles = ArticlesFiles;
+    db.UsersFiles = UsersFiles;
     
     // sync all models with database
     await sequelize.sync({ alter: false });
