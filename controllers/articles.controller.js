@@ -9,7 +9,8 @@ const articleService = require('../services/article.service');
 router.get('/', getAll);
 router.get('/last', getLastRegister);
 router.get('/:id', getById);
-router.post('/', createSchema, create);
+//router.post('/', createSchema, create);
+router.post('/', createWithUpload);
 router.put('/:id', updateSchema, update);
 router.delete('/:id', _delete);
 
@@ -52,6 +53,15 @@ function _delete(req, res, next) {
     articleService.delete(req.params.id)
         .then(() => res.json({ message: 'Article deleted' }))
         .catch(next);
+}
+
+// create and upload files
+
+function createWithUpload(req, res, next) {
+    console.log(req.body)
+    /* articleService.create(req.body)
+        .then(() => res.json({ message: 'Article created' }))
+        .catch(next); */
 }
 
 // schema functions
