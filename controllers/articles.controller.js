@@ -9,8 +9,8 @@ const articleService = require('../services/article.service');
 router.get('/', getAll);
 router.get('/last', getLastRegister);
 router.get('/:id', getById);
-//router.post('/', createSchema, create);
-router.post('/', createWithUpload);
+router.post('/', createSchema, create);
+router.post('/create-with-return',createSchema, createAndReturnId);
 router.put('/:id', updateSchema, update);
 router.delete('/:id', _delete);
 
@@ -40,6 +40,12 @@ function create(req, res, next) {
     console.log(req.body)
     articleService.create(req.body)
         .then(() => res.json({ message: 'Article created' }))
+        .catch(next);
+}
+
+function createAndReturnId(req, res, next) {
+    articleService.create(req.body)
+        .then(article => res.json({ status: 'success', message: 'Article created', id: article.id }))
         .catch(next);
 }
 

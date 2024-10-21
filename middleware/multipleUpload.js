@@ -63,6 +63,14 @@ let storage = multer.diskStorage({
       console.log('Upload file to default content folder.')
     }
     // Defines the upload directory as the final folder
+          const articleId = req.body.articleId;
+      uploadPath = __basedir + UPLOAD_PATH.CONTENT + articleDir;
+      
+      // folder /content/content_type/{articleId}
+      uploadPath = path.join(uploadPath, articleId);
+      
+      // Check if subfolder "{articleId}" exists, otherwise create
+      ensureDirectoryExistence(uploadPath);
     cb(null, uploadPath);
     
   },
@@ -84,9 +92,17 @@ let multipleUploadFile = multer({
   storage: storage,
   limits: { fileSize: maxSize }, // Defines the file size limit
 }).fields([
-  { name: "articleId", maxCount: 1 }, // The `articleId` field
   { name: "files", maxCount: uploadLimit }, // File Upload Field
 ]);
+
+
+/* let multipleUploadFile = multer({
+  storage: storage,
+  limits: { fileSize: maxSize }, // Defines the file size limit
+}).fields([
+  { name: "articleId", maxCount: 1 }, // The `articleId` field
+  { name: "files", maxCount: uploadLimit }, // File Upload Field
+]); */
 
 // export
 let multipleUploadFileMiddleware = util.promisify(multipleUploadFile);

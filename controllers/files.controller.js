@@ -4,7 +4,7 @@ const Joi = require('joi');
 const fs = require('fs');
 const validateRequest = require('../middleware/validate-request');
 const fileService = require('../services/file.service ');
-const uploadFile = require("../middleware/upload");
+const uploadFileMiddleware = require("../middleware/upload");
 const multipleUploadFile = require("../middleware/multipleUpload");
 const { UPLOAD_PATH } = require('../helpers/constants');
 
@@ -60,17 +60,15 @@ function _delete(req, res, next) {
         .catch(next);
 }
 
-/* async function upload(req, res) {
-  
+ async function upload(req, res) {
+  console.log(req.file);
   try {
-      await uploadFile(req, res);
+      await uploadFileMiddleware(req, res);
 
       if (req.file == undefined) {
         return res.status(400).send({ message: "Please upload a file!" });
       }
-      
-      console.log(req.file)
-            
+                  
       const { originalname, filename, path } = req.file
       
       // Recuperar a parte da string a partir de 'storage'
@@ -84,12 +82,20 @@ function _delete(req, res, next) {
       // Output: 'storage/12b3ee2eeba5232ab5dae111d798ab0b'
       const renamedPath = fullStoragePath.substring(0, dotIndex);
       
-      await fileService.create({ name: filename, path: renamedPath, articleId: 1 });
+      // todo: remover articleId (foi criada uma tabela para associar arquivos a artigos)
+      // criar tabela para detalhes de arquivos como imagem, vídeo, etc
+      const fileCreated = await fileService.create({ name: filename, path: renamedPath, articleId: 1 });
            
       res.status(200).send({
         message: { 
-          uploaded: originalname + "was uploaded the file successfully as " + filename,
-          saved: "The file " + filename + "was successfully saved to the database."
+          uploaded: `${originalname} was uploaded successfully.`,
+          saved: "The file " + filename + "was successfully saved to the database.",
+          file: {
+            originalName: originalname,
+            name: filename,
+            path: renamedPath
+          },
+          created: fileCreated
         },
       });
       
@@ -98,19 +104,20 @@ function _delete(req, res, next) {
         message: `Could not upload the file: ${req.file}. ${err}`,
       });
     }
-}; */
+};
 
-async function upload(req, res) {
+/* async function upload(req, res) {
+  console.log(req.body)
   try {
-    await multipleUploadFile(req, res);       
+    await multipleUploadFile(req, res);
     
-    if (!req.files || !req.files['files'] || req.files['files'].length === 0) {
+    if (!req.body.files || !req.body.files['files'] || req.body.files['files'].length === 0) {
       return res.status(400).send({ message: "Please upload at least one file!" });
     }
 
     const uploadedFiles = [];
 
-    for (const file of req.files['files']) {
+    for (const file of req.body.files['files']) {
       const { originalname, filename, path } = file;
 
       // Retrieve part of string from 'storage'
@@ -150,7 +157,7 @@ async function upload(req, res) {
     });
   }
 }
-
+ */
   
 async function getFiles(req, res, next) {
     const directoryPath = __basedir + UPLOAD_PATH.ROOT;
