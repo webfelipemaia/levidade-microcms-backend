@@ -7,14 +7,14 @@ module.exports = {
       { 
         name: 'example-image', 
         path: 'path/to/image/', 
-        articleId: 1,
+        type: 'image',
         createdAt: '2024-07-25 16:00:01', 
         updatedAt: '2024-07-25 16:00:01' 
       },
       { 
-        name: 'second-example-img', 
-        path: 'path/to/second/image/', 
-        articleId: 1,
+        name: 'example-video', 
+        path: 'path/to/video/', 
+        type: 'video',
         createdAt: '2024-07-25 16:00:01', 
         updatedAt: '2024-07-25 16:00:01' 
       },

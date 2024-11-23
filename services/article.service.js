@@ -28,6 +28,7 @@ async function getLastRegister() {
 async function create(params) {
     const article = new db.Article(params);
     await article.save();
+    return article;
 }
 
 async function update(id, params) {

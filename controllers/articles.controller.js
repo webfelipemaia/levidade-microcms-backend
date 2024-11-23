@@ -3,6 +3,7 @@ const router = express.Router();
 const Joi = require('joi');
 const validateRequest = require('../middleware/validate-request');
 const articleService = require('../services/article.service');
+const fileService = require('../services/file.service ');
 
 // routes
 
@@ -36,10 +37,18 @@ function getLastRegister(req, res, next) {
         .catch(next);
 }
 
+
 function create(req, res, next) {
-    console.log(req.body)
     articleService.create(req.body)
-        .then(() => res.json({ message: 'Article created' }))
+        .then(article => {
+            if (!article || !article.id) {
+                throw new Error('Article creation failed. ID not found.');
+            }
+            // Adiciona o ID do artigo criado aos parâmetros para o fileService.update
+            const updatedParams = { ...req.body, articleId: article.id };
+            return fileService.renameAndUpdateFile(req.body.fileId, updatedParams);
+        })
+        .then(() => res.json({ message: 'Article created with file updated' }))
         .catch(next);
 }
 
@@ -61,15 +70,6 @@ function _delete(req, res, next) {
         .catch(next);
 }
 
-// create and upload files
-
-function createWithUpload(req, res, next) {
-    console.log(req.body)
-    /* articleService.create(req.body)
-        .then(() => res.json({ message: 'Article created' }))
-        .catch(next); */
-}
-
 // schema functions
 
 function createSchema(req, res, next) {
@@ -80,7 +80,8 @@ function createSchema(req, res, next) {
         body: Joi.string().optional(),
         status: Joi.number().required(),
         featured: Joi.boolean().required(),
-        categoryId: Joi.number().integer().required()
+        categoryId: Joi.number().integer().required(),
+        fileId: Joi.number().optional(),
     });
     validateRequest(req, next, schema);
 }
@@ -93,7 +94,8 @@ function updateSchema(req, res, next) {
         body: Joi.string().empty(''),
         status: Joi.number().required(),
         featured: Joi.boolean().empty(''),
-        categoryId: Joi.number().integer().empty('')
+        categoryId: Joi.number().integer().empty(''),
+        fileId: Joi.number().optional(),
     });
     validateRequest(req, next, schema);
 }

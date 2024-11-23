@@ -8,7 +8,7 @@ const UPLOAD_CONTENT_TYPE = {
     ARTICLE: 'article',                     // for articles and posts in general
     PAGE: 'page',                           // for static pages
     PRODUCT: 'product',                     // for products
-    AVATAR: 'avatar',                       // for avatars
+    PROFILE: 'profile',                     // for avatars and profile images
 };
 
 const FILESIZES = {

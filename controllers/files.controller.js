@@ -5,7 +5,7 @@ const fs = require('fs');
 const validateRequest = require('../middleware/validate-request');
 const fileService = require('../services/file.service ');
 const uploadFileMiddleware = require("../middleware/upload");
-const multipleUploadFile = require("../middleware/multipleUpload");
+//const multipleUploadFile = require("../middleware/multipleUpload");
 const { UPLOAD_PATH } = require('../helpers/constants');
 
 // routes
@@ -49,7 +49,7 @@ function create(req, res, next) {
 }
 
 function update(req, res, next) {
-    fileService.update(req.params.id, req.body)
+    fileService.update(req.body.fileId, req.body)
         .then(() => res.json({ message: 'File updated' }))
         .catch(next);
 }
@@ -60,51 +60,58 @@ function _delete(req, res, next) {
         .catch(next);
 }
 
- async function upload(req, res) {
-  console.log(req.file);
+async function upload(req, res) {
   try {
-      await uploadFileMiddleware(req, res);
+    await uploadFileMiddleware(req, res);
 
-      if (req.file == undefined) {
-        return res.status(400).send({ message: "Please upload a file!" });
-      }
-                  
-      const { originalname, filename, path } = req.file
-      
-      // Recuperar a parte da string a partir de 'storage'
-      const storagePath = path.split('storage')[1];
-      // Adiciona 'storage' no início para manter a referência completa
-      // Output: 'storage/12b3ee2eeba5232ab5dae111d798ab0b.jpeg'
-      const fullStoragePath = 'storage' + storagePath;
-      // Encontra o índice do último ponto, que indica o início da extensão
-      const dotIndex = fullStoragePath.lastIndexOf('.');
-      // Retorna a parte da string antes do último ponto
-      // Output: 'storage/12b3ee2eeba5232ab5dae111d798ab0b'
-      const renamedPath = fullStoragePath.substring(0, dotIndex);
-      
-      // todo: remover articleId (foi criada uma tabela para associar arquivos a artigos)
-      // criar tabela para detalhes de arquivos como imagem, vídeo, etc
-      const fileCreated = await fileService.create({ name: filename, path: renamedPath, articleId: 1 });
-           
-      res.status(200).send({
-        message: { 
-          uploaded: `${originalname} was uploaded successfully.`,
-          saved: "The file " + filename + "was successfully saved to the database.",
-          file: {
-            originalName: originalname,
-            name: filename,
-            path: renamedPath
-          },
-          created: fileCreated
-        },
-      });
-      
-    } catch (err) {
-      res.status(500).send({
-        message: `Could not upload the file: ${req.file}. ${err}`,
-      });
+    // Verifica se existem arquivos no req.files
+    if (!req.files || !req.files.file || req.files.file.length === 0) {
+      return res.status(400).send({ message: "Please upload a file!" });
     }
+
+    // Obtém o primeiro arquivo do campo "file"
+    const uploadedFile = req.files.file[0];
+    const { originalname, filename, path: filePath } = uploadedFile;
+
+    console.log("Uploaded file:", uploadedFile);
+
+    // Recuperar a parte da string a partir de 'storage'
+    const storagePath = filePath.split('storage')[1];
+    const fullStoragePath = 'storage' + storagePath;
+
+    // Renomear o caminho removendo a extensão
+    const dotIndex = fullStoragePath.lastIndexOf('.');
+    const renamedPath = fullStoragePath.substring(0, dotIndex);
+
+    // Salvar o arquivo no banco de dados
+    const fileCreated = await fileService.create({
+      name: filename,
+      path: renamedPath,
+      type: uploadedFile.mimetype,
+    });
+
+    res.status(200).send({
+      message: {
+        uploaded: `${originalname} was uploaded successfully.`,
+        saved: `The file ${filename} was successfully saved to the database.`,
+        file: {
+          originalName: originalname,
+          name: filename,
+          path: renamedPath,
+        },
+        created: fileCreated,
+      },
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).send({
+      message: `Could not upload the file. ${err.message}`,
+    });
+  }
 };
+
+// Primeira tentativa com múltiplo upload. 
+// Achou-se por bem efetuar apenas um upload por vez até o momento.
 
 /* async function upload(req, res) {
   console.log(req.body)
