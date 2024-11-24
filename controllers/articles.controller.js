@@ -9,6 +9,7 @@ const fileService = require('../services/file.service ');
 
 router.get('/', getAll);
 router.get('/last', getLastRegister);
+router.get('/paginated', getAllPaginated);
 router.get('/:id', getById);
 router.post('/', createSchema, create);
 router.post('/create-with-return',createSchema, createAndReturnId);
@@ -24,6 +25,25 @@ function getAll(req, res, next) {
         .then(articles => res.json(articles))
         .catch(next);
 }
+
+async function getAllPaginated(req, res, next) {
+    try {
+        const page = parseInt(req.query.page) || 1;
+        const pageSize = parseInt(req.query.pageSize) || 10;
+        const searchQuery = req.query.search || '';
+        const order = req.query.order
+            ? JSON.parse(req.query.order) // Exemplo: '[["title", "ASC"]]'
+            : [['createdAt', 'DESC']];
+
+        const result = await articleService.getPaginatedArticles(page, pageSize, searchQuery, order); // Adicionado await
+
+        return res.status(200).json(result);
+    } catch (error) {
+        console.error('Error fetching articles:', error);
+        res.status(500).json({ error: 'Failed to fetch articles' });
+    }
+}
+
 
 function getById(req, res, next) {
     articleService.getById(req.params.id)

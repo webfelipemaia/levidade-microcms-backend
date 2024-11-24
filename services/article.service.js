@@ -1,17 +1,65 @@
 const db = require('../helpers/db');
-
+const Sequelize = require('sequelize');
 module.exports = {
     getAll,
     getById,
     getLastRegister,
     create,
     update,
-    delete: _delete
+    delete: _delete,
+    getPaginatedArticles,
 };
 
 async function getAll() {
     return await db.Article.findAll();
 }
+
+const { paginate } = require('../helpers/pagination.helper');
+
+// Usando helper
+async function getPaginatedArticles(page, pageSize, searchQuery, order) {
+    return await paginate(db.Article, {
+        page,
+        pageSize,
+        searchQuery,
+        searchFields: ['title', 'subtitle'],
+        order
+    });
+}
+
+module.exports = {
+    getPaginatedArticles
+};
+
+// Sem o helper
+/* async function getPaginatedArticles(page, pageSize, searchQuery, order) {
+    const limit = pageSize;
+    const offset = (page - 1) * pageSize;
+
+    let where = {};
+    if (searchQuery) {
+        where = {
+            [Sequelize.Op.or]: [
+                { title: { [Sequelize.Op.like]: `%${searchQuery}%` } },
+                { subtitle: { [Sequelize.Op.like]: `%${searchQuery}%` } }
+            ]
+        };
+    }
+
+    const articles =  await db.Article.findAndCountAll({
+        where: where,
+        limit: limit,
+        offset: offset,
+        order: order
+    });
+    console.log('articles: ', articles)
+    return {
+        total: articles.count,
+        totalPages: Math.ceil(articles.count / pageSize),
+        currentPage: page,
+        articles: articles.rows
+    };
+} */
 
 async function getById(id) {
     return await getArticle(id);
