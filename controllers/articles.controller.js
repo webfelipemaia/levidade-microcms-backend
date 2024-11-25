@@ -31,11 +31,12 @@ async function getAllPaginated(req, res, next) {
         const page = parseInt(req.query.page) || 1;
         const pageSize = parseInt(req.query.pageSize) || 10;
         const searchQuery = req.query.search || '';
+         // Exemplo: '[["title", "ASC"]]'
         const order = req.query.order
-            ? JSON.parse(req.query.order) // Exemplo: '[["title", "ASC"]]'
+            ? JSON.parse(req.query.order)
             : [['createdAt', 'DESC']];
 
-        const result = await articleService.getPaginatedArticles(page, pageSize, searchQuery, order); // Adicionado await
+        const result = await articleService.getPaginatedArticles(page, pageSize, searchQuery, order);
 
         return res.status(200).json(result);
     } catch (error) {

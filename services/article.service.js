@@ -10,11 +10,11 @@ module.exports = {
     getPaginatedArticles,
 };
 
+const { paginate } = require('../helpers/pagination.helper');
+
 async function getAll() {
     return await db.Article.findAll();
 }
-
-const { paginate } = require('../helpers/pagination.helper');
 
 // Usando helper
 async function getPaginatedArticles(page, pageSize, searchQuery, order) {
@@ -26,10 +26,6 @@ async function getPaginatedArticles(page, pageSize, searchQuery, order) {
         order
     });
 }
-
-module.exports = {
-    getPaginatedArticles
-};
 
 // Sem o helper
 /* async function getPaginatedArticles(page, pageSize, searchQuery, order) {
