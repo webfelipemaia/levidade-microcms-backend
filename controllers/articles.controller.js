@@ -13,7 +13,7 @@ router.get('/paginated', getAllPaginated);
 router.get('/:id', getById);
 router.post('/', createSchema, create);
 router.post('/create-with-return',createSchema, createAndReturnId);
-router.put('/:id', updateSchema, update);
+router.patch('/:id', updateSchema, update);
 router.delete('/:id', _delete);
 
 module.exports = router;
