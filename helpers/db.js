@@ -12,7 +12,8 @@ const UsersRoles = require('../models/usersRoles.model');
 const Status = require('../models/status.model.js');
 const File = require('../models/file.model');
 const UsersFiles = require('../models/usersFiles.model.js');
-const ArticlesFiles = require('../models/articlesFiles.model.js')
+const ArticlesFiles = require('../models/articlesFiles.model.js');
+const SystemSettings = require('../models/systemSettings.model.js');
 
 module.exports = db = {};
 
@@ -50,6 +51,7 @@ async function initialize() {
     db.File = File;
     db.ArticlesFiles = ArticlesFiles;
     db.UsersFiles = UsersFiles;
+    db.SystemSettings = SystemSettings;
     
     // sync all models with database
     await sequelize.sync({ alter: false });

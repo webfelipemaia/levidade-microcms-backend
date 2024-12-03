@@ -29,6 +29,7 @@ app.use('/categories', require('./controllers/categories.controller'));
 app.use('/articles', require('./controllers/articles.controller'));
 app.use('/status', require('./controllers/status.controller'));
 app.use('/files', require('./controllers/files.controller'));
+app.use('/settings', require('./controllers/settings.controller'));
 
 // global error handler
 app.use(errorHandler);

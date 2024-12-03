@@ -9,7 +9,7 @@ module.exports = {
 };
 
 async function getAll() {
-    return await db.Status.findAll();
+    return await db.SystemSettings.findAll();
 }
 
 async function getById(id) {
@@ -18,23 +18,26 @@ async function getById(id) {
 
 async function create(params) {
     
-    if (await db.Status.findOne({ where: { name: params.name } })) {
+    if (await db.SystemSettings.findOne({ where: { settingName: params.settingName } })) {
         throw { 
             status: 'error', 
-            message: params.name + '" is already registered'
+            message: params.settingName + '" is already registered'
         };
     }
 
-    const status = new db.Status(params);
+    const status = new db.SystemSettings(params);
     await status.save();
 }
 
 async function update(id, params) {
   try {
-      // Updating the status name
-      const rowsUpdated = await db.Status.update(
-        { name: params.name },
+      // Updating the setting item
+      const rowsUpdated = await db.SystemSettings.update(
+        { settingName: params.settingName },
         { value: params.value },
+        { additionalValue: params.additionalValue },
+        { description: params.description },
+        { type: params.type },
         {
           where: {
             id: id,
@@ -44,18 +47,18 @@ async function update(id, params) {
   
       return {
           status: "success",
-          message: "Status updated successfully."
+          message: "Setting updated successfully."
       };
       
     } catch (error) {
       console.error(error);
-      return { status: "error", message: "An error occurred while updating the status." };
+      return { status: "error", message: "An error occurred while updating the setting item." };
     }
   }
     
 async function _delete(id) {
     try {
-        const result = await db.Status.destroy({
+        const result = await db.SystemSettings.destroy({
           where: {
             id: id,
           },
@@ -64,27 +67,27 @@ async function _delete(id) {
         if (result > 0) {
             return { 
                 status: "success", 
-                message: "Status successfully deleted" 
+                message: "Setting successfully deleted" 
             }
         } else {
             return {
                 status: "error",
-                message: "No status found with the given criteria"
+                message: "No setting found with the given criteria"
             }
         }
       } catch (error) {
-        return { status: "error", message: `Error deleting status: ${error}` };
+        return { status: "error", message: `Error deleting setting: ${error}` };
       }
 }
 
 // helper functions
 
 async function getName(id) {
-    const status = await db.Status.findByPk(id);
+    const status = await db.SystemSettings.findByPk(id);
     if (!status) {
         return { 
             status: "error", 
-            message: "Status name not found" 
+            message: "Setting name not found" 
         }
     } else {
         return { 
