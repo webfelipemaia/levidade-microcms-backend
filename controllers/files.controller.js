@@ -6,7 +6,7 @@ const validateRequest = require('../middleware/validate-request');
 const fileService = require('../services/file.service ');
 const uploadFileMiddleware = require("../middleware/upload");
 //const multipleUploadFile = require("../middleware/multipleUpload");
-const { UPLOAD_PATH } = require('../helpers/constants');
+const { UPLOAD_PATH } = require('../helpers/constants.helper');
 
 // routes
 

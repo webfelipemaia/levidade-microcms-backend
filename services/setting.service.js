@@ -1,4 +1,4 @@
-const db = require('../helpers/db');
+const db = require('../helpers/db.helper');
 
 module.exports = {
     getAll,
@@ -6,7 +6,53 @@ module.exports = {
     create,
     update,
     delete: _delete,
+    loadSettings,
+    clearCache
 };
+
+let cache = null; // Cache em memória
+let cacheTimestamp = 0; // Timestamp do último carregamento do cache
+const CACHE_TTL = 5 * 60 * 1000; // Tempo de vida do cache: 5 minutos
+
+async function loadSettings() {
+  // Recarrega configurações do banco apenas se o cache estiver expirado
+  if (!cache || Date.now() - cacheTimestamp > CACHE_TTL) {
+    console.log('Carregando configurações do banco...');
+    const settings = await SystemSettings.findAll();
+
+    // Transforma o resultado em um objeto chave-valor, com base em `settingName`
+    cache = settings.reduce((acc, setting) => {
+      let value;
+      try {
+        // Converte valores JSON automaticamente, dependendo do tipo
+        value = setting.type === 'json' ? JSON.parse(setting.value) : setting.value;
+      } catch (e) {
+        console.error(`Erro ao parsear valor JSON para ${setting.settingName}:`, e);
+        value = setting.value; // Se falhar, mantém o valor original
+      }
+
+      acc[setting.settingName] = {
+        value,
+        additionalValue: setting.additionalValue,
+        type: setting.type,
+        description: setting.description,
+      };
+
+      return acc;
+    }, {});
+
+    cacheTimestamp = Date.now(); // Atualiza o timestamp do cache
+  }
+
+  return cache;
+}
+
+// Função para limpar o cache (caso necessário)
+function clearCache() {
+  cache = null;
+  cacheTimestamp = 0;
+  console.log('Cache limpo.');
+}
 
 async function getAll() {
     return await db.SystemSettings.findAll();

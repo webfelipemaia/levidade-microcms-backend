@@ -3,7 +3,7 @@ const multer = require("multer");
 const fs = require('fs');
 const path = require('path');
 const crypto = require("crypto");
-const { FILESIZES, UPLOAD_PATH, UPLOAD_CONTENT_TYPE } = require('../helpers/constants');
+const { FILESIZES, UPLOAD_PATH, UPLOAD_CONTENT_TYPE } = require('../helpers/constants.helper');
 
 const maxSize = FILESIZES["2 MB"];
 const uploadLimit = 3;

@@ -14,9 +14,9 @@ const sequelize = new Sequelize(database, user, password, {
 
 
 // Configuration using migrations
-const { host, port, username, password, database } = config.development;
+const { host, port, user, password, database } = config.development;
 
-const sequelize = new Sequelize(database, username, password, {
+const sequelize = new Sequelize(database, user, password, {
   host: host,
   dialect: 'mysql'
 });

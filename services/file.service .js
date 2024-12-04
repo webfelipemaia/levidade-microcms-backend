@@ -1,7 +1,7 @@
-const db = require('../helpers/db');
+const db = require('../helpers/db.helper');
 const fs = require('fs');
 const path = require('path');
-const { UPLOAD_PATH } = require('../helpers/constants');
+const { UPLOAD_PATH } = require('../helpers/constants.helper');
 
 module.exports = {
     getAll,
