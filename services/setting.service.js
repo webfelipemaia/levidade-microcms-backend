@@ -18,9 +18,9 @@ async function loadSettings() {
   // Recarrega configurações do banco apenas se o cache estiver expirado
   if (!cache || Date.now() - cacheTimestamp > CACHE_TTL) {
     console.log('Carregando configurações do banco...');
-    const settings = await SystemSettings.findAll();
+    const settings = await db.SystemSettings.findAll();
 
-    // Transforma o resultado em um objeto chave-valor, com base em `settingName`
+    // Transforma o resultado em um objeto onde cada `settingName` contém uma lista de valores
     cache = settings.reduce((acc, setting) => {
       let value;
       try {
@@ -31,12 +31,16 @@ async function loadSettings() {
         value = setting.value; // Se falhar, mantém o valor original
       }
 
-      acc[setting.settingName] = {
+      // Adiciona o setting ao array correspondente ao `settingName`, ou cria um novo array se ainda não existir
+      if (!acc[setting.settingName]) {
+        acc[setting.settingName] = [];
+      }
+      acc[setting.settingName].push({
         value,
         additionalValue: setting.additionalValue,
         type: setting.type,
         description: setting.description,
-      };
+      });
 
       return acc;
     }, {});

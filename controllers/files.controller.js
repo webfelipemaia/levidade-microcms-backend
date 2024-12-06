@@ -73,7 +73,7 @@ async function upload(req, res) {
     const uploadedFile = req.files.file[0];
     const { originalname, filename, path: filePath } = uploadedFile;
 
-    console.log("Uploaded file:", uploadedFile);
+    //console.log("Uploaded file:", uploadedFile);
 
     // Recuperar a parte da string a partir de 'storage'
     const storagePath = filePath.split('storage')[1];
@@ -102,10 +102,10 @@ async function upload(req, res) {
         created: fileCreated,
       },
     });
-  } catch (err) {
-    console.error(err);
+  } catch (error) {
+    console.error(error);
     res.status(500).send({
-      message: `Could not upload the file. ${err.message}`,
+      message: `Could not upload the file. ${error.message}`,
     });
   }
 };

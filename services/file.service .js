@@ -34,7 +34,6 @@ async function renameAndUpdateFile(id, params) {
     const file = await getFile(id);
     
     // Diretório onde os arquivos estão armazenados
-    // Extrai o diretório sem o nome do arquivo
     const uploadDir = path.dirname(file.path);
 
     // Recuperar a extensão do arquivo
@@ -60,8 +59,8 @@ async function renameAndUpdateFile(id, params) {
     // Renomear o arquivo no sistema de arquivos
     try {
         await fs.promises.rename(oldFilePath, newFilePath);
-    } catch (err) {
-        console.error('Error renaming file:', err);
+    } catch (error) {
+        console.error(`Error renaming file: ${error}`);
         throw new Error('Error renaming file (in file system).');
     }
 

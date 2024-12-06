@@ -3,11 +3,7 @@ const multer = require("multer");
 const fs = require("fs");
 const path = require("path");
 const crypto = require("crypto");
-const { FILESIZES, UPLOAD_PATH, UPLOAD_CONTENT_TYPE } = require("../helpers/constants.helper");
-
-// Configuração do tamanho máximo de upload e número de arquivos permitidos
-const maxSize = FILESIZES["2 MB"];
-const uploadLimit = 3;
+const { loadSettings } = require("../services/setting.service");
 
 // Função para verificar e/ou criar diretórios
 function ensureDirectoryExistence(dirPath) {
@@ -18,41 +14,47 @@ function ensureDirectoryExistence(dirPath) {
 }
 
 // Função para validar `contentType` e retornar subdiretório
-function getUploadPath(contentType) {
-  switch (contentType) {
-    case UPLOAD_CONTENT_TYPE.ARTICLE:
-      return UPLOAD_CONTENT_TYPE.ARTICLE;
-    case UPLOAD_CONTENT_TYPE.PAGE:
-      return UPLOAD_CONTENT_TYPE.PAGE;
-    case UPLOAD_CONTENT_TYPE.PRODUCT:
-      return UPLOAD_CONTENT_TYPE.PRODUCT;
-    case UPLOAD_CONTENT_TYPE.PROFILE:
-      return UPLOAD_CONTENT_TYPE.PROFILE;
-    default:
-      console.error("Invalid or missing contentType");
-      throw new Error("Invalid or missing contentType");
+async function getUploadPath(contentType) {
+  const settings = await loadSettings();
+
+  if (!settings.uploadContentType) {
+    throw new Error("Configuração uploadContentType não encontrada no banco.");
   }
+
+  const contentTypePaths = settings.uploadContentType;
+
+  // Busca pelo valor correspondente
+  const matchedContentType = contentTypePaths.find(
+    (item) => item.value === contentType
+  );
+  
+  if (matchedContentType) {
+    return matchedContentType.value; // Retorna apenas o valor do diretório
+  }
+
+  throw new Error("contentType inválido ou não encontrado.");
 }
+
 
 // Configuração do armazenamento com `multer`
 const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
+  destination: async (req, file, cb) => {
     try {
       const { contentType } = req.body;
 
+      // Carrega configurações em cache
+      const settings = await loadSettings();
       // Chama a função para obter o subdiretório
-      const subfolder = getUploadPath(contentType);
-
+      const subfolder = await getUploadPath(contentType);      
       // Obtém o ano e o mês atuais
       const currentDate = new Date();
       const year = currentDate.getFullYear();
-      // Garante o zero à esquerda
       const month = String(currentDate.getMonth() + 1).padStart(2, "0");
-
+      
       // Define o caminho de upload com ano e mês
       const uploadPath = path.join(
         __basedir,
-        UPLOAD_PATH.CONTENT,
+        String(settings.uploadPathContent[0].value),
         subfolder,
         `${year}_${month}`
       );
@@ -67,16 +69,16 @@ const storage = multer.diskStorage({
   },
 
   filename: (req, file, cb) => {
-
+    
     // Obtém a extensão do arquivo e gera um nome único
     const ext = path.extname(file.originalname);
     const uniqueName = crypto.randomBytes(16).toString("hex") + ext;
 
+    console.log("Upload file...");
     console.log(`Original file name: ${file.originalname}`);
     console.log(`File extension: ${ext}`);
     console.log(`Generated file name: ${uniqueName}`);
     
-    // Define o nome do arquivo
     cb(null, uniqueName);
   },
 });
@@ -84,11 +86,20 @@ const storage = multer.diskStorage({
 // Configuração do middleware de upload
 const uploadFile = multer({
   storage: storage,
-  // Define o tamanho máximo do arquivo
-  limits: { fileSize: maxSize },
+  limits: {
+    fileSize: async () => {
+      const settings = await loadSettings();
+      const maxFileSize = settings.uploadMaxFileSize.value;
+      // Obtém o tamanho máximo do cache
+      return parseInt(settings.filesize[maxFileSize].value);
+    },
+  },
 }).fields([
-  // Define o campo de upload e limite
-  { name: "file", maxCount: uploadLimit },
+  { name: "file", maxCount: async () => {
+      const settings = await loadSettings();
+      return parseInt(settings.uploadLimit.value); // Define o limite do cache
+    },
+  },
 ]);
 
 // Exporta o middleware de upload com suporte a Promises
