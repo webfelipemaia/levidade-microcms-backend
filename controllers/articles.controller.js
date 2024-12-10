@@ -4,6 +4,8 @@ const Joi = require('joi');
 const validateRequest = require('../middleware/validate-request');
 const articleService = require('../services/article.service');
 const fileService = require('../services/file.service ');
+const crypto = require("crypto");
+const { pagination } = require("../services/setting.service");
 
 // routes
 
@@ -28,13 +30,17 @@ function getAll(req, res, next) {
 
 async function getAllPaginated(req, res, next) {
     try {
+        const paginationSettings = await pagination();
+        const storedPageOrder =  paginationSettings.order
+        const storedPageSize = parseInt(paginationSettings.pageSize);        
+        
         const page = parseInt(req.query.page) || 1;
-        const pageSize = parseInt(req.query.pageSize) || 10;
-        const searchQuery = req.query.search || '';
-         // Exemplo: '[["title", "ASC"]]'
+        const pageSize = parseInt(req.query.pageSize) || storedPageSize;
+        
+        const searchQuery = req.query.search || '';        
         const order = req.query.order
             ? JSON.parse(req.query.order)
-            : [['createdAt', 'DESC']];
+            : [storedPageOrder];
 
         const result = await articleService.getPaginatedArticles(page, pageSize, searchQuery, order);
 

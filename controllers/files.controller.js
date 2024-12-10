@@ -6,7 +6,7 @@ const validateRequest = require('../middleware/validate-request');
 const fileService = require('../services/file.service ');
 const uploadFileMiddleware = require("../middleware/upload");
 //const multipleUploadFile = require("../middleware/multipleUpload");
-const { UPLOAD_PATH } = require('../helpers/constants.helper');
+const { uploadPath } = require("../services/setting.service");
 
 // routes
 
@@ -167,7 +167,9 @@ async function upload(req, res) {
  */
   
 async function getFiles(req, res, next) {
-    const directoryPath = __basedir + UPLOAD_PATH.ROOT;
+
+    const uploadPaths = await uploadPath()
+    const directoryPath = __basedir + uploadPaths.uploadPathRoot;
 
     fs.readdir(directoryPath, function (err, files) {
       if (err) {
@@ -189,9 +191,10 @@ async function getFiles(req, res, next) {
     });
   }
   
-function download(req, res, next) {
+async function download(req, res, next) {
     const fileName = req.params.name;
-    const directoryPath = __basedir + UPLOAD_PATH.ROOT;
+    const uploadPaths = await uploadPath()
+    const directoryPath = __basedir + uploadPaths.uploadPathRoot;
 
     res.download(directoryPath + fileName, fileName, (err) => {
         if (err) {

@@ -1,7 +1,6 @@
 const db = require('../helpers/db.helper');
 const fs = require('fs');
 const path = require('path');
-const { UPLOAD_PATH } = require('../helpers/constants.helper');
 
 module.exports = {
     getAll,
@@ -33,18 +32,14 @@ async function update(id, params) {
 async function renameAndUpdateFile(id, params) {
     const file = await getFile(id);
     
-    // Diretório onde os arquivos estão armazenados
     const uploadDir = path.dirname(file.path);
 
-    // Recuperar a extensão do arquivo
     const fileExtension = path.extname(file.name);
     if (!fileExtension) {
         throw new Error("The original file does not have a valid extension.");
     }
 
-    // Recuperar o nome original do arquivo e construir o caminho completo
     let oldFilePath = file.path;
-    // Garantir que a extensão esteja presente no caminho
     if (!oldFilePath.endsWith(fileExtension)) {
         oldFilePath += fileExtension;
     }
@@ -68,7 +63,7 @@ async function renameAndUpdateFile(id, params) {
     file.name = newFileName;
     file.path = removeLastSegment(file.path)
     Object.assign(file, params);
-    await file.save(); // Salva as alterações no banco de dados
+    await file.save();
 
     return newFileName;
 }

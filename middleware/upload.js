@@ -3,7 +3,7 @@ const multer = require("multer");
 const fs = require("fs");
 const path = require("path");
 const crypto = require("crypto");
-const { loadSettings } = require("../services/setting.service");
+const settingsHelper = require('../helpers/settings.helper');
 
 // Função para verificar e/ou criar diretórios
 function ensureDirectoryExistence(dirPath) {
@@ -14,27 +14,36 @@ function ensureDirectoryExistence(dirPath) {
 }
 
 // Função para validar `contentType` e retornar subdiretório
-async function getUploadPath(contentType) {
-  const settings = await loadSettings();
-
-  if (!settings.uploadContentType) {
-    throw new Error("Configuração uploadContentType não encontrada no banco.");
-  }
-
-  const contentTypePaths = settings.uploadContentType;
-
-  // Busca pelo valor correspondente
-  const matchedContentType = contentTypePaths.find(
-    (item) => item.value === contentType
-  );
+ async function getUploadPath(contentType) {
+    const settings = await settingsHelper.loadSettings();
   
-  if (matchedContentType) {
-    return matchedContentType.value; // Retorna apenas o valor do diretório
+    if (!settings.uploadContentType) {
+      throw new Error("Configuração uploadContentType não encontrada no banco.");
+    }
+  
+    const contentTypePaths = settings.uploadContentType;
+  
+    let matchedContentType;
+  
+    if (Array.isArray(contentTypePaths)) {
+      matchedContentType = contentTypePaths.find(
+        (item) => item.value === contentType
+      );
+    } else if (typeof contentTypePaths === "object") {
+      matchedContentType = Object.values(contentTypePaths).find(
+        (item) => item.value === contentType
+      );
+    } else {
+      throw new Error("uploadContentType deve ser um array ou objeto.");
+    }
+  
+    if (matchedContentType) {
+      return matchedContentType.value;
+    }
+  
+    throw new Error("contentType inválido ou não encontrado.");
   }
-
-  throw new Error("contentType inválido ou não encontrado.");
-}
-
+  
 
 // Configuração do armazenamento com `multer`
 const storage = multer.diskStorage({
@@ -42,16 +51,13 @@ const storage = multer.diskStorage({
     try {
       const { contentType } = req.body;
 
-      // Carrega configurações em cache
-      const settings = await loadSettings();
-      // Chama a função para obter o subdiretório
-      const subfolder = await getUploadPath(contentType);      
-      // Obtém o ano e o mês atuais
+      const settings = await settingsHelper.loadSettings();
+      const subfolder = await getUploadPath(`${contentType}`);      
+      
       const currentDate = new Date();
       const year = currentDate.getFullYear();
       const month = String(currentDate.getMonth() + 1).padStart(2, "0");
       
-      // Define o caminho de upload com ano e mês
       const uploadPath = path.join(
         __basedir,
         String(settings.uploadPathContent[0].value),
@@ -59,7 +65,6 @@ const storage = multer.diskStorage({
         `${year}_${month}`
       );
 
-      // Garante que o diretório existe
       ensureDirectoryExistence(uploadPath);
 
       cb(null, uploadPath);
@@ -70,7 +75,6 @@ const storage = multer.diskStorage({
 
   filename: (req, file, cb) => {
     
-    // Obtém a extensão do arquivo e gera um nome único
     const ext = path.extname(file.originalname);
     const uniqueName = crypto.randomBytes(16).toString("hex") + ext;
 

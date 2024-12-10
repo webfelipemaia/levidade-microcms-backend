@@ -27,43 +27,19 @@ async function getPaginatedArticles(page, pageSize, searchQuery, order) {
     });
 }
 
-// Sem o helper
-/* async function getPaginatedArticles(page, pageSize, searchQuery, order) {
-    const limit = pageSize;
-    const offset = (page - 1) * pageSize;
-
-    let where = {};
-    if (searchQuery) {
-        where = {
-            [Sequelize.Op.or]: [
-                { title: { [Sequelize.Op.like]: `%${searchQuery}%` } },
-                { subtitle: { [Sequelize.Op.like]: `%${searchQuery}%` } }
-            ]
-        };
-    }
-
-    const articles =  await db.Article.findAndCountAll({
-        where: where,
-        limit: limit,
-        offset: offset,
-        order: order
-    });
-    console.log('articles: ', articles)
-    return {
-        total: articles.count,
-        totalPages: Math.ceil(articles.count / pageSize),
-        currentPage: page,
-        articles: articles.rows
-    };
-} */
-
 async function getById(id) {
     return await getArticle(id);
 }
 
 async function getLastRegister() {
+
+    const paginationSettings = await pagination();
+    const storedPageOrder =  paginationSettings.order
+    const order = req.query.order
+            ? JSON.parse(req.query.order)
+            : [storedPageOrder];
     const article = await db.Article.findOne({
-        order: [['createdAt', 'DESC']]     
+        order: [order]     
     });
     if (!article) throw 'Article not found';
     return article;

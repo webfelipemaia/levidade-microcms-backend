@@ -1,4 +1,5 @@
 const db = require('../helpers/db.helper');
+const settingsHelper = require('../helpers/settings.helper');
 
 module.exports = {
     getAll,
@@ -6,56 +7,27 @@ module.exports = {
     create,
     update,
     delete: _delete,
-    loadSettings,
-    clearCache
+    pagination,
+    uploadPath,
 };
 
-let cache = null; // Cache em memória
-let cacheTimestamp = 0; // Timestamp do último carregamento do cache
-const CACHE_TTL = 5 * 60 * 1000; // Tempo de vida do cache: 5 minutos
 
-async function loadSettings() {
-  // Recarrega configurações do banco apenas se o cache estiver expirado
-  if (!cache || Date.now() - cacheTimestamp > CACHE_TTL) {
-    console.log('Carregando configurações do banco...');
-    const settings = await db.SystemSettings.findAll();
-
-    // Transforma o resultado em um objeto onde cada `settingName` contém uma lista de valores
-    cache = settings.reduce((acc, setting) => {
-      let value;
-      try {
-        // Converte valores JSON automaticamente, dependendo do tipo
-        value = setting.type === 'json' ? JSON.parse(setting.value) : setting.value;
-      } catch (e) {
-        console.error(`Erro ao parsear valor JSON para ${setting.settingName}:`, e);
-        value = setting.value; // Se falhar, mantém o valor original
-      }
-
-      // Adiciona o setting ao array correspondente ao `settingName`, ou cria um novo array se ainda não existir
-      if (!acc[setting.settingName]) {
-        acc[setting.settingName] = [];
-      }
-      acc[setting.settingName].push({
-        value,
-        additionalValue: setting.additionalValue,
-        type: setting.type,
-        description: setting.description,
-      });
-
-      return acc;
-    }, {});
-
-    cacheTimestamp = Date.now(); // Atualiza o timestamp do cache
+async function pagination() {
+  try {
+    return await settingsHelper.getSettingsByName('pagination');
+  } catch (error) {
+    console.error('Erro ao carregar configuração de paginação:', error);
+      throw error;
   }
-
-  return cache;
 }
 
-// Função para limpar o cache (caso necessário)
-function clearCache() {
-  cache = null;
-  cacheTimestamp = 0;
-  console.log('Cache limpo.');
+async function uploadPath() {
+  try {
+    return await settingsHelper.getSettingsByPrefix('uploadPath');
+  } catch (error) {
+    console.error('Erro ao carregar configuração de paginação:', error);
+      throw error;
+  }
 }
 
 async function getAll() {
