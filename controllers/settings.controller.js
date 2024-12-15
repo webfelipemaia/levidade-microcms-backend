@@ -7,10 +7,11 @@ const settingService = require('../services/setting.service');
 // routes
 
 router.get('/', getAll);
+router.get('/pagination', getPaginationSettings);
+router.get('/uploadpath', getUploadpathSettings);
+router.get('/filesize', getFilesizeSettings);
 router.get('/:id', getById);
-router.post('/', createSchema, create);
-router.put('/:id', updateSchema, update);
-router.delete('/:id', _delete);
+router.put('/update', updateSchema, update);
 
 module.exports = router;
 
@@ -26,57 +27,76 @@ function getById(req, res, next) {
         .catch(next);
 }
 
-function create(req, res, next) {
-    settingService.create(req.body)
-        .then(() => res.json(
-            { 
-                status: 'success', 
-                message: 'Setting registered successfully' 
-            }
-        ))
-        .catch(next);
-}
+async function update(req, res, next) {
+    try {
+        let updates = req.body;
 
-function update(req, res, next) {
-    settingService.update(req.body.id, req.body)
-        .then(() => res.json(
-            { 
-                status: 'success', 
-                message: 'Setting updated' 
-            }
-        ))
-        .catch(next);
-}
+        // Verifica se a entrada está agrupada e precisa ser desmembrada
+        /* if (!Array.isArray(updates)) {
+            updates = Object.values(updates).flatMap(setting => {
+                if (Array.isArray(setting)) {
+                    return setting.map(({ id, value }) => ({ id, value }));
+                }
+                return { id: setting.id, value: setting.value };
+            });
+        } */
 
-function _delete(req, res, next) {
-    settingService.delete(req.params.id)
-        .then(() => res.json(
-            { 
-                status: 'success',  
-                message: 'Setting deleted' 
-            }
-        ))
-        .catch(next);
-}
+        // Validações no nível do controller
+        const validUpdates = updates.filter(({ id, value }) => id && value !== undefined);
+        if (validUpdates.length === 0) {
+            return res.status(400).json({ status: 'error', message: 'Nenhuma configuração válida foi enviada.' });
+        }
 
-function createSchema(req, res, next) {
-    const schema = Joi.object({
-        settingName: Joi.string().required(),
-        value: Joi.string().required(),
-        additionalValue: Joi.string().empty(''),
-        description: Joi.string().empty(''),
-        type: Joi.string().empty(''),
-    });
-    validateRequest(req, next, schema);
+        // Processa atualizações individualmente
+        const results = await Promise.allSettled(
+            validUpdates.map(({ id, value }) =>
+                settingService.update(id, { value })
+            )
+        );
+
+        // Classifica resultados
+        const successes = results.filter(result => result.status === 'fulfilled');
+        const errors = results.filter(result => result.status === 'rejected');
+
+        // Resposta final
+        res.json({
+            status: 'partial',
+            message: `Configurações processadas: ${successes.length} sucesso(s), ${errors.length} falha(s).`,
+            successes: successes.map(s => s.value),
+            errors: errors.map(e => e.reason)
+        });
+    } catch (error) {
+        next(error);
+    }
 }
 
 function updateSchema(req, res, next) {
-    const schema = Joi.object({
-        settingName: Joi.string().required(),
-        value: Joi.string().required(),
-        additionalValue: Joi.string().empty(''),
-        description: Joi.string().empty(''),
-        type: Joi.string().empty(''),
-    });
+    console.log(req.body)
+    const schema = Joi.array().items(
+        Joi.object({
+            id: Joi.number(),
+            value: Joi.string()
+        })
+    );
     validateRequest(req, next, schema);
+}
+
+
+function getPaginationSettings(req, res, next) {
+    settingService.pagination()
+    .then(settings => res.json(settings))
+    .catch(next);
+}
+
+function getUploadpathSettings(req, res, next) {
+    settingService.uploadPath()
+    .then(settings => res.json(settings))
+    .catch(next);
+}
+
+
+function getFilesizeSettings(req, res, next) {
+    settingService.fileSize()
+    .then(settings => res.json(settings))
+    .catch(next);
 }

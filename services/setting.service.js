@@ -4,17 +4,16 @@ const settingsHelper = require('../helpers/settings.helper');
 module.exports = {
     getAll,
     getById,
-    create,
     update,
-    delete: _delete,
     pagination,
     uploadPath,
+    fileSize,
 };
 
 
 async function pagination() {
   try {
-    return await settingsHelper.getSettingsByName('pagination');
+    return await settingsHelper.getSettingsByPrefix('pagination');
   } catch (error) {
     console.error('Erro ao carregar configuração de paginação:', error);
       throw error;
@@ -25,7 +24,16 @@ async function uploadPath() {
   try {
     return await settingsHelper.getSettingsByPrefix('uploadPath');
   } catch (error) {
-    console.error('Erro ao carregar configuração de paginação:', error);
+    console.error('Erro ao carregar configuração de uploadPath:', error);
+      throw error;
+  }
+}
+
+async function fileSize() {
+  try {
+    return await settingsHelper.getSettingsByName('filesize');
+  } catch (error) {
+    console.error('Erro ao carregar configuração de filesize:', error);
       throw error;
   }
 }
@@ -38,68 +46,28 @@ async function getById(id) {
     return await getName(id);
 }
 
-async function create(params) {
-    
-    if (await db.SystemSettings.findOne({ where: { settingName: params.settingName } })) {
-        throw { 
-            status: 'error', 
-            message: params.settingName + '" is already registered'
-        };
-    }
-
-    const status = new db.SystemSettings(params);
-    await status.save();
-}
-
 async function update(id, params) {
   try {
-      // Updating the setting item
       const rowsUpdated = await db.SystemSettings.update(
-        { settingName: params.settingName },
-        { value: params.value },
-        { additionalValue: params.additionalValue },
-        { description: params.description },
-        { type: params.type },
-        {
-          where: {
-            id: id,
-          },
-        }
+          { value: params.value },
+          { where: { id } }
       );
-  
-      return {
-          status: "success",
-          message: "Setting updated successfully."
-      };
-      
-    } catch (error) {
-      console.error(error);
-      return { status: "error", message: "An error occurred while updating the setting item." };
-    }
-  }
-    
-async function _delete(id) {
-    try {
-        const result = await db.SystemSettings.destroy({
-          where: {
-            id: id,
-          },
-        });
-      
-        if (result > 0) {
-            return { 
-                status: "success", 
-                message: "Setting successfully deleted" 
-            }
-        } else {
-            return {
-                status: "error",
-                message: "No setting found with the given criteria"
-            }
-        }
-      } catch (error) {
-        return { status: "error", message: `Error deleting setting: ${error}` };
+
+      // Verifica se o registro foi encontrado e atualizado
+      if (rowsUpdated[0] === 0) {
+          throw new Error(`Configuração com ID ${id} não encontrada ou não foi alterada.`);
       }
+
+      return {
+          id,
+          status: 'success',
+          message: `Configuração com ID ${id} atualizada com sucesso.`
+      };
+  } catch (error) {
+      // Retorna erro detalhado para facilitar o debugging
+      console.error(`Erro ao atualizar configuração com ID ${id}:`, error);
+      throw new Error(`Erro ao atualizar configuração com ID ${id}.`);
+  }
 }
 
 // helper functions

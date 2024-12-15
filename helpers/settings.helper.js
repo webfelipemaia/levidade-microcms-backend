@@ -13,7 +13,7 @@ module.exports = {
   setCache,
   loadSettings,
   getSettingsByName,
-  getSettingsByPrefix
+  getSettingsByPrefix,
 };
 
 // Inicializa o cache com valores padrão
