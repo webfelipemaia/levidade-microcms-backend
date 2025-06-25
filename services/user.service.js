@@ -1,4 +1,6 @@
-﻿const bcrypt = require('bcryptjs');
+﻿const jwt = require('jsonwebtoken');
+const bcrypt = require('bcryptjs');
+require('dotenv').config();
 const db = require('../helpers/db.helper');
 
 module.exports = {
@@ -29,7 +31,7 @@ async function getById(id) {
     return await getUser(id);
 }
 
-async function create(params) {
+/* async function create(params) {
     
     if (await db.User.findOne({ where: { email: params.email } })) {
         throw { 
@@ -37,11 +39,46 @@ async function create(params) {
           message: 'Email "' + params.email + '" is already registered' 
         };
     }
-    
-    const user = new db.User(params);    
-    user.passwordHash = await bcrypt.hash(params.password, 10);
+
+    const user = new db.User(params);
+    user.password = await bcrypt.hash(params.password, 10);
     await user.save();
-}
+} */
+
+    async function create(params) {
+      // Verifica se já existe usuário com mesmo e-mail
+      const existingUser = await db.User.findOne({ where: { email: params.email } });
+      if (existingUser) {
+          throw { 
+            status: 'error', 
+            message: `Email "${params.email}" is already registered` 
+          };
+      }
+  
+      // Cria usuário com senha criptografada
+      const hashedPassword = await bcrypt.hash(params.password, 10);
+  
+      const user = await db.User.create({
+          email: params.email,
+          name: params.name,
+          lastname: params.lastname,
+          role: params.role,
+          password: hashedPassword
+      });
+  
+      return {
+          status: 'success',
+          message: 'User created successfully',
+          data: {
+              id: user.id,
+              email: user.email,
+              name: user.name,
+              lastname: user.lastname,
+              role: user.role
+          }
+      };
+  }
+  
 
 async function addRoleToUser(user) {
     
@@ -166,7 +203,47 @@ async function getUser(id) {
     }
 }
 
-async function authenticate(email, password){
+  async function authenticate(email, password) {
+    const user = await db.User.findOne({
+        where: { email },
+        include: db.Role
+    });
+
+    if (!user) {
+        throw { status: "error", message: "User not found" };
+    }
+    
+    const isMatch = await bcrypt.compare(password, user.password);
+
+    if (!isMatch) {
+        throw { status: "error", message: "Password incorrect" };
+    }
+
+    const token = jwt.sign(
+        {
+            id: user.id,
+            email: user.email,
+            role: user.Roles?.map(r => r.name), // pega os nomes das roles se existir associação
+        },
+        process.env.JWT_SECRET,
+        { expiresIn: process.env.JWT_EXPIRES_IN || '1h' }
+    );
+
+    return {
+        status: 'success',
+        message: 'Authentication successful',
+        data: {
+          id: user.id,
+          name: user.name,
+          lastname: user.lastname,
+          email: user.email,
+          roles: user.Roles?.map(r => r.name),
+          token
+      }
+    };
+  }
+
+/* async function authenticate(email, password){
     
     const user = await db.User.findOne({ where: {email: `${email}`} });
     var isRegistered = false;
@@ -196,4 +273,4 @@ async function authenticate(email, password){
             message: "Password incorrect" 
         }
     }
-  };
+  }; */
