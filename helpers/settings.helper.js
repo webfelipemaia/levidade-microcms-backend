@@ -14,6 +14,11 @@ module.exports = {
   loadSettings,
   getSettingsByName,
   getSettingsByPrefix,
+  auth: {
+    debugMode: parseBool(process.env.AUTH_DEBUG),
+    jwtSecret: process.env.JWT_SECRET || 'your-secret-key',
+    tokenExpiration: process.env.JWT_EXPIRATION || '1h'
+  }
 };
 
 // Inicializa o cache com valores padrão
@@ -98,8 +103,7 @@ async function getSettingsByName(settingName) {
 
 // Obtém configurações específicas que começam com "uploadPath", por exemplo
 async function getSettingsByPrefix(prefix) {
-  try {
-    // Busca todas as configurações cujo settingName começa com o prefixo fornecido
+  try {    
     const settings = await db.SystemSettings.findAll({
       where: {
         settingName: {
@@ -108,7 +112,6 @@ async function getSettingsByPrefix(prefix) {
       }
     });
 
-    // Transforma os resultados em um objeto chave-valor
     const settingsObject = settings.reduce((acc, setting) => {
       acc[setting.settingName] = {
         value: setting.value,
@@ -124,4 +127,11 @@ async function getSettingsByPrefix(prefix) {
     console.error("Erro ao buscar configurações por prefixo:", error);
     throw error;
   }
+}
+
+// valida o tipo informado na definição de AUTH_DEBUG
+function parseBool(value) {
+  if (value === undefined || value === null) return false;
+  if (typeof value === 'boolean') return value;
+  return ['true', 'True', 'TRUE', '1', 'yes', 'y', 'on'].includes(value.toString().toLowerCase());
 }

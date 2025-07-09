@@ -7,7 +7,7 @@ const auth = require('../middleware/auth');
 
 // routes
 
-router.get('/', getAll);
+router.get('/', auth, getAll);
 router.get('/roles', getUsersRoles);
 router.get('/:id', getById);
 router.post('/', createSchema, create);

@@ -4,6 +4,10 @@ const bodyParser = require('body-parser');
 const app = express();
 const cors = require('cors');
 const errorHandler = require('./middleware/error-handler');
+require('./config/passport');
+const passport = require('passport');
+const authRoutes = require('./routes/auth.router');
+const authMiddleware = require('./middleware/auth');
 
 // system settings
 const corsOptions ={
@@ -20,8 +24,16 @@ app.use(bodyParser.json());
 app.use(cors(corsOptions));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use(passport.initialize());
 
+
+// api protected routes
+app.get('/protected', authMiddleware, (req, res) => {
+    res.json({ message: 'Rota protegida acessada com sucesso' });
+  });
 // api routes
+app.use('/auth', authRoutes);
+app.use('/', require('./controllers/app.controller'));
 app.use('/users', require('./controllers/users.controller'));
 app.use('/roles', require('./controllers/roles.controller'));
 app.use('/permissions', require('./controllers/permissions.controller'));
