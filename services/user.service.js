@@ -176,7 +176,7 @@ async function getUser(id) {
   }
 }
 
-async function authenticate(email, password) {
+/* async function authenticate(email, password) {
   const user = await db.User.findOne({
     where: { email },
     include: db.Role,
@@ -214,4 +214,29 @@ async function authenticate(email, password) {
       token,
     },
   };
-}
+} */
+
+  async function authenticate(email, password) {
+    const user = await db.User.findOne({
+      where: { email },
+      include: db.Role,
+    });
+  
+    if (!user) {
+      throw { status: "error", message: "User not found" };
+    }
+  
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch) {
+      throw { status: "error", message: "Incorrect password" };
+    }
+  
+    return {
+      id: user.id,
+      name: user.name,
+      lastname: user.lastname,
+      email: user.email,
+      roles: user.Roles?.map((r) => r.name),
+    };
+  }
+  

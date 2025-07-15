@@ -2,7 +2,9 @@ const passport = require('passport');
 const config = require('../helpers/settings.helper');
 
 const authenticate = (req, res, next) => {
-  
+  console.log('Incoming cookies:', req.cookies);
+  console.log('Token no cookie:', req.cookies?.token);
+
   console.log(`[Auth] Attempt at ${new Date().toISOString()} from ${req.ip}`);
   
   passport.authenticate('jwt', { session: false }, (err, user, info) => {
@@ -18,8 +20,9 @@ const authenticate = (req, res, next) => {
       console.debug('Headers:', {
         ...req.headers,
         authorization: req.headers.authorization 
-          ? `Bearer ***${req.headers.authorization.length - 7} chars` 
-          : 'none'
+        ? `Bearer ***${req.headers.authorization.length - 7} chars` 
+        : 'none (using cookie instead)'
+      
       });
 
       if (err) {

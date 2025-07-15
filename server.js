@@ -3,9 +3,10 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const app = express();
 const cors = require('cors');
-const errorHandler = require('./middleware/error-handler');
-require('./config/passport');
+const cookieParser = require('cookie-parser');
 const passport = require('passport');
+const errorHandler = require('./middleware/error-handler');
+const initPassportStrategy = require('./config/passport');
 const authRoutes = require('./routes/auth.router');
 const authMiddleware = require('./middleware/auth');
 
@@ -13,8 +14,8 @@ const authMiddleware = require('./middleware/auth');
 const corsOptions ={
     origin:'http://localhost:8000',
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
-    credentials:true,            //access-control-allow-credentials:true
-    optionSuccessStatus:200
+    credentials: true,
+    optionSuccessStatus: 200
 }
 
 global.__basedir = __dirname;
@@ -23,7 +24,9 @@ app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 app.use(cors(corsOptions));
 app.use(express.json());
+app.use(cookieParser());
 app.use(express.urlencoded({ extended: true }));
+initPassportStrategy(passport);
 app.use(passport.initialize());
 
 
