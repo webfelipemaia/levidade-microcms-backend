@@ -11,22 +11,6 @@ const UsersFiles = sequelize.define('Users_Files', {
         primaryKey: true,
         autoIncrement: true
     },
-    userId: {
-        type: DataTypes.INTEGER,
-        allowNull: false,
-        references: {
-          model: User, 
-          key: 'id'
-        }
-    },
-    fileId: {
-        type: DataTypes.INTEGER,
-        allowNull: false,
-        references: {
-          model: File, 
-          key: 'id'
-        }
-    },
     createdAt: {
         type: DataTypes.DATE,
         allowNull: true,

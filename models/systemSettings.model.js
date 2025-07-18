@@ -41,13 +41,6 @@ const SystemSettings = sequelize.define('System_Settings', {
 }, {
   sequelize,
   timestamps: true,
-  indexes: [
-      {
-          unique: true,
-          fields: ['settingName', 'value'],
-          name: 'system_settings_unique_constraint',
-      },
-  ],
 });
 
 module.exports = SystemSettings;

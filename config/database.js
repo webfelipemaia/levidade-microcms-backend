@@ -1,24 +1,26 @@
-// standard connection
-//const config = require('./config.json');
+const env = process.env.NODE_ENV || 'development';
+if (env === 'test') {
+  require('dotenv').config({ path: '.env.test' });
+} else {
+  require('dotenv').config();
+}
 
-// migration connection
-const config = require('./config.js');
+const config = require('./config.js')[env];
 const { Sequelize } = require('sequelize');
 
-// Setting for standard connection
-/* const { host, port, user, password, database } = config.database;
-const sequelize = new Sequelize(database, user, password, {
-  host: host,
-  dialect: 'mysql'
-}); */
-
-
-// Configuration using migrations
-const { host, port, user, password, database } = config.development;
-
-const sequelize = new Sequelize(database, user, password, {
-  host: host,
-  dialect: 'mysql'
-});
+const sequelize = new Sequelize(
+  config.database,
+  config.user,
+  config.password,
+  {
+    host: config.host,
+    port: config.port,
+    dialect: config.dialect,
+    logging: config.logging || false,
+    dialectOptions: {
+      charset: 'utf8mb4',
+    },
+  }
+);
 
 module.exports = sequelize;

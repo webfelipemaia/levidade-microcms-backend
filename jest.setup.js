@@ -1,14 +1,20 @@
-process.env.NODE_ENV = 'test';
+// jest.setup.js
+jest.setTimeout(20000);
 
-const db = require('./helpers/db.js');
+
+const sequelize = require('./config/database.js');
 
 beforeAll(async () => {
-  await db.sequelize.sync({ force: true });
-});
+  await sequelize.sync({ force: true });
+}, 20000);
 
 beforeEach(async () => {
-  const tables = Object.keys(db.sequelize.models);
+  const tables = Object.keys(sequelize.models);
   for (let table of tables) {
-    await db.sequelize.models[table].destroy({ where: {}, force: true });
+    await sequelize.models[table].destroy({ where: {}, force: true });
   }
+});
+
+afterAll(async () => {
+  await sequelize.close();
 });

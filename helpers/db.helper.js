@@ -33,10 +33,10 @@ async function initialize() {
     Category.belongsTo(Category, { as: 'parent', foreignKey: 'parentId' });
     Category.hasMany(Category, { as: 'children', foreignKey: 'parentId' });
     Article.belongsTo(Category, { foreignKey: 'categoryId' });
-    Article.belongsToMany(File, { through: 'Articles_Files' });
-    File.belongsToMany(Article, { through: 'Articles_Files' });
-    User.belongsToMany(File, { through: 'Articles_Files' });
-    File.belongsToMany(User, { through: 'Articles_Files' });
+    Article.belongsToMany(File, { through: 'Articles_Files', foreignKey: 'articleId', otherKey: 'fileId', });
+    File.belongsToMany(Article, { through: 'Articles_Files',  foreignKey: 'fileId', otherKey: 'articleId', });
+    User.belongsToMany(File, {  through: 'Users_Files', foreignKey: 'userId', otherKey: 'fileId', });
+    File.belongsToMany(User, { through: 'Users_Files', foreignKey: 'fileId', otherKey: 'userId', });
 
     
     // init models and add them to the exported db object
@@ -53,6 +53,23 @@ async function initialize() {
     db.UsersFiles = UsersFiles;
     db.SystemSettings = SystemSettings;
     
-    // sync all models with database
-    await sequelize.sync({ alter: false });
+  // Sincroniza os modelos com o banco
+  await syncDatabase();
 }
+
+// Função para sincronizar o banco com base no ambiente
+async function syncDatabase() {
+  try {
+    if (process.env.NODE_ENV === 'test') {
+      await sequelize.sync({ alter: false });
+      console.log('Banco sincronizado com `force: true` para testes.');
+    } else {
+      await sequelize.sync({ alter: false });
+      console.log('Banco sincronizado com `alter: false` para produção/dev.');
+    }
+  } catch (error) {
+    console.error('Erro ao sincronizar o banco:', error);
+  }
+}
+
+module.exports = db;

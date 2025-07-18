@@ -11,6 +11,52 @@ const UPLOAD_CONTENT_TYPE = {
     PROFILE: 'profile',                     // for avatars and profile images
 };
 
+const ALLOWED_MIME_TYPES = [
+    // Document
+    'application/pdf',
+    'application/msword', // .doc
+    'application/vnd.openxmlformats-officedocument.wordprocessingml.document', // .docx
+    'application/vnd.ms-excel', // .xls
+    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', // .xlsx
+    'application/vnd.ms-powerpoint', // .ppt
+    'application/vnd.openxmlformats-officedocument.presentationml.presentation', // .pptx
+    'application/vnd.oasis.opendocument.text', // .odt
+    'text/plain', // .txt
+    'application/rtf', // .rtf
+  
+    // Image
+    'image/jpeg',
+    'image/png',
+    'image/gif',
+    'image/svg+xml',
+    'image/webp',
+    'image/bmp',
+    'image/tiff',
+  
+    // Audio
+    'audio/mpeg', // .mp3
+    'audio/wav', // .wav
+    'audio/ogg', // .ogg
+    'audio/aac', // .aac
+    'audio/flac', // .flac
+  
+    // Video
+    'video/mp4',
+    'video/webm',
+    'video/ogg',
+    'video/x-msvideo', // .avi
+    'video/quicktime', // .mov
+    'video/x-matroska', // .mkv
+  
+    // Compressed
+    'application/zip',
+    'application/x-tar',
+    'application/gzip',
+    'application/vnd.rar',
+    'application/x-7z-compressed'
+  ];
+  
+
 const FILESIZES = {
     "250 KB": 250 * 1024,                   // 250 KB em bytes
     "500 KB": 500 * 1024,                   // 500 KB em bytes
@@ -49,6 +95,7 @@ const MESSAGES = {
 module.exports = {
     FILESIZES,
     FILETYPES,
+    ALLOWED_MIME_TYPES,
     UPLOAD_PATH,
     UPLOAD_CONTENT_TYPE,
     MESSAGES

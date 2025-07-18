@@ -38,8 +38,17 @@ module.exports = {
         allowNull: false,
         type: Sequelize.DATE,
         defaultValue: Sequelize.NOW
+      },
+    },
+    {
+      uniqueKeys: {
+        unique_setting_name: {
+          customIndex: true,
+          fields: ['settingName', 'value']
+        }
       }
-    });
+    }
+  );
   },
   async down(queryInterface, Sequelize) {
     await queryInterface.dropTable('System_Settings');

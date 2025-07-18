@@ -5,6 +5,9 @@ const app = express();
 const cors = require('cors');
 const cookieParser = require('cookie-parser');
 const passport = require('passport');
+const helmet = require('helmet');
+const rateLimit = require('express-rate-limit');
+const compression = require('compression');
 const errorHandler = require('./middleware/error-handler');
 const initPassportStrategy = require('./config/passport');
 const authRoutes = require('./routes/auth.router');
@@ -22,6 +25,12 @@ global.__basedir = __dirname;
 
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
+app.use(helmet());
+app.use(compression());
+app.use(rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutos
+  max: 100, // Limite de requisições por IP
+}));
 app.use(cors(corsOptions));
 app.use(express.json());
 app.use(cookieParser());
@@ -51,4 +60,11 @@ app.use(errorHandler);
 
 // start server
 const port = process.env.NODE_ENV === 'production' ? (process.env.PORT || 80) : 4000;
-app.listen(port, () => console.log('Server listening on port ' + port));
+if (process.env.NODE_ENV !== 'test') {
+  app.listen(port, () => {
+    console.log(`Server listening on port ${port}`);
+  });
+}
+
+// for test
+module.exports = app;

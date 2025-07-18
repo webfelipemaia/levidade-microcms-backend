@@ -4,6 +4,7 @@ const fs = require("fs");
 const path = require("path");
 const crypto = require("crypto");
 const settingsHelper = require('../helpers/settings.helper');
+const { UPLOAD_CONTENT_TYPE, ALLOWED_MIME_TYPES } = require('../helpers/constants.helper');
 
 // Função para verificar e/ou criar diretórios
 function ensureDirectoryExistence(dirPath) {
@@ -16,6 +17,10 @@ function ensureDirectoryExistence(dirPath) {
 // Função para validar `contentType` e retornar subdiretório
  async function getUploadPath(contentType) {
     const settings = await settingsHelper.loadSettings();
+  
+    if (!contentType || !Object.values(UPLOAD_CONTENT_TYPE).includes(contentType)) {
+      throw new Error("Tipo de conteúdo inválido ou ausente");
+    }
   
     if (!settings.uploadContentType) {
       throw new Error("Configuração uploadContentType não encontrada no banco.");
@@ -49,7 +54,8 @@ function ensureDirectoryExistence(dirPath) {
 const storage = multer.diskStorage({
   destination: async (req, file, cb) => {
     try {
-      const { contentType } = req.body;
+      //const { contentType } = req.body;
+      const contentType = `${req.body?.contentType || ''}`.trim().toLowerCase();
 
       const settings = await settingsHelper.loadSettings();
       const subfolder = await getUploadPath(`${contentType}`);      
@@ -90,6 +96,12 @@ const storage = multer.diskStorage({
 // Configuração do middleware de upload
 const uploadFile = multer({
   storage: storage,
+  fileFilter: (req, file, cb) => {
+    if (!ALLOWED_MIME_TYPES.includes(file.mimetype)) {
+      return cb(new Error('Tipo de arquivo não permitido'), false);
+    }
+    cb(null, true);
+  },
   limits: {
     fileSize: async () => {
       const settings = await loadSettings();
