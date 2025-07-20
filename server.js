@@ -10,8 +10,8 @@ const rateLimit = require('express-rate-limit');
 const compression = require('compression');
 const errorHandler = require('./middleware/error-handler');
 const initPassportStrategy = require('./config/passport');
-const authRoutes = require('./routes/auth.router');
 const authMiddleware = require('./middleware/auth');
+const { publicLimiter, privateLimiter } = require("./middleware/rateLimiter");
 
 // system settings
 const corsOptions ={
@@ -39,12 +39,19 @@ initPassportStrategy(passport);
 app.use(passport.initialize());
 
 
-// api protected routes
+const publicRouterV1 = require('./routes/v1/public/auth.router');
+const privateRouterV1 = require('./routes/v1/private/auth.router');
+
+// api private routes
 app.get('/protected', authMiddleware, (req, res) => {
     res.json({ message: 'Rota protegida acessada com sucesso' });
   });
-// api routes
-app.use('/auth', authRoutes);
+
+app.use('/api/v1/private/auth', privateLimiter, privateRouterV1);
+
+// api public routes
+app.use('/api/v1/public/auth', publicLimiter, publicRouterV1);
+
 app.use('/', require('./controllers/app.controller'));
 app.use('/users', require('./controllers/users.controller'));
 app.use('/roles', require('./controllers/roles.controller'));
