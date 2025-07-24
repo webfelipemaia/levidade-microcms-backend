@@ -2,12 +2,12 @@ const express = require('express');
 const router = express.Router();
 const Joi = require('joi');
 const fs = require('fs');
-const validateRequest = require('../middleware/validate-request');
+const validateRequest = require('../middlewares/validateRequest.middleware');
 const fileService = require('../services/file.service ');
-const uploadFile = require("../middleware/upload");
-//const multipleUploadFile = require("../middleware/multipleUpload");
+const uploadFile = require("../middlewares/upload.middleware");
+//const multipleUploadFile = require("../middlewares/multipleUpload.middleware");
 const { uploadPath } = require("../services/setting.service");
-const validateFile = require("../middleware/file.middleware");
+const validateFile = require("../middlewares/file.middleware");
 
 // routes
 

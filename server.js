@@ -8,10 +8,10 @@ const passport = require('passport');
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
 const compression = require('compression');
-const errorHandler = require('./middleware/error-handler');
+const errorHandler = require('./middlewares/errorHandler.middleware');
 const initPassportStrategy = require('./config/passport');
-const authMiddleware = require('./middleware/auth');
-const { publicLimiter, privateLimiter } = require("./middleware/rateLimiter");
+const authMiddleware = require('./middlewares/auth.middleware');
+const { publicLimiter, privateLimiter } = require("./middlewares/rateLimiter.middleware");
 
 // system settings
 const corsOptions ={
