@@ -1,67 +1,50 @@
-const express = require('express');
-const router = express.Router();
 const Joi = require('joi');
 const fs = require('fs');
 const validateRequest = require('../middlewares/validateRequest.middleware');
 const fileService = require('../services/file.service ');
 const uploadFile = require("../middlewares/upload.middleware");
-//const multipleUploadFile = require("../middlewares/multipleUpload.middleware");
 const { uploadPath } = require("../services/setting.service");
 const validateFile = require("../middlewares/file.middleware");
 
-// routes
-
-router.post('/upload', upload);
-router.get('/all', getFiles);
-router.get('/:name', download);
-router.get('/', getAll);
-router.get('/last', getLastRegister);
-router.get('/:id', getById);
-router.post('/', createSchema, create);
-router.put('/:id', updateSchema, update);
-router.delete('/:id', _delete);
-
-module.exports = router;
-
 // route functions
 
-function getAll(req, res, next) {
+exports.getAll = (req, res, next) => {
     fileService.getAll()
         .then(files => res.json(files))
         .catch(next);
 }
 
-function getById(req, res, next) {
+exports.getById = (req, res, next) => {
     fileService.getById(req.params.id)
         .then(file => res.json(file))
         .catch(next);
-}
+};
 
-function getLastRegister(req, res, next) {
+exports.getLastRegister = (req, res, next) => {
     fileService.getLastRegister()
         .then(file => res.json(file))
         .catch(next);
-}
+};
 
-function create(req, res, next) {
+exports.create = (req, res, next) => {
     fileService.create(req.body)
         .then(() => res.json({ message: 'File created' }))
         .catch(next);
 }
 
-function update(req, res, next) {
+exports.update = (req, res, next) => {
     fileService.update(req.body.fileId, req.body)
         .then(() => res.json({ message: 'File updated' }))
         .catch(next);
 }
 
-function _delete(req, res, next) {
+exports._delete = (req, res, next) => {
     fileService.delete(req.params.id)
         .then(() => res.json({ message: 'File deleted' }))
         .catch(next);
 }
 
-async function upload(req, res) {
+exports.upload = async (req, res) => {
   try {
 
     await uploadFile(req, res);
@@ -105,12 +88,12 @@ async function upload(req, res) {
   }
 };
   
-async function getFiles(req, res, next) {
+exports.getFiles = async (req, res, next) => {
 
-    const uploadPaths = await uploadPath()
+    const uploadPaths = await uploadPath();
     const directoryPath = __basedir + uploadPaths.uploadPathRoot;
 
-    fs.readdir(directoryPath, function (err, files) {
+    fs.readdir(directoryPath, function(err, files) {
       if (err) {
         res.status(500).send({
           message: "Unable to scan files!",
@@ -130,7 +113,7 @@ async function getFiles(req, res, next) {
     });
   }
   
-async function download(req, res, next) {
+exports.download = async (req, res, next) => {
     const fileName = req.params.name;
     const uploadPaths = await uploadPath()
     const directoryPath = __basedir + uploadPaths.uploadPathRoot;
@@ -146,20 +129,20 @@ async function download(req, res, next) {
 
 // schema functions
 
-function createSchema(req, res, next) {
+exports.createSchema = (req, res, next) => {
     const schema = Joi.object({
         name: Joi.string().required(),
         path: Joi.string().optional(),
         id: Joi.number().integer().optional()
     });
     validateRequest(req, next, schema);
-}
+};
 
-function updateSchema(req, res, next) {
+exports.updateSchema = (req, res, next) => {
     const schema = Joi.object({
         name: Joi.string().empty(''),
         path: Joi.string().empty(''),
         categoryId: Joi.number().integer().empty('')
     });
     validateRequest(req, next, schema);
-}
+};

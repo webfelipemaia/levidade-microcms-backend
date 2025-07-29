@@ -1,32 +1,20 @@
-const express = require('express');
-const router = express.Router();
 const Joi = require('joi');
 const validateRequest = require('../middlewares/validateRequest.middleware');
-const statusService = require('../services/status.service');    
+const statusService = require('../services/status.service');
 
-// routes
-
-router.get('/', getAll);
-router.get('/:id', getById);
-router.post('/', createSchema, create);
-router.patch('/:id', updateSchema, update);
-router.delete('/:id', _delete);
-
-module.exports = router;
-
-function getAll(req, res, next) {
+exports.getAll = (req, res, next) => {
     statusService.getAll()
         .then(status => res.json(status))
         .catch(next);
-}
+};
 
-function getById(req, res, next) {
+exports.getById = (req, res, next) => {
     statusService.getById(req.params.id)
         .then(status => res.json(status))
         .catch(next);
-}
+};
 
-function create(req, res, next) {
+exports.create = (req, res, next) => {
     statusService.create(req.body)
         .then(() => res.json(
             { 
@@ -35,9 +23,9 @@ function create(req, res, next) {
             }
         ))
         .catch(next);
-}
+};
 
-function update(req, res, next) {
+exports.update = (req, res, next) => {
     statusService.update(req.params.id, req.body)
         .then(() => res.json(
             { 
@@ -46,9 +34,9 @@ function update(req, res, next) {
             }
         ))
         .catch(next);
-}
+};
 
-function _delete(req, res, next) {
+exports._delete = (req, res, next) => {
     statusService.delete(req.params.id)
         .then(() => res.json(
             { 
@@ -57,20 +45,20 @@ function _delete(req, res, next) {
             }
         ))
         .catch(next);
-}
+};
 
-function createSchema(req, res, next) {
+exports.createSchema = (req, res, next) => {
     const schema = Joi.object({
         name: Joi.string().required(),
         value: Joi.number().required()
     });
     validateRequest(req, next, schema);
-}
+};
 
-function updateSchema(req, res, next) {
+exports.updateSchema = (req, res, next) => {
     const schema = Joi.object({
         name: Joi.string().empty(''),
         value: Joi.number().required()
     });
     validateRequest(req, next, schema);
-}
+};
