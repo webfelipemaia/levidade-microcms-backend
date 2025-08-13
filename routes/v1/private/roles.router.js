@@ -10,7 +10,7 @@ const {
     create,
     update,
     _delete,
-    createRolesWithPermissions,
+    createRoleWithPermissions,
 } = require("../../../controllers/roles.controller");
 
 const {
@@ -25,6 +25,6 @@ privateRoleRouterV1.get("/:id", authenticate, getById);
 privateRoleRouterV1.post("/", authenticate, createSchema, create);
 privateRoleRouterV1.patch("/:id", authenticate, updateSchema, update);
 privateRoleRouterV1.delete("/:id", authenticate, _delete);
-privateRoleRouterV1.post("/add",  authenticate,  createRolesWithPermissions);
+privateRoleRouterV1.post("/add-with-permissions",  authenticate, createRoleWithPermissions);
 
 module.exports = privateRoleRouterV1;
