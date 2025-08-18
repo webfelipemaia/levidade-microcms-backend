@@ -9,6 +9,8 @@ const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
 const compression = require('compression');
 const errorHandler = require('./middlewares/errorHandler.middleware');
+const injectLogger = require('./middlewares/logger.middleware');
+const morganMiddleware = require('./middlewares/morgan.middleware');
 const initPassportStrategy = require('./config/passport');
 const authMiddleware = require('./middlewares/auth.middleware');
 const { publicLimiter, privateLimiter } = require("./middlewares/rateLimiter.middleware");
@@ -35,8 +37,12 @@ app.use(cors(corsOptions));
 app.use(express.json());
 app.use(cookieParser());
 app.use(express.urlencoded({ extended: true }));
+
 initPassportStrategy(passport);
 app.use(passport.initialize());
+
+const appLogger = injectLogger(app);
+app.use(morganMiddleware());
 
 
 const publicRouterV1 = require('./routes/v1/public/auth.router');
@@ -68,15 +74,6 @@ app.use('/api/v1/private/user', privateLimiter, privateUserRouterV1);
 // api public routes
 app.use('/api/v1/public/auth', publicLimiter, publicRouterV1);
 
-//app.use('/', require('./controllers/app.controller'));
-//app.use('/users', require('./controllers/users.controller'));
-//app.use('/roles', require('./controllers/roles.controller'));
-//app.use('/permissions', require('./controllers/permissions.controller'));
-//app.use('/categories', require('./controllers/categories.controller'));
-//app.use('/articles', require('./controllers/articles.controller'));
-//app.use('/status', require('./controllers/status.controller'));
-//app.use('/files', require('./controllers/files.controller'));
-//app.use('/settings', require('./controllers/settings.controller'));
 
 // global error handler
 app.use(errorHandler);
@@ -85,7 +82,7 @@ app.use(errorHandler);
 const port = process.env.NODE_ENV === 'production' ? (process.env.PORT || 80) : 4000;
 if (process.env.NODE_ENV !== 'test') {
   app.listen(port, () => {
-    console.log(`Server listening on port ${port}`);
+    appLogger.info(`Server listening on port ${port}`);
   });
 }
 
