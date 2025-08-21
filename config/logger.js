@@ -1,72 +1,73 @@
 // config/logger.js
 const fs = require("fs");
-const path = require("path");
+const path = require("path")
+
+require('dotenv').config();
 const { createLogger, format, transports } = require("winston");
 
-// ---- Configs vindas do seu modelo ----
+// ---- Configs vindas do .env ----
 const settings = {
-  level: process.env.LOG_LEVEL || "info", // error, warn, info, debug
-  useColors: process.env.LOG_COLORS === "true" || true, // habilitar/desabilitar cores
-  output: process.env.LOG_OUTPUT || "console", // console | file | both
-  format: process.env.LOG_FORMAT || "json", // json | text
+  level: process.env.LOG_LEVEL || "info",
+  toConsole: process.env.LOG_TO_CONSOLE === "true",
+  toFile: process.env.LOG_TO_FILE === "true",
+  formatType: process.env.LOG_FORMAT || "json", // json | text
   dateFormat: process.env.LOG_DATE_FORMAT || "YYYY-MM-DD HH:mm:ss",
-  logDir: path.join(__dirname, "../logs"),
-  fileName: "app.log",
+  logFilePath:
+    process.env.LOG_FILE_PATH || path.join(__dirname, "../logs/app.log"),
 };
 
-// Garante a pasta de logs (se for escrever em arquivo)
-if ((settings.output === "file" || settings.output === "both") && !fs.existsSync(settings.logDir)) {
-  fs.mkdirSync(settings.logDir, { recursive: true });
+// Garante a pasta de logs se for salvar em arquivo
+if (settings.toFile) {
+  const logDir = path.dirname(settings.logFilePath);
+  if (!fs.existsSync(logDir)) {
+    fs.mkdirSync(logDir, { recursive: true });
+  }
 }
 
-// Formatação base (timestamp + stack)
+// Formatação base (timestamp + stacktrace)
 const base = [
   format.timestamp({ format: settings.dateFormat }),
   format.errors({ stack: true }),
 ];
 
-// Console: JSON ou texto (com cores opcionais)
-const consoleFormat = settings.format === "json"
-  ? format.combine(...base, format.json())
-  : format.combine(
-      ...base,
-      settings.useColors ? format.colorize({ all: true }) : format.uncolorize(),
-      format.printf(({ timestamp, level, message, ...meta }) => {
-        const rest = Object.keys(meta).length ? ` | ${JSON.stringify(meta)}` : "";
-        return `[${timestamp}] [${level.toUpperCase()}] ${message}${rest}`;
-      })
-    );
+// Builder de formato
+const buildFormat = (forConsole = true) => {
+  if (settings.formatType === "json") {
+    return format.combine(...base, format.json());
+  }
+  return format.combine(
+    ...base,
+    forConsole ? format.colorize({ all: true }) : format.uncolorize(),
+    format.printf(({ timestamp, level, message, ...meta }) => {
+      const rest =
+        meta && Object.keys(meta).length ? ` | ${JSON.stringify(meta)}` : "";
+      return `[${timestamp}] [${level.toUpperCase()}] ${message}${rest}`;
+    })
+  );
+};
 
-// Arquivo: JSON (recomendado) ou texto, conforme config
-const fileFormat = settings.format === "json"
-  ? format.combine(...base, format.json())
-  : format.combine(
-      ...base,
-      format.uncolorize(), // arquivo sem códigos de cor
-      format.printf(({ timestamp, level, message, ...meta }) => {
-        const rest = Object.keys(meta).length ? ` | ${JSON.stringify(meta)}` : "";
-        return `[${timestamp}] [${level.toUpperCase()}] ${message}${rest}`;
-      })
-    );
-
+// Transports
 const logTransports = [];
-if (settings.output === "console" || settings.output === "both") {
-  logTransports.push(new transports.Console({ format: consoleFormat }));
+if (settings.toConsole) {
+  logTransports.push(new transports.Console({ format: buildFormat(true) }));
 }
-if (settings.output === "file" || settings.output === "both") {
+if (settings.toFile) {
   logTransports.push(
     new transports.File({
-      filename: path.join(settings.logDir, settings.fileName),
-      format: fileFormat,
+      filename: settings.logFilePath,
+      format: buildFormat(false), // arquivo sem cores
     })
   );
 }
 
+// fallback: sempre ter pelo menos 1 transport
+if (logTransports.length === 0) {
+  logTransports.push(new transports.Console({ format: buildFormat(true) }));
+}
+
 const logger = createLogger({
   level: settings.level,
-  // Colocamos um format padrão apenas para fallback.
-  // O formato real é definido em cada transport (acima).
-  format: format.combine(...base, format.json()),
+  format: format.combine(...base, format.json()), // fallback
   transports: logTransports,
 });
 

@@ -15,6 +15,12 @@ const initPassportStrategy = require('./config/passport');
 const authMiddleware = require('./middlewares/auth.middleware');
 const { publicLimiter, privateLimiter } = require("./middlewares/rateLimiter.middleware");
 
+// Configurar Swagger
+const swaggerUi = require('swagger-ui-express');
+const YAML = require('yamljs');
+const swaggerDocument = YAML.load('./docs/swagger.yaml'); // caminho para o arquivo YAML
+
+
 // system settings
 const corsOptions ={
     origin:'http://localhost:8000',
@@ -77,6 +83,9 @@ app.use('/api/v1/public/auth', publicLimiter, publicRouterV1);
 
 // global error handler
 app.use(errorHandler);
+
+// Swagger
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
 // start server
 const port = process.env.NODE_ENV === 'production' ? (process.env.PORT || 80) : 4000;
