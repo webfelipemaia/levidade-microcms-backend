@@ -1,20 +1,103 @@
 openapi: 3.0.0
 info:
-  title: Levidade API
+  title: API Documentation
+  description: API documentation for the application
   version: 1.0.0
-  description: Documentação da API usando Swagger com YAML
 servers:
-  - url: http://localhost:4000/api/v1
+  - url: http://localhost:3000/api/v1
+    description: Development server
+
+tags:
+  - name: Public
+    description: Public endpoints that don't require authentication
+  - name: Auth
+    description: Authentication endpoints
+  - name: Users
+    description: User management endpoints
+  - name: Roles
+    description: Role management endpoints
+  - name: Articles
+    description: Article management endpoints
+  - name: Categories
+    description: Category management endpoints
+  - name: Files
+    description: File management endpoints
+  - name: Permissions
+    description: Permission management endpoints
+  - name: Settings
+    description: Application settings endpoints
+  - name: Status
+    description: Status management endpoints
 
 paths:
-  /auth/app:
-    get:
-      tags:
-        - Auth
-      summary: Retorna informações da aplicação
+  /login:
+    post:
+      tags: [Public]
+      summary: User login
+      description: Authenticates a user and returns a JWT token
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+                - password
+              properties:
+                email:
+                  type: string
+                  format: email
+                  example: user@example.com
+                password:
+                  type: string
+                  format: password
+                  example: password123
       responses:
         '200':
-          description: Nome da aplicação
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  message:
+                    type: string
+                    example: Authentication successful
+                  data:
+                    type: object
+                    properties:
+                      id:
+                        type: integer
+                      name:
+                        type: string
+                      lastname:
+                        type: string
+                      email:
+                        type: string
+                      roles:
+                        type: array
+                        items:
+                          type: string
+                  tokenInfo:
+                    type: object
+                    properties:
+                      issuedAt:
+                        type: string
+                        format: date-time
+                      expiresAt:
+                        type: string
+                        format: date-time
+          headers:
+            Set-Cookie:
+              schema:
+                type: string
+                example: token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...; HttpOnly; Secure; SameSite=Lax; Max-Age=3600
+        '401':
+          description: Invalid credentials
           content:
             application/json:
               schema:
@@ -22,13 +105,15 @@ paths:
                 properties:
                   message:
                     type: string
-                    example: Minha API Express
+                    example: Invalid credentials
+        '500':
+          description: Internal server error
 
-  /auth/login:
+  /register:
     post:
-      tags:
-        - Auth
-      summary: Realiza login do usuário
+      tags: [Public]
+      summary: Register new user
+      description: Creates a new user account and automatically logs in
       requestBody:
         required: true
         content:
@@ -41,226 +126,2255 @@ paths:
               properties:
                 email:
                   type: string
-                  example: usuario@email.com
+                  format: email
+                  example: newuser@example.com
                 password:
                   type: string
-                  example: senha123
-      responses:
-        '200':
-          description: Login bem-sucedido
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  token:
-                    type: string
-                    example: eyJhbGciOiJIUzI1NiIsInR...
-        '401':
-          description: Credenciais inválidas
-
-  /auth/register:
-    post:
-      tags:
-        - Auth
-      summary: Registra um novo usuário
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              required:
-                - name
-                - email
-                - password
-              properties:
+                  format: password
+                  example: newpassword123
                 name:
                   type: string
-                  example: Felipe Maia
-                email:
+                  example: John
+                lastname:
                   type: string
-                  example: usuario@email.com
-                password:
-                  type: string
-                  example: senha123
+                  example: Doe
       responses:
         '201':
-          description: Usuário registrado
+          description: User registered and logged in successfully
           content:
             application/json:
               schema:
                 type: object
                 properties:
-                  id:
-                    type: integer
-                    example: 1
-                  name:
+                  message:
                     type: string
-                    example: Felipe Maia
-                  email:
-                    type: string
-                    example: usuario@email.com
+                    example: User registered and logged in successfully
+                  data:
+                    type: object
+                    properties:
+                      id:
+                        type: integer
+                      email:
+                        type: string
+                      name:
+                        type: string
+                      lastname:
+                        type: string
+          headers:
+            Set-Cookie:
+              schema:
+                type: string
+                example: token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...; HttpOnly; Secure; SameSite=Lax; Max-Age=3600
         '400':
-          description: Erro na validação dos dados
-  /users:
-      get:
-        tags:
-          - Users
-        summary: Retorna todos os usuários
-        security:
-          - bearerAuth: []
-        responses:
-          '200':
-            description: Lista de usuários
-            content:
-              application/json:
-                schema:
-                  type: array
-                  items:
-                    $ref: '#/components/schemas/User'
-      post:
-        tags:
-          - Users
-        summary: Cria um novo usuário
-        security:
-          - bearerAuth: []
-        requestBody:
-          required: true
+          description: Bad request - Email already registered or invalid data
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/UserInput'
-        responses:
-          '200':
-            description: Usuário criado
-            content:
-              application/json:
-                schema:
-                  $ref: '#/components/schemas/User'
-
-  /users/{id}:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Email is already registered
+        '500':
+          description: Internal server error
+  /auth/me:
     get:
-      tags:
-        - Users
-      summary: Retorna um usuário pelo ID
+      tags: [Auth]
+      summary: Get current user information
+      description: Returns information about the currently authenticated user
       security:
-        - bearerAuth: []
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: integer
+        - cookieAuth: []
       responses:
         '200':
-          description: Usuário encontrado
+          description: User information retrieved successfully
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/User'
+                type: object
+                properties:
+                  user:
+                    type: object
+                    properties:
+                      id:
+                        type: integer
+                      email:
+                        type: string
+                      name:
+                        type: string
+                      lastname:
+                        type: string
+                      roles:
+                        type: array
+                        items:
+                          type: string
+                  tokenInfo:
+                    type: object
+                    properties:
+                      issuedAt:
+                        type: string
+                        format: date-time
+                      expiresAt:
+                        type: string
+                        format: date-time
+        '401':
+          description: Unauthorized - Invalid or missing token
         '404':
-          description: Usuário não encontrado
-    put:
-      tags:
-        - Users
-      summary: Atualiza um usuário pelo ID
-      security:
-        - bearerAuth: []
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: integer
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/UserInput'
-      responses:
-        '200':
-          description: Usuário atualizado
-    delete:
-      tags:
-        - Users
-      summary: Deleta um usuário pelo ID
-      security:
-        - bearerAuth: []
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: integer
-      responses:
-        '200':
-          description: Usuário deletado
+          description: User not found
+        '500':
+          description: Internal server error
 
-  /users/roles:
+  /users:
     get:
-      tags:
-        - Users
-      summary: Retorna todos os papéis de usuários
+      tags: [Users]
+      summary: Get all users
+      description: Returns a list of all users
       security:
-        - bearerAuth: []
+        - cookieAuth: []
       responses:
         '200':
-          description: Lista de roles
+          description: Users retrieved successfully
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  type: string
+                  $ref: '#/components/schemas/User'
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal server error
+
+    post:
+      tags: [Users]
+      summary: Create a new user
+      description: Creates a new user with the provided data
+      security:
+        - cookieAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateUser'
+      responses:
+        '200':
+          description: User created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '400':
+          description: Bad request - Invalid input data
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal server error
+
+  /users/roles:
+    get:
+      tags: [Users]
+      summary: Get all users with roles
+      description: Returns a list of all users with their associated roles
+      security:
+        - cookieAuth: []
+      responses:
+        '200':
+          description: Users with roles retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/UserWithRoles'
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal server error
+
+  /users/{id}:
+    get:
+      tags: [Users]
+      summary: Get user by ID
+      description: Returns a user by their ID
+      security:
+        - cookieAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: User retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '401':
+          description: Unauthorized
+        '404':
+          description: User not found
+        '500':
+          description: Internal server error
+
+    put:
+      tags: [Users]
+      summary: Update user
+      description: Updates an existing user
+      security:
+        - cookieAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateUser'
+      responses:
+        '200':
+          description: User updated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  message:
+                    type: string
+                    example: User updated
+        '400':
+          description: Bad request - Invalid input data
+        '401':
+          description: Unauthorized
+        '404':
+          description: User not found
+        '500':
+          description: Internal server error
+
+    delete:
+      tags: [Users]
+      summary: Delete user
+      description: Deletes a user by ID
+      security:
+        - cookieAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: User deleted successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  message:
+                    type: string
+                    example: User deleted
+        '401':
+          description: Unauthorized
+        '404':
+          description: User not found
+        '500':
+          description: Internal server error
 
   /users/authenticate:
     post:
-      tags:
-        - Users
-      summary: Autentica um usuário (login)
+      tags: [Users]
+      summary: Authenticate user
+      description: Authenticates a user with email and password
+      security:
+        - cookieAuth: []
       requestBody:
         required: true
         content:
           application/json:
             schema:
               type: object
-              required:
-                - email
-                - password
               properties:
                 email:
                   type: string
-                  example: usuario@email.com
+                  format: email
                 password:
                   type: string
-                  example: senha123
       responses:
         '200':
-          description: Usuário autenticado
+          description: Authentication successful
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  token:
-                    type: string
-                    example: eyJhbGciOiJIUzI1NiIsInR...
+                $ref: '#/components/schemas/User'
         '401':
-          description: Credenciais inválidas
+          description: Invalid credentials
+        '500':
+          description: Internal server error
 
   /users/register:
     post:
-      tags:
-        - Users
-      summary: Registra um novo usuário
+      tags: [Users]
+      summary: Register new user
+      description: Registers a new user account
+      security:
+        - cookieAuth: []
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/UserInput'
+              $ref: '#/components/schemas/RegisterUser'
       responses:
         '200':
-          description: Usuário registrado com sucesso
+          description: User registered successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  message:
+                    type: string
+                    example: User registered successfully
+        '400':
+          description: Bad request - Invalid input data
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal server error
+
+  /roles:
+    get:
+      tags: [Roles]
+      summary: Get all roles
+      description: Returns a list of all roles
+      security:
+        - cookieAuth: []
+      responses:
+        '200':
+          description: Roles retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Role'
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal server error
+
+    post:
+      tags: [Roles]
+      summary: Create a new role
+      description: Creates a new role with the provided data
+      security:
+        - cookieAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateRole'
+      responses:
+        '200':
+          description: Role created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  message:
+                    type: string
+                    example: Role registered successfully
+        '400':
+          description: Bad request - Invalid input data
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal server error
+
+  /roles/all:
+    get:
+      tags: [Roles]
+      summary: Get all roles with permissions
+      description: Returns a list of all roles with their associated permissions
+      security:
+        - cookieAuth: []
+      responses:
+        '200':
+          description: Roles with permissions retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/RoleWithPermissions'
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal server error
+
+  /roles/roles:
+    get:
+      tags: [Roles]
+      summary: Get roles with permissions
+      description: Returns roles with their associated permissions
+      security:
+        - cookieAuth: []
+      responses:
+        '200':
+          description: Roles with permissions retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/RoleWithPermissions'
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal server error
+
+  /roles/{id}:
+    get:
+      tags: [Roles]
+      summary: Get role by ID
+      description: Returns a role by its ID
+      security:
+        - cookieAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Role retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Role'
+        '401':
+          description: Unauthorized
+        '404':
+          description: Role not found
+        '500':
+          description: Internal server error
+
+    patch:
+      tags: [Roles]
+      summary: Update role
+      description: Updates an existing role
+      security:
+        - cookieAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateRole'
+      responses:
+        '200':
+          description: Role updated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  message:
+                    type: string
+                    example: Role updated
+        '400':
+          description: Bad request - Invalid input data
+        '401':
+          description: Unauthorized
+        '404':
+          description: Role not found
+        '500':
+          description: Internal server error
+
+    delete:
+      tags: [Roles]
+      summary: Delete role
+      description: Deletes a role by ID
+      security:
+        - cookieAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Role deleted successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  message:
+                    type: string
+                    example: Role deleted
+        '401':
+          description: Unauthorized
+        '404':
+          description: Role not found
+        '500':
+          description: Internal server error
+
+  /roles/add-with-permissions:
+    post:
+      tags: [Roles]
+      summary: Create role with permissions
+      description: Creates a new role with associated permissions
+      security:
+        - cookieAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                permissions:
+                  type: array
+                  items:
+                    type: string
+      responses:
+        '200':
+          description: Role with permissions created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Role'
+        '400':
+          description: Bad request - Invalid input data
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal server error
+
+  /articles:
+    get:
+      tags: [Articles]
+      summary: Get all articles
+      description: Returns a list of all articles
+      security:
+        - cookieAuth: []
+      responses:
+        '200':
+          description: Articles retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Article'
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal server error
+
+    post:
+      tags: [Articles]
+      summary: Create a new article
+      description: Creates a new article with the provided data
+      security:
+        - cookieAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateArticle'
+      responses:
+        '200':
+          description: Article created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Article created with file updated
+        '400':
+          description: Bad request - Invalid input data
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal server error
+
+  /articles/last:
+    get:
+      tags: [Articles]
+      summary: Get last registered article
+      description: Returns the most recently created article
+      security:
+        - cookieAuth: []
+      responses:
+        '200':
+          description: Last article retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Article'
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal server error
+
+  /articles/paginated:
+    get:
+      tags: [Articles]
+      summary: Get paginated articles
+      description: Returns articles with pagination, search, and ordering
+      security:
+        - cookieAuth: []
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: pageSize
+          in: query
+          schema:
+            type: integer
+        - name: search
+          in: query
+          schema:
+            type: string
+        - name: order
+          in: query
+          schema:
+            type: string
+            description: JSON array of ordering criteria
+      responses:
+        '200':
+          description: Paginated articles retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  articles:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Article'
+                  totalPages:
+                    type: integer
+                  currentPage:
+                    type: integer
+                  totalItems:
+                    type: integer
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal server error
+
+  /articles/{id}:
+    get:
+      tags: [Articles]
+      summary: Get article by ID
+      description: Returns an article by its ID
+      security:
+        - cookieAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Article retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Article'
+        '401':
+          description: Unauthorized
+        '404':
+          description: Article not found
+        '500':
+          description: Internal server error
+
+    patch:
+      tags: [Articles]
+      summary: Update article
+      description: Updates an existing article
+      security:
+        - cookieAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateArticle'
+      responses:
+        '200':
+          description: Article updated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Article updated
+        '400':
+          description: Bad request - Invalid input data
+        '401':
+          description: Unauthorized
+        '404':
+          description: Article not found
+        '500':
+          description: Internal server error
+
+    delete:
+      tags: [Articles]
+      summary: Delete article
+      description: Deletes an article by ID
+      security:
+        - cookieAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Article deleted successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Article deleted
+        '401':
+          description: Unauthorized
+        '404':
+          description: Article not found
+        '500':
+          description: Internal server error
+
+  /articles/create-with-return:
+    post:
+      tags: [Articles]
+      summary: Create article and return ID
+      description: Creates a new article and returns its ID
+      security:
+        - cookieAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateArticle'
+      responses:
+        '200':
+          description: Article created successfully with ID returned
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  message:
+                    type: string
+                    example: Article created
+                  id:
+                    type: integer
+        '400':
+          description: Bad request - Invalid input data
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal server error
+
+  /categories:
+    get:
+      tags: [Categories]
+      summary: Get all categories
+      description: Returns a list of all categories
+      security:
+        - cookieAuth: []
+      responses:
+        '200':
+          description: Categories retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Category'
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal server error
+
+    post:
+      tags: [Categories]
+      summary: Create a new category
+      description: Creates a new category with the provided data
+      security:
+        - cookieAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateCategory'
+      responses:
+        '200':
+          description: Category created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Category created
+        '400':
+          description: Bad request - Invalid input data
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal server error
+
+  /categories/with-subcategories:
+    post:
+      tags: [Categories]
+      summary: Create category with subcategories
+      description: Creates a new category with associated subcategories
+      security:
+        - cookieAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateCategoryWithSubcategories'
+      responses:
+        '200':
+          description: Category with subcategories created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Category with subcategories created
+        '400':
+          description: Bad request - Invalid input data
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal server error
+
+  /categories/{id}:
+    get:
+      tags: [Categories]
+      summary: Get category by ID
+      description: Returns a category by its ID
+      security:
+        - cookieAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Category retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Category'
+        '401':
+          description: Unauthorized
+        '404':
+          description: Category not found
+        '500':
+          description: Internal server error
+
+    patch:
+      tags: [Categories]
+      summary: Update category
+      description: Updates an existing category
+      security:
+        - cookieAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateCategory'
+      responses:
+        '200':
+          description: Category updated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Category updated
+        '400':
+          description: Bad request - Invalid input data
+        '401':
+          description: Unauthorized
+        '404':
+          description: Category not found
+        '500':
+          description: Internal server error
+
+    delete:
+      tags: [Categories]
+      summary: Delete category
+      description: Deletes a category by ID
+      security:
+        - cookieAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Category deleted successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Category deleted
+        '401':
+          description: Unauthorized
+        '404':
+          description: Category not found
+        '500':
+          description: Internal server error
+
+  /files/upload:
+    post:
+      tags: [Files]
+      summary: Upload file
+      description: Uploads a file to the server
+      security:
+        - cookieAuth: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file:
+                  type: string
+                  format: binary
+      responses:
+        '200':
+          description: File uploaded successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: object
+                    properties:
+                      uploaded:
+                        type: string
+                      saved:
+                        type: string
+                      file:
+                        type: object
+                        properties:
+                          originalName:
+                            type: string
+                          name:
+                            type: string
+                          path:
+                            type: string
+                      created:
+                        $ref: '#/components/schemas/File'
+        '400':
+          description: Bad request - No file uploaded
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal server error
+
+  /files/all:
+    get:
+      tags: [Files]
+      summary: Get all files
+      description: Returns a list of all files in the upload directory
+      security:
+        - cookieAuth: []
+      responses:
+        '200':
+          description: Files retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    name:
+                      type: string
+                    url:
+                      type: string
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal server error
+
+  /files/{name}:
+    get:
+      tags: [Files]
+      summary: Download file
+      description: Downloads a file by its name
+      security:
+        - cookieAuth: []
+      parameters:
+        - name: name
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: File downloaded successfully
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+        '401':
+          description: Unauthorized
+        '404':
+          description: File not found
+        '500':
+          description: Internal server error
+
+  /files:
+    get:
+      tags: [Files]
+      summary: Get all file records
+      description: Returns a list of all file records from the database
+      security:
+        - cookieAuth: []
+      responses:
+        '200':
+          description: File records retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/File'
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal server error
+
+    post:
+      tags: [Files]
+      summary: Create file record
+      description: Creates a new file record in the database
+      security:
+        - cookieAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateFile'
+      responses:
+        '200':
+          description: File record created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: File created
+        '400':
+          description: Bad request - Invalid input data
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal server error
+
+  /files/last:
+    get:
+      tags: [Files]
+      summary: Get last file record
+      description: Returns the most recently created file record
+      security:
+        - cookieAuth: []
+      responses:
+        '200':
+          description: Last file record retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/File'
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal server error
+
+  /files/{id}:
+    get:
+      tags: [Files]
+      summary: Get file record by ID
+      description: Returns a file record by its ID
+      security:
+        - cookieAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: File record retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/File'
+        '401':
+          description: Unauthorized
+        '404':
+          description: File record not found
+        '500':
+          description: Internal server error
+
+    put:
+      tags: [Files]
+      summary: Update file record
+      description: Updates an existing file record
+      security:
+        - cookieAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateFile'
+      responses:
+        '200':
+          description: File record updated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: File updated
+        '400':
+          description: Bad request - Invalid input data
+        '401':
+          description: Unauthorized
+        '404':
+          description: File record not found
+        '500':
+          description: Internal server error
+
+    delete:
+      tags: [Files]
+      summary: Delete file record
+      description: Deletes a file record by ID
+      security:
+        - cookieAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: File record deleted successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: File deleted
+        '401':
+          description: Unauthorized
+        '404':
+          description: File record not found
+        '500':
+          description: Internal server error
+
+  /permissions:
+    get:
+      tags: [Permissions]
+      summary: Get all permissions
+      description: Returns a list of all permissions
+      security:
+        - cookieAuth: []
+      responses:
+        '200':
+          description: Permissions retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Permission'
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal server error
+
+    post:
+      tags: [Permissions]
+      summary: Create a new permission
+      description: Creates a new permission with the provided data
+      security:
+        - cookieAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreatePermission'
+      responses:
+        '200':
+          description: Permission created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  message:
+                    type: string
+                    example: Permission created
+        '400':
+          description: Bad request - Invalid input data
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal server error
+
+  /permissions/all:
+    get:
+      tags: [Permissions]
+      summary: Get all permissions with roles
+      description: Returns a list of all permissions with their associated roles
+      security:
+        - cookieAuth: []
+      responses:
+        '200':
+          description: Permissions with roles retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/PermissionWithRoles'
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal server error
+
+  /permissions/roles:
+    get:
+      tags: [Permissions]
+      summary: Get permissions with roles
+      description: Returns permissions with their associated roles
+      security:
+        - cookieAuth: []
+      responses:
+        '200':
+          description: Permissions with roles retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/PermissionWithRoles'
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal server error
+
+  /permissions/{id}:
+    get:
+      tags: [Permissions]
+      summary: Get permission by ID
+      description: Returns a permission by its ID
+      security:
+        - cookieAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Permission retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Permission'
+        '401':
+          description: Unauthorized
+        '404':
+          description: Permission not found
+        '500':
+          description: Internal server error
+
+    patch:
+      tags: [Permissions]
+      summary: Update permission
+      description: Updates an existing permission
+      security:
+        - cookieAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdatePermission'
+      responses:
+        '200':
+          description: Permission updated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  message:
+                    type: string
+                    example: Permission updated
+        '400':
+          description: Bad request - Invalid input data
+        '401':
+          description: Unauthorized
+        '404':
+          description: Permission not found
+        '500':
+          description: Internal server error
+
+    delete:
+      tags: [Permissions]
+      summary: Delete permission
+      description: Deletes a permission by ID
+      security:
+        - cookieAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Permission deleted successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  message:
+                    type: string
+                    example: Permission deleted
+        '401':
+          description: Unauthorized
+        '404':
+          description: Permission not found
+        '500':
+          description: Internal server error
+
+  /permissions/add:
+    post:
+      tags: [Permissions]
+      summary: Add permission to role
+      description: Adds a permission to a role
+      security:
+        - cookieAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                roleName:
+                  type: string
+                permissionName:
+                  type: string
+      responses:
+        '200':
+          description: Permission added to role successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  message:
+                    type: string
+                    example: Permission added successfully
+                  role:
+                    $ref: '#/components/schemas/Role'
+        '400':
+          description: Bad request - Invalid input data
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal server error
+
+  /settings:
+    get:
+      tags: [Settings]
+      summary: Get all settings
+      description: Returns a list of all application settings
+      security:
+        - cookieAuth: []
+      responses:
+        '200':
+          description: Settings retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Setting'
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal server error
+
+  /settings/pagination:
+    get:
+      tags: [Settings]
+      summary: Get pagination settings
+      description: Returns pagination-related settings
+      security:
+        - cookieAuth: []
+      responses:
+        '200':
+          description: Pagination settings retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginationSettings'
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal server error
+
+  /settings/uploadpath:
+    get:
+      tags: [Settings]
+      summary: Get upload path settings
+      description: Returns upload path-related settings
+      security:
+        - cookieAuth: []
+      responses:
+        '200':
+          description: Upload path settings retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UploadPathSettings'
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal server error
+
+  /settings/filesize:
+    get:
+      tags: [Settings]
+      summary: Get file size settings
+      description: Returns file size-related settings
+      security:
+        - cookieAuth: []
+      responses:
+        '200':
+          description: File size settings retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FileSizeSettings'
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal server error
+
+  /settings/{id}:
+    get:
+      tags: [Settings]
+      summary: Get setting by ID
+      description: Returns a setting by its ID
+      security:
+        - cookieAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Setting retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Setting'
+        '401':
+          description: Unauthorized
+        '404':
+          description: Setting not found
+        '500':
+          description: Internal server error
+
+  /settings/updade:
+    put:
+      tags: [Settings]
+      summary: Update settings
+      description: Updates multiple application settings
+      security:
+        - cookieAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateSettings'
+      responses:
+        '200':
+          description: Settings updated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: partial
+                  message:
+                    type: string
+                  successes:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Setting'
+                  errors:
+                    type: array
+        '400':
+          description: Bad request - Invalid input data
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal server error
+
+  /status:
+    get:
+      tags: [Status]
+      summary: Get all statuses
+      description: Returns a list of all statuses
+      security:
+        - cookieAuth: []
+      responses:
+        '200':
+          description: Statuses retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Status'
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal server error
+
+    post:
+      tags: [Status]
+      summary: Create a new status
+      description: Creates a new status with the provided data
+      security:
+        - cookieAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateStatus'
+      responses:
+        '200':
+          description: Status created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  message:
+                    type: string
+                    example: Status created
+        '400':
+          description: Bad request - Invalid input data
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal server error
+
+  /status/{id}:
+    get:
+      tags: [Status]
+      summary: Get status by ID
+      description: Returns a status by its ID
+      security:
+        - cookieAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Status retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Status'
+        '401':
+          description: Unauthorized
+        '404':
+          description: Status not found
+        '500':
+          description: Internal server error
+
+    patch:
+      tags: [Status]
+      summary: Update status
+      description: Updates an existing status
+      security:
+        - cookieAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateStatus'
+      responses:
+        '200':
+          description: Status updated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  message:
+                    type: string
+                    example: Status updated
+        '400':
+          description: Bad request - Invalid input data
+        '401':
+          description: Unauthorized
+        '404':
+          description: Status not found
+        '500':
+          description: Internal server error
+
+    delete:
+      tags: [Status]
+      summary: Delete status
+      description: Deletes a status by ID
+      security:
+        - cookieAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Status deleted successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  message:
+                    type: string
+                    example: Status deleted
+        '401':
+          description: Unauthorized
+        '404':
+          description: Status not found
+        '500':
+          description: Internal server error
+
+components:
+  securitySchemes:
+    cookieAuth:
+      type: apiKey
+      in: cookie
+      name: token
+
+  schemas:
+    User:
+      type: object
+      properties:
+        id:
+          type: integer
+        email:
+          type: string
+          format: email
+        name:
+          type: string
+        lastname:
+          type: string
+        roles:
+          type: array
+          items:
+            type: string
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    CreateUser:
+      type: object
+      required:
+        - email
+        - name
+        - lastname
+        - password
+      properties:
+        email:
+          type: string
+          format: email
+        name:
+          type: string
+        lastname:
+          type: string
+        password:
+          type: string
+          minLength: 6
+        roles:
+          type: array
+          items:
+            type: string
+
+    UpdateUser:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+        name:
+          type: string
+        lastname:
+          type: string
+        password:
+          type: string
+          minLength: 6
+        roles:
+          type: array
+          items:
+            type: string
+
+    RegisterUser:
+      type: object
+      required:
+        - email
+        - name
+        - lastname
+        - password
+      properties:
+        email:
+          type: string
+          format: email
+        name:
+          type: string
+        lastname:
+          type: string
+        password:
+          type: string
+          minLength: 6
+
+    UserWithRoles:
+      type: object
+      properties:
+        id:
+          type: integer
+        email:
+          type: string
+          format: email
+        name:
+          type: string
+        lastname:
+          type: string
+        roles:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: integer
+              name:
+                type: string
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    Role:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    CreateRole:
+      type: object
+      required:
+        - name
+      properties:
+        name:
+          type: string
+
+    UpdateRole:
+      type: object
+      properties:
+        name:
+          type: string
+
+    RoleWithPermissions:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        permissions:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: integer
+              name:
+                type: string
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    Article:
+      type: object
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+        content:
+          type: string
+        categoryId:
+          type: integer
+        statusId:
+          type: integer
+        fileId:
+          type: integer
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    CreateArticle:
+      type: object
+      required:
+        - title
+        - content
+        - categoryId
+        - statusId
+      properties:
+        title:
+          type: string
+        content:
+          type: string
+        categoryId:
+          type: integer
+        statusId:
+          type: integer
+        fileId:
+          type: integer
+
+    UpdateArticle:
+      type: object
+      properties:
+        title:
+          type: string
+        content:
+          type: string
+        categoryId:
+          type: integer
+        statusId:
+          type: integer
+        fileId:
+          type: integer
+
+    Category:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        parentId:
+          type: integer
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    CreateCategory:
+      type: object
+      required:
+        - name
+      properties:
+        name:
+          type: string
+        parentId:
+          type: integer
+
+    UpdateCategory:
+      type: object
+      properties:
+        name:
+          type: string
+        parentId:
+          type: integer
+
+    CreateCategoryWithSubcategories:
+      type: object
+      required:
+        - name
+        - subcategories
+      properties:
+        name:
+          type: string
+        subcategories:
+          type: array
+          items:
+            type: object
+            properties:
+              name:
+                type: string
+
+    File:
+      type: object
+      properties:
+        id:
+          type: integer
+        originalName:
+          type: string
+        name:
+          type: string
+        path:
+          type: string
+        size:
+          type: integer
+        mimetype:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    CreateFile:
+      type: object
+      required:
+        - originalName
+        - name
+        - path
+        - size
+        - mimetype
+      properties:
+        originalName:
+          type: string
+        name:
+          type: string
+        path:
+          type: string
+        size:
+          type: integer
+        mimetype:
+          type: string
+
+    UpdateFile:
+      type: object
+      properties:
+        originalName:
+          type: string
+        name:
+          type: string
+        path:
+          type: string
+        size:
+          type: integer
+        mimetype:
+          type: string
+
+    Permission:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    CreatePermission:
+      type: object
+      required:
+        - name
+      properties:
+        name:
+          type: string
+
+    UpdatePermission:
+      type: object
+      properties:
+        name:
+          type: string
+
+    PermissionWithRoles:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        roles:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: integer
+              name:
+                type: string
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    Setting:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        value:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    UpdateSettings:
+      type: object
+      properties:
+        settings:
+          type: array
+          items:
+            type: object
+            properties:
+              name:
+                type: string
+              value:
+                type: string
+
+    PaginationSettings:
+      type: object
+      properties:
+        pageSize:
+          type: integer
+
+    UploadPathSettings:
+      type: object
+      properties:
+        uploadPath:
+          type: string
+
+    FileSizeSettings:
+      type: object
+      properties:
+        maxFileSize:
+          type: integer
+
+    Status:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    CreateStatus:
+      type: object
+      required:
+        - name
+      properties:
+        name:
+          type: string
+
+    UpdateStatus:
+      type: object
+      properties:
+        name:
+          type: string
+
