@@ -1,16 +1,16 @@
 const Sequelize = require('sequelize');
 
 /**
- * Paginação genérica para qualquer entidade Sequelize.
+ * Generic pagination for any Sequelize entity.
  *
- * @param {Object} model - O modelo Sequelize (ex: User, Article).
- * @param {Object} options - Opções de paginação e filtros.
- * @param {number} options.page - Página atual.
- * @param {number} options.pageSize - Tamanho da página.
- * @param {Object} [options.searchFields] - Campos para realizar buscas (ex: { name: "John" }).
- * @param {string} [options.searchQuery] - Texto de busca.
- * @param {Array} [options.order] - Ordenação (ex: [['createdAt', 'DESC']]).
- * @returns {Object} - Resultados paginados.
+ * @param {Object} model - The Sequelize model (e.g., User, Article).
+ * @param {Object} options - Pagination and filter options.
+ * @param {number} options.page - Current page.
+ * @param {number} options.pageSize - Page size.
+ * @param {Object} [options.searchFields] - Fields to search (e.g., { name: "John" }).
+ * @param {string} [options.searchQuery] - Search text.
+ * @param {Array} [options.order] - Ordering (e.g., [['createdAt', 'DESC']]).
+ * @returns {Object} - Paginated results.
  */
 async function paginate(model, { page = 1, pageSize = 10, searchFields = [], searchQuery = '', order = [['createdAt', 'DESC']] }) {
     const limit = pageSize;

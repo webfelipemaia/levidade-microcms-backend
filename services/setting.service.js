@@ -1,5 +1,6 @@
 const db = require('../helpers/db.helper');
 const settingsHelper = require('../helpers/settings.helper');
+const logger = require("../config/logger");
 
 module.exports = {
     getAll,
@@ -10,79 +11,105 @@ module.exports = {
     fileSize,
 };
 
-
+/**
+ * Get pagination settings
+ */
 async function pagination() {
   try {
-    return await settingsHelper.getSettingsByPrefix('pagination');
+    const data = await settingsHelper.getSettingsByPrefix('pagination');
+    return { status: "success", data };
   } catch (error) {
-    console.error('Erro ao carregar configuração de paginação:', error);
-      throw error;
+    logger.error(`[SettingService] Error in pagination: ${error.message}`);
+    throw { status: "error", message: "Failed to load pagination settings." };
   }
 }
 
+/**
+ * Get uploadPath settings
+ */
 async function uploadPath() {
   try {
-    return await settingsHelper.getSettingsByPrefix('uploadPath');
+    const data = await settingsHelper.getSettingsByPrefix('uploadPath');
+    return { status: "success", data };
   } catch (error) {
-    console.error('Erro ao carregar configuração de uploadPath:', error);
-      throw error;
+    logger.error(`[SettingService] Error in uploadPath: ${error.message}`);
+    throw { status: "error", message: "Failed to load uploadPath settings." };
   }
 }
 
+/**
+ * Get fileSize settings
+ */
 async function fileSize() {
   try {
-    return await settingsHelper.getSettingsByName('filesize');
+    const data = await settingsHelper.getSettingsByName('filesize');
+    return { status: "success", data };
   } catch (error) {
-    console.error('Erro ao carregar configuração de filesize:', error);
-      throw error;
+    logger.error(`[SettingService] Error in fileSize: ${error.message}`);
+    throw { status: "error", message: "Failed to load filesize settings." };
   }
 }
 
+/**
+ * Get all system settings
+ */
 async function getAll() {
-    return await db.SystemSettings.findAll();
+  try {
+    const settings = await db.SystemSettings.findAll();
+    return { status: "success", data: settings };
+  } catch (error) {
+    logger.error(`[SettingService] Error in getAll: ${error.message}`);
+    throw { status: "error", message: "Failed to retrieve settings." };
+  }
 }
 
+/**
+ * Get setting by ID
+ */
 async function getById(id) {
-    return await getName(id);
+  return await getName(id);
 }
 
+/**
+ * Update a system setting
+ */
 async function update(id, params) {
   try {
-      const rowsUpdated = await db.SystemSettings.update(
-          { value: params.value },
-          { where: { id } }
-      );
+    const [rowsUpdated] = await db.SystemSettings.update(
+      { value: params.value },
+      { where: { id } }
+    );
 
-      // Verifica se o registro foi encontrado e atualizado
-      if (rowsUpdated[0] === 0) {
-          throw new Error(`Configuração com ID ${id} não encontrada ou não foi alterada.`);
-      }
-
+    if (rowsUpdated === 0) {
       return {
-          id,
-          status: 'success',
-          message: `Configuração com ID ${id} atualizada com sucesso.`
+        status: "error",
+        message: `Setting with ID ${id} not found or not updated.`
       };
+    }
+
+    return {
+      id,
+      status: "success",
+      message: `Setting with ID ${id} updated successfully.`
+    };
   } catch (error) {
-      // Retorna erro detalhado para facilitar o debugging
-      console.error(`Erro ao atualizar configuração com ID ${id}:`, error);
-      throw new Error(`Erro ao atualizar configuração com ID ${id}.`);
+    logger.error(`[SettingService] Error in update (ID: ${id}): ${error.message}`);
+    throw { status: "error", message: `Failed to update setting with ID ${id}.` };
   }
 }
 
-// helper functions
-
+/**
+ * Helper: Get setting by ID
+ */
 async function getName(id) {
-    const status = await db.SystemSettings.findByPk(id);
-    if (!status) {
-        return { 
-            status: "error", 
-            message: "Setting name not found" 
-        }
-    } else {
-        return { 
-            status: "success", 
-            data: status 
-        }
+  try {
+    const setting = await db.SystemSettings.findByPk(id);
+    if (!setting) {
+      return { status: "error", message: "Setting not found" };
     }
+    return { status: "success", data: setting };
+  } catch (error) {
+    logger.error(`[SettingService] Error in getName (ID: ${id}): ${error.message}`);
+    throw { status: "error", message: "Failed to retrieve setting." };
+  }
 }

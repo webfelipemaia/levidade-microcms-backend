@@ -1,6 +1,7 @@
 const config = require('../config/config.js');
 const sequelize = require('../config/database.js');
 const mysql = require('mysql2/promise');
+const logger = require("../config/logger");
 
 const User = require('../models/user.model');
 const Role = require('../models/role.model');
@@ -53,22 +54,21 @@ async function initialize() {
     db.UsersFiles = UsersFiles;
     db.SystemSettings = SystemSettings;
     
-  // Sincroniza os modelos com o banco
   await syncDatabase();
 }
 
-// Função para sincronizar o banco com base no ambiente
+//** Synchronizes the database based on the environment */
 async function syncDatabase() {
   try {
     if (process.env.NODE_ENV === 'test') {
       await sequelize.sync({ alter: false });
-      console.log('Banco sincronizado com `force: true` para testes.');
+      logger.info('Database synchronized with `force: true` for testing.');
     } else {
       await sequelize.sync({ alter: false });
-      console.log('Banco sincronizado com `alter: false` para produção/dev.');
+      logger.info('Database synchronized with `alter: false` for dev/production.');
     }
   } catch (error) {
-    console.error('Erro ao sincronizar o banco:', error);
+    logger.error('Erro ao sincronizar o banco:', error);
   }
 }
 

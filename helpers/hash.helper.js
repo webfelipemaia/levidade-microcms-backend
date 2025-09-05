@@ -2,7 +2,13 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 require('dotenv').config();
 
-// Função para gerar uma string aleatória de 8 caracteres
+
+/**
+ * Function to generate a random string of 8 characters
+ *
+ * @param {*} length 
+ * @returns {string} 
+ */
 function generateRandomString(length) {
   const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
   let result = '';
@@ -13,6 +19,12 @@ function generateRandomString(length) {
   return result;
 }
 
+/**
+ * Generates the token
+ *
+ * @param {*} user 
+ * @returns {*} 
+ */
 function generateToken(user) {
   return jwt.sign(
     {

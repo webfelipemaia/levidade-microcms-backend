@@ -2,14 +2,30 @@
 const expressWinston = require("express-winston");
 const logger = require("../config/logger");
 
+
+/**
+ * Class for logging
+ *
+ * @class AppLogger
+ * @typedef {AppLogger}
+ */
 class AppLogger {
-  constructor(app) {
+
+  /**
+ * Creates an instance of AppLogger.
+ * Exposes for manual logs: info/warn/error/debug.
+ *
+ * @constructor
+ * @param {*} app 
+ */
+constructor(app) {
     this.app = app;
-    this.logger = logger; // expõe para logs manuais: info/warn/error/debug
+    this.logger = logger;
   }
 
   // Chamada única no server.js
-  setup() {
+  /** Description placeholder */
+setup() {
     this.logRequests();
     this.logSlowRequests();
     this.logStatusErrors();
@@ -17,33 +33,62 @@ class AppLogger {
     this.handleProcessErrors();
   }
 
-  // ---------- logs manuais (substituem console.log) ----------
-  error(message, meta = {}) {
+ /**
+ * Logs errors that cause failure
+ *
+ * @param {*} message 
+ * @param {{}} [meta={}] 
+ */
+error(message, meta = {}) {
     this.logger.error(message, meta);
   }
-  warn(message, meta = {}) {
+  /**
+ * Logs warnings and potential problems
+ *
+ * @param {*} message 
+ * @param {{}} [meta={}] 
+ */
+warn(message, meta = {}) {
     this.logger.warn(message, meta);
   }
-  info(message, meta = {}) {
+  /**
+ * Logs general information
+ *
+ * @param {*} message 
+ * @param {{}} [meta={}] 
+ */
+info(message, meta = {}) {
     this.logger.info(message, meta);
   }
-  debug(message, meta = {}) {
+  /**
+ * Detailed logs
+ *
+ * @param {*} message 
+ * @param {{}} [meta={}] 
+ */
+debug(message, meta = {}) {
     this.logger.debug(message, meta);
   }
-  http(message, meta = {}) {
+  /**
+ * Log HTTP Requests
+ *
+ * @param {*} message 
+ * @param {{}} [meta={}] 
+ */
+http(message, meta = {}) {
     this.logger.info(message, meta);
   }
 
-  // ---------- middlewares ----------
-  logRequests() {
-    // Loga cada request com meta útil (ip, rota, user-agent)
+/** Logs each request with useful meta (ip, route, user-agent) */
+logRequests() {
+    
     this.app.use(
       expressWinston.logger({
         winstonInstance: this.logger,
         meta: true,
         msg: "HTTP {{req.method}} {{req.url}}",
         expressFormat: false,
-        colorize: false, // o colorize é tratado no transport do console
+        colorize: false,
         dynamicMeta: (req) => ({
           ip: req.ip,
           route: req.originalUrl,
@@ -53,13 +98,18 @@ class AppLogger {
     );
   }
 
-  logSlowRequests(thresholdMs = 1000) {
+  /**
+ * Records slow request log
+ * Execution time can be measured and logged when slow requests occur.
+ * @param {number} [thresholdMs=1000] 
+ */
+logSlowRequests(thresholdMs = 1000) {
     this.app.use((req, res, next) => {
       const start = Date.now();
       res.on("finish", () => {
         const duration = Date.now() - start;
         if (duration > thresholdMs) {
-          this.warn("Requisição lenta", {
+          this.warn("Slow request", {
             method: req.method,
             route: req.originalUrl,
             duration,
@@ -72,13 +122,18 @@ class AppLogger {
     });
   }
 
-  logStatusErrors() {
-    // Avisa quando a resposta sair com 4xx/5xx
+  /** 
+   * Notify when the response comes out with 4xx/5xx
+   * You can use other middleware to check the response status and log data. 
+   * 
+   */
+logStatusErrors() {
+    
     this.app.use((req, res, next) => {
       const originalSend = res.send;
       res.send = function (body) {
         if (res.statusCode >= 400) {
-          logger.warn("Resposta com erro", {
+          logger.warn("Error response", {
             method: req.method,
             route: req.originalUrl,
             status: res.statusCode,
@@ -91,10 +146,11 @@ class AppLogger {
     });
   }
 
-  logErrors() {
-    // Middleware de erro do Express (tem 4 args!)
+  /** Intercepts errors that occur during requests. */
+logErrors() {
+  
     this.app.use((err, req, res, next) => {
-      this.error("Erro de aplicação", {
+      this.error("Application error", {
         message: err.message,
         stack: err.stack,
         route: req.originalUrl,
@@ -105,14 +161,15 @@ class AppLogger {
 
       // resposta ao cliente
       res.status(err.status || 500).json({
-        error: "Erro interno no servidor",
+        error: "Internal server error",
       });
     });
   }
 
-  handleProcessErrors() {
+  /** Catches any error that "escaped" from middleware and normal application logic */
+handleProcessErrors() {
     process.on("uncaughtException", (err) => {
-      this.error("Exceção não capturada", {
+      this.error("Uncaught exception", {
         message: err.message,
         stack: err.stack,
       });
@@ -122,12 +179,12 @@ class AppLogger {
     process.on("unhandledRejection", (reason) => {
       
       if (reason instanceof Error) {
-        this.error("Promise rejeitada não tratada", {
+        this.error("Untreated rejected promise", {
           message: reason.message,
           stack: reason.stack,
         });
       } else {
-        this.error("Promise rejeitada não tratada", { reason });
+        this.error("Untreated rejected promise", { reason });
       }
     });
   }

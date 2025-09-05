@@ -5,18 +5,17 @@ const path = require("path")
 require('dotenv').config();
 const { createLogger, format, transports } = require("winston");
 
-// ---- Configs vindas do .env ----
 const settings = {
   level: process.env.LOG_LEVEL || "info",
   toConsole: process.env.LOG_TO_CONSOLE === "true",
   toFile: process.env.LOG_TO_FILE === "true",
-  formatType: process.env.LOG_FORMAT || "json", // json | text
+  formatType: process.env.LOG_FORMAT || "json",
   dateFormat: process.env.LOG_DATE_FORMAT || "YYYY-MM-DD HH:mm:ss",
   logFilePath:
     process.env.LOG_FILE_PATH || path.join(__dirname, "../logs/app.log"),
 };
 
-// Garante a pasta de logs se for salvar em arquivo
+// Ensures the logs folder if saving to file
 if (settings.toFile) {
   const logDir = path.dirname(settings.logFilePath);
   if (!fs.existsSync(logDir)) {
@@ -24,13 +23,13 @@ if (settings.toFile) {
   }
 }
 
-// Formatação base (timestamp + stacktrace)
+// Base formatting (timestamp + stacktrace)
 const base = [
   format.timestamp({ format: settings.dateFormat }),
   format.errors({ stack: true }),
 ];
 
-// Builder de formato
+// Format Builder
 const buildFormat = (forConsole = true) => {
   if (settings.formatType === "json") {
     return format.combine(...base, format.json());
@@ -55,19 +54,19 @@ if (settings.toFile) {
   logTransports.push(
     new transports.File({
       filename: settings.logFilePath,
-      format: buildFormat(false), // arquivo sem cores
+      format: buildFormat(false),
     })
   );
 }
 
-// fallback: sempre ter pelo menos 1 transport
+// fallback: always have at least 1 transport
 if (logTransports.length === 0) {
   logTransports.push(new transports.Console({ format: buildFormat(true) }));
 }
 
 const logger = createLogger({
   level: settings.level,
-  format: format.combine(...base, format.json()), // fallback
+  format: format.combine(...base, format.json()),
   transports: logTransports,
 });
 

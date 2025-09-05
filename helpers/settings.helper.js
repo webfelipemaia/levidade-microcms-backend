@@ -1,9 +1,25 @@
 const db = require('./db.helper');
-const { Sequelize } = require("sequelize"); 
+const { Sequelize } = require("sequelize");
+const logger = require("../config/logger");
 
-let cache = null; // Cache em memória
-let cacheTimestamp = 0; // Timestamp do último carregamento do cache
-const CACHE_TTL = 5 * 60 * 1000; // Tempo de vida do cache: 5 minutos
+/**
+ * In-memory cache
+ *
+ * @type {*}
+ */
+let cache = null;
+/**
+ * Timestamp of last cache load
+ *
+ * @type {number}
+ */
+let cacheTimestamp = 0;
+/**
+ * Cache lifetime: 5 minutes
+ *
+ * @type {number}
+ */
+const CACHE_TTL = 5 * 60 * 1000;
 
 module.exports = {
   initializeCache,
@@ -21,38 +37,48 @@ module.exports = {
   }
 };
 
-// Inicializa o cache com valores padrão
+
+/** Initialize the cache with default values */
 function initializeCache() {
   cache = null;
   cacheTimestamp = 0;
 }
 
-// Limpa o cache
+
+/** Clear the cache */
 function clearCache() {
   initializeCache();
-  console.log('Cache limpo.');
+  logger.info('Cache limpo.');
 }
 
-// Verifica se o cache ainda é válido
+/**
+ * Checks if the cache is still valid
+ *
+ * @returns {boolean} 
+ */
 function isCacheValid() {
   return cache && Date.now() - cacheTimestamp <= CACHE_TTL;
 }
 
-// Obtém o valor do cache
+/** Gets the value from the cache */
 function getCache() {
   return cache;
 }
 
-// Atualiza o cache com novos dados e ajusta o timestamp
+/**
+ * Update the cache with new data and adjust the timestamp
+ *
+ * @param {*} data 
+ */
 function setCache(data) {
   cache = data;
   cacheTimestamp = Date.now();
 }
 
-// Carrega todas as configurações do banco com suporte a cache
+/** Loads all database settings with cache support */
 async function loadSettings() {
   if (!isCacheValid()) {
-    console.log('Carregando configurações do banco...');
+    logger.info('Loading database settings...');
     const settings = await db.SystemSettings.findAll();
 
     const processedSettings = settings.reduce((acc, setting) => {
@@ -60,7 +86,7 @@ async function loadSettings() {
       try {
         value = setting.type === 'json' ? JSON.parse(setting.value) : setting.value;
       } catch (e) {
-        console.error(`Erro ao parsear valor JSON para ${setting.settingName}:`, e);
+        logger.error(`Error parsing JSON value to ${setting.settingName}:`, e);
         value = setting.value;
       }
 
@@ -83,16 +109,22 @@ async function loadSettings() {
   return getCache();
 }
 
-// Obtém configurações específicas por nome
+
+/**
+ * Get specific settings by name
+ *
+ * @async
+ * @param {*} settingName 
+ * @returns {unknown} 
+ */
 async function getSettingsByName(settingName) {
   const settings = await loadSettings();
 
-  // Verifica se o nome existe
   if (!settings[settingName]) {
-    throw new Error(`Configuração "${settingName}" não encontrada no cache.`);
+    throw new Error(`Setting "${settingName}" not found in cache.`);
   }
 
-  // Transforma a configuração em um objeto chave-valor (adicionalValue -> value)
+  // Transforms the configuration into a key-value object (additionalValue -> value)
   return settings[settingName].reduce((acc, item) => {
     if (item.additionalValue && item.value !== undefined) {
       acc[item.additionalValue] = item.value;
@@ -101,7 +133,14 @@ async function getSettingsByName(settingName) {
   }, {});
 }
 
-// Obtém configurações específicas que começam com "uploadPath", por exemplo
+
+/**
+ * Gets specific settings that start with "uploadPath", e.g.
+ *
+ * @async
+ * @param {*} prefix 
+ * @returns {unknown} 
+ */
 async function getSettingsByPrefix(prefix) {
   try {    
     const settings = await db.SystemSettings.findAll({
@@ -124,12 +163,18 @@ async function getSettingsByPrefix(prefix) {
 
     return settingsObject;
   } catch (error) {
-    console.error("Erro ao buscar configurações por prefixo:", error);
+    logger.error("Error searching for settings by prefix:", error);
     throw error;
   }
 }
 
-// valida o tipo informado na definição de AUTH_DEBUG
+
+/**
+ * Validates the type given in the AUTH_DEBUG definition
+ *
+ * @param {*} value 
+ * @returns {*} 
+ */
 function parseBool(value) {
   if (value === undefined || value === null) return false;
   if (typeof value === 'boolean') return value;

@@ -4,6 +4,7 @@ const fs = require('fs');
 const path = require('path');
 const crypto = require("crypto");
 const { FILESIZES, UPLOAD_PATH, UPLOAD_CONTENT_TYPE } = require('../helpers/constants.helper');
+const logger = require("../config/logger");
 
 const maxSize = FILESIZES["2 MB"];
 const uploadLimit = 3;
@@ -11,99 +12,85 @@ const articleDir = UPLOAD_CONTENT_TYPE.ARTICLE;
 const pageDir = UPLOAD_CONTENT_TYPE.PAGE;
 const productDir = UPLOAD_CONTENT_TYPE.PRODUCT;
 
-// Function to check or create directories
+/**
+ * Ensures that a directory exists; if it does not, creates it.
+ *
+ * @param {string} dirPath - The path of the directory to check or create.
+ */
 function ensureDirectoryExistence(dirPath) {
   if (!fs.existsSync(dirPath)) {
     fs.mkdirSync(dirPath, { recursive: false });
-    console.log(`Directory created: ${dirPath}`);
+    logger.info(`Directory created: ${dirPath}`);
   }
 }
 
+/**
+ * Multer storage configuration for handling file uploads.
+ */
 let storage = multer.diskStorage({
-
+  /**
+   * Determines the destination folder for the uploaded file based on request body IDs.
+   *
+   * @param {import('express').Request} req - The Express request object.
+   * @param {Express.Multer.File} file - The uploaded file object.
+   * @param {Function} cb - The callback function to specify destination folder.
+   */
   destination: (req, file, cb) => {
-    
-    // base path of the "article" folder
     let uploadPath = __basedir + UPLOAD_PATH.CONTENT;
 
     if (req.body.articleId) {
-      
       const articleId = req.body.articleId;
-      uploadPath = __basedir + UPLOAD_PATH.CONTENT + articleDir;
-      
-      // folder /content/content_type/{articleId}
-      uploadPath = path.join(uploadPath, articleId);
-      
-      // Check if subfolder "{articleId}" exists, otherwise create
+      uploadPath = path.join(__basedir + UPLOAD_PATH.CONTENT + articleDir, articleId);
       ensureDirectoryExistence(uploadPath);
 
-    } else if(req.body.pageId) {
-
+    } else if (req.body.pageId) {
       const pageId = req.body.pageId;
-      uploadPath = __basedir + UPLOAD_PATH.CONTENT + pageDir;
-      
-      // folder /content/content_type/{pageId}
-      uploadPath = path.join(uploadPath, pageId);
-      
-      // Check if subfolder "{pageId}" exists, otherwise create
+      uploadPath = path.join(__basedir + UPLOAD_PATH.CONTENT + pageDir, pageId);
       ensureDirectoryExistence(uploadPath);
 
-    } else if(req.body.productId) {
-      
+    } else if (req.body.productId) {
       const productId = req.body.productId;
-      uploadPath = __basedir + UPLOAD_PATH.CONTENT + productDir;
-      
-      // folder /content/content_type/{productId}
-      uploadPath = path.join(uploadPath, productId);
-      
-      // Check if the subfolder "{productId}" exists, otherwise create it
+      uploadPath = path.join(__basedir + UPLOAD_PATH.CONTENT + productDir, productId);
       ensureDirectoryExistence(uploadPath);
 
     } else {
-      console.log('Upload file to default content folder.')
+      logger.info('Upload file to default content folder.');
     }
-    // Defines the upload directory as the final folder
-          const articleId = req.body.articleId;
-      uploadPath = __basedir + UPLOAD_PATH.CONTENT + articleDir;
-      
-      // folder /content/content_type/{articleId}
-      uploadPath = path.join(uploadPath, articleId);
-      
-      // Check if subfolder "{articleId}" exists, otherwise create
-      ensureDirectoryExistence(uploadPath);
+
     cb(null, uploadPath);
-    
   },
-  
+
+  /**
+   * Generates a unique filename for each uploaded file.
+   *
+   * @param {import('express').Request} req - The Express request object.
+   * @param {Express.Multer.File} file - The uploaded file object.
+   * @param {Function} cb - The callback function to specify the filename.
+   */
   filename: (req, file, cb) => {
-    
     const ext = path.extname(file.originalname);
     const uniqueName = crypto.randomBytes(16).toString('hex') + ext;
-    console.log("Original file name: " + file.originalname);
-    console.log("extension file: " + ext);
-    console.log("Generated file name: " + uniqueName);
-    //cb(null, file.originalname);
+    logger.info("Original file name: " + file.originalname, "extension file: " + ext, "Generated file name: " + uniqueName);
     cb(null, uniqueName);
   },
-
 });
 
+/**
+ * Middleware to handle multiple file uploads with Multer.
+ * Limits the file size and the number of files.
+ */
 let multipleUploadFile = multer({
   storage: storage,
-  limits: { fileSize: maxSize }, // Defines the file size limit
+  limits: { fileSize: maxSize },
 }).fields([
-  { name: "files", maxCount: uploadLimit }, // File Upload Field
+  { name: "files", maxCount: uploadLimit },
 ]);
 
-
-/* let multipleUploadFile = multer({
-  storage: storage,
-  limits: { fileSize: maxSize }, // Defines the file size limit
-}).fields([
-  { name: "articleId", maxCount: 1 }, // The `articleId` field
-  { name: "files", maxCount: uploadLimit }, // File Upload Field
-]); */
-
-// export
+/**
+ * Promisified version of the multiple file upload middleware for easier async/await usage.
+ * 
+ * @type {Function}
+ */
 let multipleUploadFileMiddleware = util.promisify(multipleUploadFile);
+
 module.exports = multipleUploadFileMiddleware;

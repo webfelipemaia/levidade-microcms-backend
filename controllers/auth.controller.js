@@ -1,7 +1,17 @@
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
 const db = require("../helpers/db.helper");
+const logger = require("../config/logger");
 
+
+/**
+ * Authenticates a user using email and password, returning a JWT and user info.
+ *
+ * @route POST /auth/login
+ * @param {import('express').Request} req - Express request object. Expects `email` and `password` in `req.body`.
+ * @param {import('express').Response} res - Express response object.
+ * @returns {Promise<Object>} JSON object containing authentication status, user data, and token information. 
+ */
 exports.login = async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -26,16 +36,13 @@ exports.login = async (req, res) => {
       expiresIn: process.env.JWT_EXPIRATION || '1h'
     });
 
-    // Decodifica o token sem verificar assinatura, apenas para pegar iat/exp
     const decoded = jwt.decode(token);
 
-    // Define o cookie
     res.cookie('token', token, {
       httpOnly: true,
-      //secure: process.env.NODE_ENV === 'production',
-      secure: false,
+      secure: process.env.NODE_ENV === 'production',
       sameSite: 'Lax',
-      maxAge: 60 * 60 * 1000 // 1 hora em milissegundos
+      maxAge: 60 * 60 * 1000 
     });
 
     return res.status(200).json({
@@ -55,33 +62,24 @@ exports.login = async (req, res) => {
     });
 
   } catch (err) {
-    console.error(err);
+    logger.error(err);
     res.status(500).json({ message: "Internal server error" });
   }
 };
 
-/* exports.register = async (req, res) => {
-  try {
-    const { email, password } = req.body;
-    const hashedPassword = await bcrypt.hash(password, 10);
-
-    const user = new db.User({
-      email,
-      password: hashedPassword,
-    });
-
-    await user.save();
-    res.status(201).json({ message: "User created successfully" });
-  } catch (err) {
-    res.status(400).json({ message: err.message });
-  }
-}; */
-
+/**
+ * Registers a new user and automatically logs them in.
+ *
+ * @route POST /auth/register
+ * @param {import('express').Request} req - Express request object. Expects `email` and `password` in `req.body`.
+ * @param {import('express').Response} res - Express response object.
+ * @returns {Promise<Object>} JSON object containing registration status and user data.
+ *
+ */
 exports.register = async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    // Verifica se já existe usuário
     const existingUser = await db.User.findOne({ where: { email } });
     if (existingUser) {
       return res.status(400).json({ message: "Email is already registered" });
@@ -103,17 +101,15 @@ exports.register = async (req, res) => {
         email: user.email,
         name: user.name,
         lastname: user.lastname,
-        role: [] // ajuste se quiser roles padrão
+        role: []
       },
       process.env.JWT_SECRET,
       { expiresIn: process.env.JWT_EXPIRES_IN || "1h" }
     );
 
-    // Envia cookie HttpOnly com o token
     res.cookie('token', token, {
       httpOnly: true,
-      //secure: process.env.NODE_ENV === 'production',
-      secure: false,
+      secure: process.env.NODE_ENV === 'production',
       sameSite: 'Lax',
       maxAge: 60 * 60 * 1000 // 1h
     });
@@ -133,7 +129,15 @@ exports.register = async (req, res) => {
   }
 };
 
-
+/**
+ * Retrieves the current authenticated user's info based on the JWT cookie.
+ *
+ * @route GET /auth/me
+ * @param {import('express').Request} req - Express request object. Expects JWT in cookies.
+ * @param {import('express').Response} res - Express response object.
+ * @returns {Promise<Object>} JSON object containing user info and token info.
+ *
+ */
 exports.getMe = async (req, res) => {
   try {
     const token = req.cookies?.token;
@@ -171,7 +175,7 @@ exports.getMe = async (req, res) => {
       });
     }
 
-    console.error('getMe Error:', error);
+    logger.error('getMe Error:', error);
     res.status(500).json({ message: 'Internal server error.' });
   }
 };

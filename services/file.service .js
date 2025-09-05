@@ -1,6 +1,7 @@
 const db = require('../helpers/db.helper');
 const fs = require('fs');
 const path = require('path');
+const logger = require("../config/logger");
 
 module.exports = {
     getAll,
@@ -11,87 +12,130 @@ module.exports = {
     renameAndUpdateFile,
 };
 
+/**
+ * Get all files.
+ * @returns {Promise<Array<Object>>} List of all files.
+ */
 async function getAll() {
     return await db.File.findAll();
 }
 
+/**
+ * Get a file by ID.
+ * @param {number} id - File ID.
+ * @returns {Promise<Object>} The file record.
+ * @throws {Error} If the file is not found.
+ */
 async function getById(id) {
     return await getFile(id);
 }
 
+/**
+ * Create a new file record.
+ * @param {Object} fileData - File metadata.
+ * @param {string} fileData.name - File name.
+ * @param {string} fileData.path - File path.
+ * @param {number} [fileData.size] - File size (in bytes).
+ * @returns {Promise<Object>} The created file.
+ */
 async function create(fileData) {
     return db.File.create(fileData);
 }
 
+/**
+ * Update a file by its ID.
+ * @param {number} id - File ID.
+ * @param {Object} params - Fields to update.
+ * @returns {Promise<void>}
+ * @throws {Error} If the file is not found.
+ */
 async function update(id, params) {
     const file = await getFile(id);
     Object.assign(file, params);
     await file.save();
 }
 
+/**
+ * Rename a file in the filesystem and update its metadata in the database.
+ * 
+ * The new name will be formatted as `[articleId]_[filename].ext`.
+ *
+ * @param {number} id - File ID.
+ * @param {Object} params - Update data.
+ * @param {number} params.articleId - ID of the related article.
+ * @returns {Promise<string>} The new file name.
+ * @throws {Error} If the file has no valid extension or cannot be renamed.
+ */
 async function renameAndUpdateFile(id, params) {
-    const file = await getFile(id);
-    
-    const uploadDir = path.dirname(file.path);
 
+    const file = await getFile(id);    
+    const uploadDir = path.dirname(file.path);
     const fileExtension = path.extname(file.name);
     if (!fileExtension) {
+        logger.error("The original file does not have a valid extension.");
         throw new Error("The original file does not have a valid extension.");
     }
-
     let oldFilePath = file.path;
     if (!oldFilePath.endsWith(fileExtension)) {
         oldFilePath += fileExtension;
     }
 
-    // Gerar o novo nome do arquivo com o ID do artigo como prefixo
-    // O novo nome será no formato [ID]_[filename].ext
     const articleId = params.articleId;
     const fileNameWithoutExt = path.basename(file.name, fileExtension);
     const newFileName = `${articleId}_${fileNameWithoutExt}${fileExtension}`;
     const newFilePath = path.join(uploadDir, newFileName);
 
-    // Renomear o arquivo no sistema de arquivos
     try {
         await fs.promises.rename(oldFilePath, newFilePath);
     } catch (error) {
-        console.error(`Error renaming file: ${error}`);
+        logger.error(`Error renaming file: ${error}`);
         throw new Error('Error renaming file (in file system).');
     }
 
-    // Atualizar o nome do arquivo no banco de dados
     file.name = newFileName;
-    file.path = removeLastSegment(file.path)
+    file.path = removeLastSegment(file.path);
     Object.assign(file, params);
     await file.save();
 
     return newFileName;
 }
 
-
-
-
+/**
+ * Delete a file by its ID.
+ * @param {number} id - File ID.
+ * @returns {Promise<void>}
+ * @throws {Error} If the file is not found.
+ */
 async function _delete(id) {
     const file = await getFile(id);
     await file.destroy();
 }
 
+/**
+ * Helper: Get a file by ID.
+ * Used internally by getById, update, renameAndUpdateFile, and delete.
+ * @private
+ * @param {number} id - File ID.
+ * @returns {Promise<Object>} The found file.
+ * @throws {Error} If the file is not found.
+ */
 async function getFile(id) {
     const file = await db.File.findByPk(id);
     if (!file) throw 'File not found';
     return file;
 }
 
-
-// auxiliar functions
-
+/**
+ * Helper: Remove the last segment of a file path.
+ * Example: "/uploads/articles/file.png" → "/uploads/articles/"
+ * @private
+ * @param {string} path - Original path.
+ * @returns {string} Path without the last segment.
+ */
 function removeLastSegment(path) {
-    // Verifica se a string contém pelo menos uma barra
     if (!path.includes('/')) {
-      return path;
+        return path;
     }
-  
-    // Encontra o índice da última barra e corta a string até essa posição
     const lastSlashIndex = path.lastIndexOf('/');
     return path.substring(0, lastSlashIndex + 1);
-  }
+}

@@ -2,6 +2,7 @@
 const bcrypt = require("bcryptjs");
 require("dotenv").config();
 const db = require("../helpers/db.helper");
+const logger = require("../config/logger");
 
 module.exports = {
   getAll,
@@ -13,6 +14,10 @@ module.exports = {
   authenticate,
 };
 
+/**
+ * Recupera todos os usuários, excluindo a senha.
+ * @returns {Promise<Array<Object>>} Lista de usuários.
+ */
 async function getAll() {
   const users = await db.User.findAll({
     attributes: { exclude: ["password"] },
@@ -20,6 +25,10 @@ async function getAll() {
   return users;
 }
 
+/**
+ * Retrieves all users with their associated roles.
+ * @returns {Promise<Array<Object>>} List of users with roles.
+ */
 async function getUsersRoles() {
   return await db.User.findAll({
     include: db.Role,
@@ -29,10 +38,25 @@ async function getUsersRoles() {
   });
 }
 
+/**
+ * Retrieves a user by ID.
+ * @param {number} id - User ID.
+ * @returns {Promise<Object>} User found or error message.
+ */
 async function getById(id) {
   return await getUser(id);
 }
 
+/**
+ * Creates a new user.
+ * @param {Object} params - User data.
+ * @param {string} params.email - User email.
+ * @param {string} params.password - User password.
+ * @param {string} params.name - User first name.
+ * @param {string} params.lastname - User last name.
+ * @param {string} [params.role] - User role (optional).
+ * @returns {Promise<Object>} Operation status and created user data.
+ */
 async function create(params) {
   const existingUser = await db.User.findOne({
     where: { email: params.email },
@@ -66,6 +90,11 @@ async function create(params) {
   };
 }
 
+/**
+ * Adds a role to an existing user.
+ * @param {Object} user - User to receive the role.
+ * @returns {Promise<Object>} Operation status.
+ */
 async function addRoleToUser(user) {
   if (await db.User.findOne({ where: { email: user.email } })) {
     throw {
@@ -87,6 +116,15 @@ async function addRoleToUser(user) {
   return { status: "success", message: role };
 }
 
+/**
+ * Updates a user's information, including roles.
+ * @param {number} id - User ID.
+ * @param {Object} params - Data to update.
+ * @param {string} params.name - User first name.
+ * @param {string} params.lastname - User last name.
+ * @param {Array<Object>} params.roles - Roles to update.
+ * @returns {Promise<Object>} Operation status.
+ */
 async function update(id, params) {
   try {
     if (!params.name || !params.lastname) {
@@ -128,7 +166,7 @@ async function update(id, params) {
       message: "User and roles updated successfully.",
     };
   } catch (error) {
-    console.error(error);
+    logger.error(error);
     return {
       status: "error",
       message: "An error occurred while updating the user.",
@@ -136,6 +174,11 @@ async function update(id, params) {
   }
 }
 
+/**
+ * Deletes a user by ID.
+ * @param {number} id - User ID.
+ * @returns {Promise<Object>} Operation status.
+ */
 async function _delete(id) {
   try {
     const result = await db.User.destroy({
@@ -161,6 +204,11 @@ async function _delete(id) {
   }
 }
 
+/**
+ * Retrieves a user by ID (internal helper).
+ * @param {number} id - User ID.
+ * @returns {Promise<Object>} User found or error message.
+ */
 async function getUser(id) {
   const user = await db.User.findByPk(id);
   if (!user) {
@@ -176,46 +224,13 @@ async function getUser(id) {
   }
 }
 
-/* async function authenticate(email, password) {
-  const user = await db.User.findOne({
-    where: { email },
-    include: db.Role,
-  });
-
-  if (!user) {
-    throw { status: "error", message: "User not found" };
-  }
-
-  const isMatch = await bcrypt.compare(password, user.password);
-
-  if (!isMatch) {
-    throw { status: "error", message: "Incorrect password" };
-  }
-
-  const token = jwt.sign(
-    {
-      id: user.id,
-      email: user.email,
-      role: user.Roles?.map((r) => r.name),
-    },
-    process.env.JWT_SECRET,
-    { expiresIn: process.env.JWT_EXPIRATION || "1h" }
-  );
-
-  return {
-    status: "success",
-    message: "Authentication successful",
-    data: {
-      id: user.id,
-      name: user.name,
-      lastname: user.lastname,
-      email: user.email,
-      roles: user.Roles?.map((r) => r.name),
-      token,
-    },
-  };
-} */
-
+/**
+ * Authenticates a user using email and password.
+ * @param {string} email - User email.
+ * @param {string} password - User password.
+ * @returns {Promise<Object>} Authenticated user data.
+ * @throws {Object} Error if user is not found or password is incorrect.
+ */
   async function authenticate(email, password) {
     const user = await db.User.findOne({
       where: { email },
