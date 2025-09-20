@@ -20,6 +20,6 @@ privateSettingRouterV1.get("/pagination", authenticate, getPaginationSettings);
 privateSettingRouterV1.get("/uploadpath", authenticate, getUploadpathSettings);
 privateSettingRouterV1.get("/filesize", authenticate, getFilesizeSettings);
 privateSettingRouterV1.get("/:id", authenticate, getById);
-privateSettingRouterV1.put("/updade", authenticate, updateSchema, update);
+privateSettingRouterV1.put("/update", authenticate, updateSchema, update);
 
 module.exports = privateSettingRouterV1;

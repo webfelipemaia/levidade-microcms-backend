@@ -20,7 +20,7 @@ const {
 
 privateRoleRouterV1.get("/", authenticate, getAll);
 privateRoleRouterV1.get("/all", authenticate, getAllRolesPermissions);
-privateRoleRouterV1.get("/roles", authenticate, getRolesPermissions);
+privateRoleRouterV1.get("/permissions", authenticate, getRolesPermissions);
 privateRoleRouterV1.get("/:id", authenticate, getById);
 privateRoleRouterV1.post("/", authenticate, createSchema, create);
 privateRoleRouterV1.patch("/:id", authenticate, updateSchema, update);

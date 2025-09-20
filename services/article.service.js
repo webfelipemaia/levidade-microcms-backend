@@ -54,14 +54,8 @@ async function getById(id) {
  * @throws {Error} If no article is found.
  */
 async function getLastRegister() {
-    const paginationSettings = await pagination();
-    const storedPageOrder = paginationSettings.order;
-    const order = req.query.order
-        ? JSON.parse(req.query.order)
-        : [storedPageOrder];
-
     const article = await db.Article.findOne({
-        order: [order]
+        order: [['createdAt', 'DESC']]
     });
 
     if (!article) throw 'Article not found';
@@ -99,8 +93,17 @@ async function update(id, params) {
  * @throws {Error} If the article is not found.
  */
 async function _delete(id) {
-    const article = await getArticle(id);
-    await article.destroy();
+  try {
+    const result = await db.Article.destroy({ where: { id: id } });
+
+    if (result > 0) {
+      return { status: "success", message: "Article successfully deleted" };
+    } else {
+      return { status: "error", message: "No article found with the given criteria" };
+    }
+  } catch (error) {
+    return { status: "error", message: `Error deleting article: ${error}` };
+  }
 }
 
 /**
