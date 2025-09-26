@@ -118,3 +118,67 @@ exports.updateSchema = (req, res, next) => {
     });
     validateRequest(req, next, schema);
 };
+
+
+/**
+ * Update permissions for a specific role
+ * @param {string|number} req.params.id - Role ID
+ * @param {Object} req.body - Permissions data { permissions: [1, 2, 3] }
+ */
+exports.updateRolePermissions = async (req, res, next) => {
+    try {
+        const roleId = parseInt(req.params.id);
+        const { permissions } = req.body;
+
+        if (!roleId || isNaN(roleId)) {
+            return res.status(400).json({
+                status: 'error',
+                message: 'Valid Role ID is required'
+            });
+        }
+
+        const result = await roleService.updateRolePermissions(roleId, permissions || []);
+        res.json(result);
+        
+    } catch (error) {
+        console.error('Error in updateRolePermissions:', error);
+        next(error);
+    }
+};
+
+/**
+ * Get permissions for a specific role
+ * @param {string|number} req.params.id - Role ID
+ */
+exports.getRolePermissions = async (req, res, next) => {
+    try {
+        const roleId = parseInt(req.params.id);
+        
+        if (!roleId || isNaN(roleId)) {
+            return res.status(400).json({
+                status: 'error',
+                message: 'Valid Role ID is required'
+            });
+        }
+
+        const permissions = await roleService.getRolePermissions(roleId);
+        res.json({ 
+            status: 'success', 
+            data: permissions 
+        });
+        
+    } catch (error) {
+        console.error('Error in getRolePermissions:', error);
+        next(error);
+    }
+};
+
+/**
+ * Schema for updating role permissions
+ */
+exports.updatePermissionsSchema = (req, res, next) => {
+    const schema = Joi.object({
+        permissions: Joi.array().items(Joi.number().integer().min(1)).optional()
+    });
+    validateRequest(req, next, schema);
+};

@@ -1,6 +1,7 @@
 const Joi = require('joi');
 const validateRequest = require('../middlewares/validateRequest.middleware');
 const permissionService = require('../services/permission.service');
+const rolesPermissionsService = require('../services/rolesPermissions.service');
 
 
 /**
@@ -26,7 +27,7 @@ exports.getAll = (req, res, next) => {
  * @returns {Promise<Object[]>} JSON array of permissions with roles
  */
 exports.getPermissionsRoles = (req, res, next) => {
-    permissionService.getPermissionsRoles()
+    rolesPermissionsService.getAll()
         .then(permissions => res.json(permissions))
         .catch(next);
 };

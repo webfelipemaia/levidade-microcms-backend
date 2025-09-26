@@ -9,7 +9,9 @@ module.exports = {
     create,
     update,
     delete: _delete,
-    createRoleWithPermissions
+    createRoleWithPermissions,
+    updateRolePermissions,
+    getRolePermissions
 };
 
 /**
@@ -173,5 +175,86 @@ async function createRoleWithPermissions(params) {
   } catch (error) {
     logger.error(`[RoleService] Error in createRoleWithPermissions: ${error.message}`);
     throw { status: "error", message: "Failed to create role with permissions." };
+  }
+}
+
+/**
+ * Update permissions for a specific role
+ * @param {number} roleId - Role ID
+ * @param {Array<number>} permissionIds - Array of permission IDs
+ * @returns {Promise<Object>} Status message
+ */
+async function updateRolePermissions(roleId, permissionIds) {
+  try {
+      // 1. Encontrar o role com suas associações
+      const role = await db.Role.findByPk(roleId);
+      if (!role) {
+          throw { status: "error", message: "Role not found." };
+      }
+
+      // 2. Validar permissões (se fornecidas)
+      if (permissionIds && permissionIds.length > 0) {
+          const permissions = await db.Permission.findAll({
+              where: { id: permissionIds }
+          });
+          
+          // Verificar se todas as permissões existem
+          if (permissions.length !== permissionIds.length) {
+              const foundIds = permissions.map(p => p.id);
+              const missingIds = permissionIds.filter(id => !foundIds.includes(id));
+              throw { 
+                  status: "error", 
+                  message: `Permissions not found: ${missingIds.join(', ')}` 
+              };
+          }
+          
+          // 3. Usar setPermissions para atualizar as associações
+          await role.setPermissions(permissions);
+      } else {
+          // 4. Se array vazio, remover todas as permissões
+          await role.setPermissions([]);
+      }
+
+      return { 
+          status: "success", 
+          message: "Role permissions updated successfully." 
+      };
+      
+  } catch (error) {
+      logger.error(`[RoleService] Error in updateRolePermissions: ${error.message}`);
+      
+      // Se já é um erro formatado, repassar
+      if (error.status) {
+          throw error;
+      }
+      
+      throw { status: "error", message: "Failed to update role permissions." };
+  }
+}
+
+/**
+* Get permissions for a specific role
+* @param {number} roleId - Role ID
+* @returns {Promise<Array<number>>} Array of permission IDs
+*/
+async function getRolePermissions(roleId) {
+  try {
+      const role = await db.Role.findByPk(roleId, {
+          include: [{
+              model: db.Permission,
+              through: { attributes: [] } // Não incluir dados da tabela de junção
+          }]
+      });
+
+      if (!role) {
+          throw { status: "error", message: "Role not found." };
+      }
+
+      // Extrair apenas os IDs das permissões
+      return role.Permissions ? role.Permissions.map(p => p.id) : [];
+      
+  } catch (error) {
+      logger.error(`[RoleService] Error in getRolePermissions: ${error.message}`);
+      throw { status: "error", message: "Failed to retrieve role permissions." };
   }
 }
