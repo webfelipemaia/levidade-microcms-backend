@@ -15,7 +15,6 @@ const createTransporter = () => {
   })
 }
 
-// Template do email com código de 6 dígitos
 const createPasswordRecoveryEmail = (email, code) => {
   return {
     from: process.env.EMAIL_USER,
@@ -67,7 +66,7 @@ const createPasswordRecoveryEmail = (email, code) => {
             <p>Se você não solicitou esta redefinição, por favor ignore este email.</p>
           </div>
           <div class="footer">
-            <p>© ${new Date().getFullYear()} Seu App. Todos os direitos reservados.</p>
+            <p>© ${new Date().getFullYear()} ${process.env.APP_NAME}. Todos os direitos reservados.</p>
           </div>
         </div>
       </body>
@@ -76,72 +75,6 @@ const createPasswordRecoveryEmail = (email, code) => {
   }
 }
 
-// Template do email de recuperação
-/* const createPasswordRecoveryEmail = (email, token) => {
-  const resetLink = `${process.env.FRONTEND_URL}/password/reset/${token}&email=${email}`
-  
-  return {
-    from: process.env.EMAIL_USER,
-    to: email,
-    subject: 'Recuperação de Senha - Seu App',
-    html: `
-      <!DOCTYPE html>
-      <html>
-      <head>
-        <meta charset="utf-8">
-        <style>
-          body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
-          .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-          .header { background: #007bff; color: white; padding: 20px; text-align: center; }
-          .content { background: #f8f9fa; padding: 30px; }
-          .button { 
-            display: inline-block; 
-            padding: 12px 24px; 
-            background: #007bff; 
-            color: white; 
-            text-decoration: none; 
-            border-radius: 5px; 
-            margin: 20px 0; 
-          }
-          .footer { 
-            text-align: center; 
-            margin-top: 20px; 
-            color: #6c757d; 
-            font-size: 14px; 
-          }
-        </style>
-      </head>
-      <body>
-        <div class="container">
-          <div class="header">
-            <h1>Recuperação de Senha</h1>
-          </div>
-          <div class="content">
-            <p>Olá,</p>
-            <p>Recebemos uma solicitação para redefinir a senha da sua conta.</p>
-            <p>Clique no botão abaixo para criar uma nova senha:</p>
-            
-            <div style="text-align: center;">
-              <a href="${resetLink}" class="button">Redefinir Senha</a>
-            </div>
-            
-            <p>Se você não solicitou esta redefinição, por favor ignore este email.</p>
-            <p><strong>Este link expira em 1 hora.</strong></p>
-            
-            <p>Ou copie e cole este link no seu navegador:</p>
-            <p style="word-break: break-all; color: #007bff;">${resetLink}</p>
-          </div>
-          <div class="footer">
-            <p>© ${new Date().getFullYear()} Seu App. Todos os direitos reservados.</p>
-          </div>
-        </div>
-      </body>
-      </html>
-    `
-  }
-} */
-
-// Função para enviar email
 const sendPasswordRecoveryEmail = async (email, token) => {
   try {
     const transporter = createTransporter()
@@ -156,7 +89,6 @@ const sendPasswordRecoveryEmail = async (email, token) => {
   }
 }
 
-// Configuração alternativa para desenvolvimento
 const createTestTransporter = () => {
   return nodemailer.createTransport({
     host: "sandbox.smtp.mailtrap.io",
