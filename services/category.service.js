@@ -14,8 +14,14 @@ module.exports = {
  * @returns {Promise<Array<Object>>} List of categories with subcategories.
  */
 async function getAll() {
-    return await db.Category.findAll({ include: db.Subcategory });
+    return await db.Category.findAll({ 
+        include: [{
+            model: db.Category,
+            as: 'children'
+        }]
+    });
 }
+
 
 /**
  * Get a category by its ID.
@@ -88,7 +94,12 @@ async function createWithSubcategories(params) {
  * @throws {Error} If the category is not found.
  */
 async function getCategory(id) {
-    const category = await db.Category.findByPk(id, { include: db.Subcategory });
+    const category = await db.Category.findByPk(id, { 
+        include: [{
+            model: db.Category,
+            as: 'children'
+        }]
+    });
     if (!category) throw 'Category not found';
     return category;
 }

@@ -95,7 +95,8 @@ exports.deleteCategory = (req, res, next) => {
  */
 exports.createSchema = (req, res, next) => {
     const schema = Joi.object({
-        name: Joi.string().required()
+        name: Joi.string().required(),
+        parentId: Joi.number().integer().allow(null).optional()
     });
     validateRequest(req, next, schema);
 };
@@ -124,7 +125,8 @@ exports.createWithSubcategoriesSchema = (req, res, next) => {
  */
 exports.updateSchema = (req, res, next) => {
     const schema = Joi.object({
-        name: Joi.string().empty('')
+        name: Joi.string().empty('').optional(),
+        parentId: Joi.number().integer().allow(null).optional()
     });
     validateRequest(req, next, schema);
 };
