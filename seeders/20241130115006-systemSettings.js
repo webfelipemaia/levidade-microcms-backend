@@ -327,6 +327,15 @@ module.exports = {
           createdAt: "2024-12-02 16:44:01",
           updatedAt: "2024-12-02 16:44:01",
         },
+        {
+          settingName: "uploadRequired",
+          value: true,
+          additionalValue: "",
+          description: "Habilita ou desabilita o upload na criação de artigo. Habilitado por padrão.",
+          type: "boolean",
+          createdAt: "2024-12-02 16:44:01",
+          updatedAt: "2024-12-02 16:44:01",
+        },
       ],
       {}
     );
