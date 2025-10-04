@@ -81,15 +81,22 @@ exports.getLastRegister = (req, res, next) => {
  * @returns {Promise<Object>} JSON message indicating article creation success.
  */
 exports.create = (req, res, next) => {
+    let successMessage = null;
     articleService.create(req.body)
         .then(article => {
             if (!article || !article.id) {
                 throw new Error('Article creation failed. ID not found.');
             }
-            const updatedParams = { ...req.body, articleId: article.id };
-            return fileService.renameAndUpdateFile(req.body.fileId, updatedParams);
+            if( req.body.fileId === 0 ) {
+                successMessage = 'Article created';
+                return Promise.resolve(null);
+            } else {
+                successMessage = 'Article created with file updated';
+                const updatedParams = { ...req.body, articleId: article.id };
+                return fileService.renameAndUpdateFile(req.body.fileId, updatedParams);
+            }
         })
-        .then(() => res.json({ message: 'Article created with file updated' }))
+        .then(() => res.json({ message: successMessage }))
         .catch(next);
 };
 
