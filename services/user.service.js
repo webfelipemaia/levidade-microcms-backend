@@ -231,27 +231,42 @@ async function getUser(id) {
  * @returns {Promise<Object>} Authenticated user data.
  * @throws {Object} Error if user is not found or password is incorrect.
  */
-  async function authenticate(email, password) {
-    const user = await db.User.findOne({
-      where: { email },
-      include: db.Role,
-    });
-  
-    if (!user) {
-      throw { status: "error", message: "User not found" };
-    }
-  
-    const isMatch = await bcrypt.compare(password, user.password);
-    if (!isMatch) {
-      throw { status: "error", message: "Incorrect password" };
-    }
-  
-    return {
-      id: user.id,
-      name: user.name,
-      lastname: user.lastname,
-      email: user.email,
-      roles: user.Roles?.map((r) => r.name),
-    };
+async function authenticate(email, password) {
+  const user = await db.User.findOne({
+    where: { email },
+    include: [
+      {
+        model: db.Role,
+        attributes: ['id', 'name']
+      },
+      {
+        model: db.File,
+        attributes: ['id', 'name', 'path', 'type'],
+        through: { attributes: [] }
+      }
+    ],
+  });
+
+  if (!user) {
+    throw { status: "error", message: "User not found" };
   }
-  
+
+  const isMatch = await bcrypt.compare(password, user.password);
+  if (!isMatch) {
+    throw { status: "error", message: "Incorrect password" };
+  }
+
+  return {
+    id: user.id,
+    name: user.name,
+    lastname: user.lastname,
+    email: user.email,
+    roles: user.Roles?.map((role) => role.name),
+    files: user.Files?.map((file) => ({
+      id: file.id,
+      name: file.name,
+      path: file.path,
+      type: file.type
+    })),
+  };
+} 

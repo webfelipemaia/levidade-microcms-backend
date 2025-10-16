@@ -6,6 +6,7 @@ const { sendPasswordRecoveryEmail } = require ("../services/email.service");
 //const recentRequests = new Map();
 const recoveryCodes = new Map();
 const recentRequests = new Map(); 
+
 /**
  * Authenticates a user using email and password, returning a JWT and user info.
  *
@@ -19,7 +20,17 @@ exports.login = async (req, res) => {
     const { email, password } = req.body;
     const user = await db.User.findOne({
       where: { email },
-      include: db.Role
+      include: [
+        {
+          model: db.Role,
+          attributes: ['id', 'name']
+        },
+        {
+          model: db.File,
+          attributes: ['id', 'name', 'path', 'type'],
+          through: { attributes: [] } // Não retorna dados da tabela de junção
+        }
+      ]
     });
 
     if (!user || !(await bcrypt.compare(password, user.password))) {
@@ -31,7 +42,8 @@ exports.login = async (req, res) => {
       email: user.email,
       name: user.name,
       lastname: user.lastname,
-      role: user.Roles?.map((r) => r.name)
+      roles: user.Roles?.map((r) => r.name)
+      // Não inclua files no payload do JWT para não deixar o token muito grande
     };
 
     const token = jwt.sign(payload, process.env.JWT_SECRET, {
@@ -42,7 +54,6 @@ exports.login = async (req, res) => {
 
     res.cookie('token', token, {
       httpOnly: true,
-      //secure: process.env.NODE_ENV === 'production',
       secure: false,
       sameSite: 'Lax',
       maxAge: 60 * 60 * 1000 
@@ -56,7 +67,13 @@ exports.login = async (req, res) => {
         name: user.name,
         lastname: user.lastname,
         email: user.email,
-        roles: user.Roles?.map(r => r.name)
+        roles: user.Roles?.map(r => r.name),
+        files: user.Files?.map(file => ({
+          id: file.id,
+          name: file.name,
+          path: file.path,
+          type: file.type
+        }))
       },
       tokenInfo: {
         issuedAt: new Date(decoded.iat * 1000),
@@ -99,18 +116,36 @@ exports.register = async (req, res) => {
 
     await user.save();
 
+    // Buscar o usuário recém-criado com os relacionamentos para retornar dados completos
+    const newUser = await db.User.findByPk(user.id, {
+      include: [
+        {
+          model: db.Role,
+          attributes: ['id', 'name']
+        },
+        {
+          model: db.File,
+          attributes: ['id', 'name', 'path', 'type'],
+          through: { attributes: [] }
+        }
+      ],
+      attributes: { exclude: ['password'] }
+    });
+
     // Gera token JWT
     const token = jwt.sign(
       {
-        id: user.id,
-        email: user.email,
-        name: user.name,
-        lastname: user.lastname,
-        role: []
+        id: newUser.id,
+        email: newUser.email,
+        name: newUser.name,
+        lastname: newUser.lastname,
+        roles: newUser.Roles?.map(r => r.name) || []
       },
       process.env.JWT_SECRET,
       { expiresIn: process.env.JWT_EXPIRES_IN || "1h" }
     );
+
+    const decoded = jwt.decode(token);
 
     res.cookie('token', token, {
       httpOnly: true,
@@ -122,14 +157,26 @@ exports.register = async (req, res) => {
     res.status(201).json({
       message: "User registered and logged in successfully",
       data: {
-        id: user.id,
-        email: user.email,
-        name: user.name,
-        lastname: user.lastname
+        id: newUser.id,
+        email: newUser.email,
+        name: newUser.name,
+        lastname: newUser.lastname,
+        roles: newUser.Roles?.map(r => r.name) || [],
+        files: newUser.Files?.map(file => ({
+          id: file.id,
+          name: file.name,
+          path: file.path,
+          type: file.type
+        })) || []
+      },
+      tokenInfo: {
+        issuedAt: new Date(decoded.iat * 1000),
+        expiresAt: new Date(decoded.exp * 1000)
       }
     });
 
   } catch (err) {
+    logger.error('Register Error:', err);
     res.status(400).json({ message: err.message });
   }
 };
@@ -152,7 +199,17 @@ exports.getMe = async (req, res) => {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
     const user = await db.User.findByPk(decoded.id, {
-      include: db.Role,
+      include: [
+        {
+          model: db.Role,
+          attributes: ['id', 'name']
+        },
+        {
+          model: db.File,
+          attributes: ['id', 'name', 'path', 'type'],
+          through: { attributes: [] }
+        }
+      ],
       attributes: { exclude: ['password'] }
     });
 
@@ -164,7 +221,13 @@ exports.getMe = async (req, res) => {
         email: user.email,
         name: user.name,
         lastname: user.lastname,
-        roles: user.Roles?.map(r => r.name)
+        roles: user.Roles?.map(r => r.name),
+        files: user.Files?.map(file => ({
+          id: file.id,
+          name: file.name,
+          path: file.path,
+          type: file.type
+        }))
       },
       tokenInfo: {
         issuedAt: new Date(decoded.iat * 1000),

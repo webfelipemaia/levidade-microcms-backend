@@ -38,8 +38,25 @@ async function getById(id) {
  * @param {number} [fileData.size] - File size (in bytes).
  * @returns {Promise<Object>} The created file.
  */
-async function create(fileData) {
-    return db.File.create(fileData);
+async function create(fileData,  userId = null) {
+    try {
+        const file = await db.File.create(fileData);
+
+        if (userId) {
+            const user = await db.User.findByPk(userId);
+            if (user) {
+                await user.addFile(file);
+                logger.info(`File ${file.id} associated with user ${userId}`);
+            }
+        } else {
+            logger.info('File metadata has been saved but not associated with a user.');
+        }
+        
+        return file;
+    } catch (error) {
+        logger.error("Erro ao criar arquivo:", error);
+        throw error;
+    }
 }
 
 /**

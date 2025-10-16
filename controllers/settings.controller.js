@@ -59,8 +59,10 @@ exports.update = async (req, res, next) => {
         const successes = results.filter(result => result.status === 'fulfilled');
         const errors = results.filter(result => result.status === 'rejected');
 
+        const overallStatus = errors.length === 0 ? 'success' : 'partial';
+
         res.json({
-            status: 'partial',
+            status: overallStatus,
             message: `Processed settings: ${successes.length} success(es), ${errors.length} fault(s).`,
             successes: successes.map(s => s.value),
             errors: errors.map(e => e.reason)

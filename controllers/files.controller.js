@@ -1,5 +1,6 @@
 const Joi = require('joi');
 const fs = require('fs');
+const path = require('path');
 const validateRequest = require('../middlewares/validateRequest.middleware');
 const fileService = require('../services/file.service ');
 const uploadFile = require("../middlewares/upload.middleware");
@@ -23,6 +24,92 @@ exports.getAll = (req, res, next) => {
 };
 
 /**
+ * Retorna a URL para acessar um arquivo
+ * @param {Object} req - Request object
+ * @param {Object} res - Response object
+ */
+exports.getFileUrl = async (req, res) => {
+    try {
+      const { id } = req.params;
+      const file = await fileService.getById(id);
+      
+      if (!file) {
+        return res.status(404).json({ 
+          success: false,
+          error: 'Arquivo não encontrado' 
+        });
+      }
+  
+      // ✅ Extrai informações do path
+      const directoryInfo = getDirectoryInfo(file.path);
+      const fullFilePath = path.join(directoryInfo.directory, file.name);
+      
+      const baseUrl = `${req.protocol}://${req.get('host')}`;
+      const fileUrl = `${baseUrl}/${fullFilePath}`;
+      
+      // Verificação do arquivo físico
+      const absoluteFilePath = path.join(__dirname, '..', fullFilePath);
+      
+      if (!fs.existsSync(absoluteFilePath)) {
+        logger.warn(`Arquivo físico não encontrado: ${absoluteFilePath}`);
+        return res.status(404).json({
+          success: false,
+          error: 'Arquivo não encontrado no sistema de arquivos'
+        });
+      }
+  
+      res.json({
+        success: true,
+        data: {
+          id: file.id,
+          name: file.name,
+          path: file.path,
+          directory: directoryInfo.directory,
+          directoryWithSlash: directoryInfo.directoryWithSlash,
+          fullPath: fullFilePath,
+          url: fileUrl,
+          size: file.size,
+          type: file.type,
+          createdAt: file.createdAt,
+          updatedAt: file.updatedAt
+        },
+        message: 'URL do arquivo gerada com sucesso'
+      });
+  
+    } catch (error) {
+      logger.error('Erro ao buscar URL do arquivo:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Erro interno do servidor ao buscar arquivo'
+      });
+    }
+  }
+  
+  function getDirectoryInfo(filePath) {
+    if (!filePath || typeof filePath !== 'string') {
+      return { directory: '', directoryWithSlash: '', filename: '', hasDirectory: false };
+    }
+  
+    const lastSlashIndex = filePath.lastIndexOf('/');
+    
+    if (lastSlashIndex === -1) {
+      return {
+        directory: '',
+        directoryWithSlash: '',
+        filename: filePath,
+        hasDirectory: false
+      };
+    }
+  
+    return {
+      directory: filePath.substring(0, lastSlashIndex),
+      directoryWithSlash: filePath.substring(0, lastSlashIndex + 1),
+      filename: filePath.substring(lastSlashIndex + 1),
+      hasDirectory: true
+    };
+  }
+
+/**
  * Fetch a single file by ID.
  *
  * @route GET /files/:id
@@ -30,11 +117,32 @@ exports.getAll = (req, res, next) => {
  * @param {import('express').Response} res
  * @returns {Promise<Object>} JSON object of the requested file.
  */
-exports.getById = (req, res, next) => {
-    fileService.getById(req.params.id)
-        .then(file => res.json(file))
-        .catch(next);
-};
+
+exports.getFileById = async (req, res) => {
+  try {
+      const { id } = req.params;
+      const file = await fileService.getById(id);
+      
+      if (!file) {
+          return res.status(404).json({
+              success: false,
+              error: 'Arquivo não encontrado'
+          });
+      }
+
+      res.json({
+          success: true,
+          data: file
+      });
+
+  } catch (error) {
+      logger.error('Erro ao buscar arquivo:', error);
+      res.status(500).json({
+          success: false,
+          error: 'Erro interno do servidor'
+      });
+  }
+}
 
 /**
  * Fetch the last registered file.
@@ -115,12 +223,13 @@ exports.upload = async (req, res) => {
     const fullStoragePath = 'storage' + storagePath;
     const dotIndex = fullStoragePath.lastIndexOf('.');
     const renamedPath = fullStoragePath.substring(0, dotIndex);
+    const userId = req.body.userId || req.user?.id;
 
     const fileCreated = await fileService.create({
       name: filename,
       path: renamedPath,
       type: uploadedFile.mimetype,
-    });
+    },userId);
 
     res.status(200).send({
       message: {

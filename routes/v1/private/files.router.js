@@ -9,9 +9,10 @@ const {
     getAll, 
     getLastRegister,
     create,
-    getById,
     update,
     _delete,
+    getFileUrl,
+    getFileById,
 } = require('../../../controllers/files.controller');
 
 const {
@@ -21,10 +22,11 @@ const {
 
 privateFileRouterV1.post('/upload', authenticate, upload);
 privateFileRouterV1.get('/all', authenticate, getFiles);
+privateFileRouterV1.get('/:id', authenticate, getFileById);
+privateFileRouterV1.get('/:id/url', authenticate, getFileUrl);
 privateFileRouterV1.get('/:name', authenticate, download);
 privateFileRouterV1.get('/', authenticate, getAll);
 privateFileRouterV1.get('/last', authenticate, getLastRegister);
-privateFileRouterV1.get('/:id', authenticate, getById);
 privateFileRouterV1.post('/', authenticate, createSchema, create);
 privateFileRouterV1.put('/:id', authenticate, updateSchema, update);
 privateFileRouterV1.delete('/:id', authenticate, _delete);
