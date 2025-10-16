@@ -1,16 +1,30 @@
 const nodemailer = require('nodemailer')
 const dotenv = require('dotenv')
+const logger = require("../config/logger");
 
 dotenv.config()
 
-// Configuração do transporter
 const createTransporter = () => {
+  const isDevelopment = process.env.NODE_ENV === 'development'
+
+  // Use Mailtrap in development mode
+  if (isDevelopment) {
+    return nodemailer.createTransport({
+      host: "sandbox.smtp.mailtrap.io",
+      port: 2525,
+      auth: {
+        user: process.env.MAILTRAP_USER,
+        pass: process.env.MAILTRAP_PASS
+      }
+    })
+  }
+
+  // Use Gmail (or other provider) in production mode
   return nodemailer.createTransport({
-    host: "sandbox.smtp.mailtrap.io",
-    port: 2525,
+    service: 'gmail',
     auth: {
-      user: "a946c6d2876aac",
-      pass: "64206fce126aa5"
+      user: process.env.EMAIL_USER,
+      pass: process.env.EMAIL_PASS
     }
   })
 }
@@ -79,28 +93,15 @@ const sendPasswordRecoveryEmail = async (email, token) => {
   try {
     const transporter = createTransporter()
     const mailOptions = createPasswordRecoveryEmail(email, token)
-    
     const result = await transporter.sendMail(mailOptions)
-    console.log('Email enviado com sucesso:', result.messageId)
+    logger.info('Email sent successfully:', result.messageId)
     return true
   } catch (error) {
-    console.error('Erro ao enviar email:', error)
-    throw new Error('Falha ao enviar email de recuperação')
+    console.warn('Error sending email:', error)
+    throw new Error('Failed to send recovery email')
   }
 }
 
-const createTestTransporter = () => {
-  return nodemailer.createTransport({
-    host: "sandbox.smtp.mailtrap.io",
-    port: 2525,
-    auth: {
-      user: "a946c6d2876aac",
-      pass: "64206fce126aa5"
-    }
-  })
-}
-
 module.exports = {
-  sendPasswordRecoveryEmail,
-  createTestTransporter
+  sendPasswordRecoveryEmail
 }
