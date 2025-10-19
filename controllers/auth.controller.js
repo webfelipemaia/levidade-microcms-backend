@@ -185,7 +185,7 @@ exports.checkSession = async (req, res) => {
   const token = req.cookies.token;
 
   if (!token) {
-    return res.status(401).json({ authenticated: false, message: 'Token não encontrado' });
+    return res.status(200).json({ authenticated: false, message: 'Token não encontrado' });
   }
 
   try {
@@ -196,7 +196,7 @@ exports.checkSession = async (req, res) => {
       message: 'Sessão válida'
     });
   } catch (err) {
-    return res.status(401).json({ authenticated: false, message: 'Token inválido ou expirado' });
+    return res.status(200).json({ authenticated: false, message: 'Token inválido ou expirado' });
   }
 }
 
@@ -256,7 +256,7 @@ exports.getMe = async (req, res) => {
 
   } catch (error) {
     if (error instanceof jwt.JsonWebTokenError) {
-      return res.status(401).json({
+      return res.status(200).json({
         message: 'Invalid token',
         details: error.message
       });
