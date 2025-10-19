@@ -181,6 +181,25 @@ exports.register = async (req, res) => {
   }
 };
 
+exports.checkSession = async (req, res) => {
+  const token = req.cookies.token;
+
+  if (!token) {
+    return res.status(401).json({ authenticated: false, message: 'Token não encontrado' });
+  }
+
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    return res.json({
+      authenticated: true,
+      user: decoded,
+      message: 'Sessão válida'
+    });
+  } catch (err) {
+    return res.status(401).json({ authenticated: false, message: 'Token inválido ou expirado' });
+  }
+}
+
 /**
  * Retrieves the current authenticated user's info based on the JWT cookie.
  *
@@ -519,96 +538,3 @@ exports.resendRecoveryCode = async (req, res) => {
     });
   }
 };
-/* exports.forgotPassword = async (req, res) => {
-  try {
-    const { email } = req.body;
-
-    // Validar email
-    if (!email || !email.includes('@')) {
-      return res.status(400).json({
-        success: false,
-        message: 'Por favor, forneça um email válido'
-      });
-    }
-
-    // Prevenir spam: limitar solicitações para o mesmo email
-    const now = Date.now();
-    const lastRequest = recentRequests.get(email);
-    
-    if (lastRequest && (now - lastRequest) < 60000) { // 1 minuto
-      return res.status(429).json({
-        success: false,
-        message: 'Aguarde um minuto antes de solicitar novamente'
-      });
-    }
-    
-    recentRequests.set(email, now);
-
-    // Verificar se o usuário existe
-    const user = await db.User.findOne({ where: { email } });
-    
-    if (!user) {
-      // Por segurança, não revelar se o email existe ou não
-      return res.json({
-        success: true,
-        message: 'Se o email existir em nossa base, enviaremos um link de recuperação'
-      });
-    }
-
-    // Gerar token seguro e único
-    const tokenPayload = {
-      timestamp: now,
-      userId: user.id,
-      random: Math.random().toString(36).substring(2),
-      entropy: process.hrtime().join('')
-    };
-
-    const tokenString = JSON.stringify(tokenPayload);
-    const resetToken = Buffer.from(tokenString).toString('base64url');
-
-    const resetTokenExpiry = now + 3600000; // 1 hora
-
-    // Salvar token hasheado no banco (nunca salvar o token plaintext)
-    const hashedToken = await bcrypt.hash(resetToken, 12);
-    
-    user.resetPasswordToken = hashedToken;
-    user.resetPasswordExpires = resetTokenExpiry;
-    await user.save();
-
-    // Enviar email de recuperação
-    try {
-      await sendPasswordRecoveryEmail(email, resetToken);
-      
-      // Limpar cache após 5 minutos
-      setTimeout(() => {
-        recentRequests.delete(email);
-      }, 300000);
-
-      res.json({
-        success: true,
-        message: 'Se o email existir em nossa base, enviaremos um link de recuperação'
-      });
-
-    } catch (emailError) {
-      console.error('Erro ao enviar email:', emailError);
-      
-      // Reverter a salvação do token se o email falhar
-      user.resetPasswordToken = null;
-      user.resetPasswordExpires = null;
-      await user.save();
-
-      res.status(500).json({
-        success: false,
-        message: 'Erro ao enviar email de recuperação'
-      });
-    }
-
-  } catch (error) {
-    console.error('Erro no forgotPassword:', error);
-    
-    res.status(500).json({
-      success: false,
-      message: 'Erro interno do servidor. Tente novamente mais tarde.'
-    });
-  }
-}; */

@@ -102,6 +102,10 @@ app.use('/api/v1/private/status', privateLimiter, privateStatusRouterV1);
 app.use('/api/v1/private/user', privateLimiter, privateUserRouterV1);
 
 // Public Routes 
+app.get('/', (req, res) => {
+  res.redirect('/api/v1/public/auth/app/');
+});
+
 app.use('/api/v1/public/auth', publicLimiter, publicRouterV1);
 
 

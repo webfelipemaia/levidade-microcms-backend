@@ -2,7 +2,6 @@ const { Strategy: JwtStrategy, ExtractJwt } = require('passport-jwt');
 const db = require('../helpers/db.helper');
 const jwt = require('jsonwebtoken');
 
-// Função personalizada para extrair o token do cookie
 const cookieExtractor = function (req) {
   let token = null;
   if (req && req.cookies) {

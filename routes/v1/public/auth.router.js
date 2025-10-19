@@ -2,6 +2,11 @@ const express = require('express');
 const publicRouterV1 = express.Router();
 const authController = require('../../../controllers/auth.controller');
 
+publicRouterV1.get('/', (req, res) => {
+    res.redirect('/api/v1/public/auth/app/');
+});
+
+publicRouterV1.get('/session-check', authController.checkSession);
 publicRouterV1.get('/app', app);
 publicRouterV1.post('/login', authController.login);
 publicRouterV1.post('/register', authController.register);
@@ -13,8 +18,12 @@ publicRouterV1.post('/resend-recovery-code', authController.resendRecoveryCode);
 
 function app(req, res, next) {
     res.send({
-        message: `${process.env.APP_NAME}`
+        application: `${process.env.APP_NAME}`,
+        env: `${process.env.NODE_ENV}`,
+        port: `${process.env.SERVER_PORT}`,
+        description: `${process.env.APP_DESCRIPTION}`,
     });
 }
+
 
 module.exports = publicRouterV1;

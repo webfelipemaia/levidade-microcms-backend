@@ -38,7 +38,7 @@ function createLimiter({ max, windowMs }) {
     legacyHeaders: false,
     message: "Too many requests. Please try again later.",
     handler: (req, res, next, options) => {
-      logger.info(`IP bloqueado (public): ${req.ip}`);
+      logger.info(`IP blocked (public): ${req.ip}`);
       res.status(options.statusCode).send(options.message);
     },
   });
