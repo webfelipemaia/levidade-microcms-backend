@@ -28,7 +28,7 @@ exports.login = async (req, res) => {
         {
           model: db.File,
           attributes: ['id', 'name', 'path', 'type'],
-          through: { attributes: [] } // Não retorna dados da tabela de junção
+          through: { attributes: [] }
         }
       ]
     });
@@ -43,7 +43,6 @@ exports.login = async (req, res) => {
       name: user.name,
       lastname: user.lastname,
       roles: user.Roles?.map((r) => r.name)
-      // Não inclua files no payload do JWT para não deixar o token muito grande
     };
 
     const token = jwt.sign(payload, process.env.JWT_SECRET, {
@@ -116,7 +115,6 @@ exports.register = async (req, res) => {
 
     await user.save();
 
-    // Buscar o usuário recém-criado com os relacionamentos para retornar dados completos
     const newUser = await db.User.findByPk(user.id, {
       include: [
         {
@@ -132,7 +130,6 @@ exports.register = async (req, res) => {
       attributes: { exclude: ['password'] }
     });
 
-    // Gera token JWT
     const token = jwt.sign(
       {
         id: newUser.id,
@@ -185,7 +182,7 @@ exports.checkSession = async (req, res) => {
   const token = req.cookies.token;
 
   if (!token) {
-    return res.status(200).json({ authenticated: false, message: 'Token não encontrado' });
+    return res.status(200).json({ authenticated: false, message: 'Token not found' });
   }
 
   try {
@@ -193,10 +190,10 @@ exports.checkSession = async (req, res) => {
     return res.json({
       authenticated: true,
       user: decoded,
-      message: 'Sessão válida'
+      message: 'Valid session'
     });
   } catch (err) {
-    return res.status(200).json({ authenticated: false, message: 'Token inválido ou expirado' });
+    return res.status(200).json({ authenticated: false, message: 'Invalid or expired token' });
   }
 }
 
@@ -294,83 +291,76 @@ exports.forgotPassword = async (req, res) => {
   try {
     const { email } = req.body;
 
-    // Validar email
     if (!email || !email.includes('@')) {
       return res.status(400).json({
         success: false,
-        message: 'Por favor, forneça um email válido'
+        message: 'Please provide a valid email address.'
       });
     }
 
-    // Prevenir spam: limitar solicitações para o mesmo email
     const now = Date.now();
     const lastRequest = recentRequests.get(email);
     
     if (lastRequest && (now - lastRequest) < 60000) {
       return res.status(429).json({
         success: false,
-        message: 'Aguarde um minuto antes de solicitar novamente'
+        message: 'Please wait a minute before requesting again.'
       });
     }
     
     recentRequests.set(email, now);
 
-    // Verificar se o usuário existe
     const user = await db.User.findOne({ where: { email } });
     
     if (!user) {
-      // Por segurança, não revelar se o email existe ou não
       return res.json({
         success: true,
-        message: 'Se o email existir em nossa base, enviaremos um código de recuperação'
+        message: 'If the email exists in our database, we will send you a recovery code.'
       });
     }
 
-    // Gerar código de 6 dígitos
+    // Generate 6-digit code
     const recoveryCode = Math.floor(100000 + Math.random() * 900000).toString();
-    const codeExpiry = now + 900000; // 15 minutos
+    const codeExpiry = now + 900000; // 15 minutes
 
-    // Armazenar código em cache (em produção, use Redis)
+    // Cache code
     recoveryCodes.set(email, {
       code: recoveryCode,
       expires: codeExpiry,
       userId: user.id
     });
 
-    // Limpar código após expiração
     setTimeout(() => {
       recoveryCodes.delete(email);
     }, 900000);
 
-    // Enviar email com o código
     try {
       await sendPasswordRecoveryEmail(email, recoveryCode);
       
       res.json({
         success: true,
-        message: 'Se o email existir em nossa base, enviaremos um código de recuperação'
+        message: 'If the email exists in our database, we will send you a recovery code.'
       });
 
     } catch (emailError) {
-      console.error('Erro ao enviar email:', emailError);
-      recoveryCodes.delete(email); // Remover código se email falhar
+      logger.error('Error sending email:', emailError);
+      recoveryCodes.delete(email);
       
       res.status(500).json({
         success: false,
-        message: 'Erro ao enviar email de recuperação'
+        message: 'Error sending recovery email'
       });
     }
 
   } catch (error) {
-    console.error('Erro no forgotPassword:', error);
+    logger.error('ForgotPassword error:', error);
     res.status(500).json({
       success: false,
-      message: 'Erro interno do servidor'
+      message: 'Internal server error'
     });
   }
 };
 
-// Novo endpoint para verificar código
 exports.verifyRecoveryCode = async (req, res) => {
   try {
     const { email, code } = req.body;
@@ -380,7 +370,7 @@ exports.verifyRecoveryCode = async (req, res) => {
     if (!storedData) {
       return res.status(400).json({
         success: false,
-        message: 'Código inválido ou expirado'
+        message: 'Invalid or expired code'
       });
     }
 
@@ -388,21 +378,20 @@ exports.verifyRecoveryCode = async (req, res) => {
       recoveryCodes.delete(email);
       return res.status(400).json({
         success: false,
-        message: 'Código expirado'
+        message: 'Expired code'
       });
     }
 
     if (storedData.code !== code) {
       return res.status(400).json({
         success: false,
-        message: 'Código incorreto'
+        message: 'Incorrect code'
       });
     }
 
-    // Código válido - gerar token de sessão para reset
     const resetToken = await bcrypt.hash(`${email}${Date.now()}`, 10);
     
-    // Armazenar token válido por 10 minutos
+    // Store token valid for 10 minutes
     recoveryCodes.set(email, {
       ...storedData,
       resetToken: resetToken,
@@ -411,20 +400,20 @@ exports.verifyRecoveryCode = async (req, res) => {
 
     res.json({
       success: true,
-      message: 'Código verificado com sucesso',
+      message: 'Code verified successfully',
       resetToken: resetToken
     });
 
   } catch (error) {
-    console.error('Erro na verificação do código:', error);
+    logger.error('Error verifying code:', error);
     res.status(500).json({
       success: false,
-      message: 'Erro interno do servidor'
+      message: 'Internal server error'
     });
   }
 };
 
-// Endpoint para resetar senha com token válido
+// Reset password with valid token
 exports.resetPasswordWithCode = async (req, res) => {
   try {
     const { email, resetToken, newPassword } = req.body;
@@ -434,7 +423,7 @@ exports.resetPasswordWithCode = async (req, res) => {
     if (!storedData || !storedData.resetToken) {
       return res.status(400).json({
         success: false,
-        message: 'Sessão inválida ou expirada'
+        message: 'Invalid or expired session'
       });
     }
 
@@ -442,23 +431,22 @@ exports.resetPasswordWithCode = async (req, res) => {
       recoveryCodes.delete(email);
       return res.status(400).json({
         success: false,
-        message: 'Sessão expirada'
+        message: 'Expired session'
       });
     }
 
     if (storedData.resetToken !== resetToken) {
       return res.status(400).json({
         success: false,
-        message: 'Token inválido'
+        message: 'Invalid token'
       });
     }
 
-    // Buscar usuário e atualizar senha
     const user = await db.User.findByPk(storedData.userId);
     if (!user) {
       return res.status(400).json({
         success: false,
-        message: 'Usuário não encontrado'
+        message: 'User not found'
       });
     }
 
@@ -466,75 +454,67 @@ exports.resetPasswordWithCode = async (req, res) => {
     user.password = hashedPassword;
     await user.save();
 
-    // Limpar dados de recuperação
     recoveryCodes.delete(email);
 
     res.json({
       success: true,
-      message: 'Senha redefinida com sucesso'
+      message: 'Password reset successfully'
     });
 
   } catch (error) {
-    console.error('Erro ao resetar senha:', error);
+    logger.error('Error resetting password:', error);
     res.status(500).json({
       success: false,
-      message: 'Erro ao redefinir senha'
+      message: 'Error resetting password'
     });
   }
 };
 
-// Adicione este método no seu auth.controller.js
 exports.resendRecoveryCode = async (req, res) => {
   try {
     const { email } = req.body;
-
-    // Verificar rate limiting
     const now = Date.now();
     const lastRequest = recentRequests.get(email);
     
     if (lastRequest && (now - lastRequest) < 30000) {
       return res.status(429).json({
         success: false,
-        message: 'Aguarde 30 segundos antes de solicitar um novo código'
+        message: 'Please wait 30 seconds before requesting a new code.'
       });
     }
 
     recentRequests.set(email, now);
-
-    // Verificar se o usuário existe
     const user = await db.User.findOne({ where: { email } });
     
     if (!user) {
       return res.json({
         success: true,
-        message: 'Se o email existir, enviaremos um novo código'
+        message: 'If the email exists, we will send you a new code.'
       });
     }
 
-    // Gerar novo código
     const recoveryCode = Math.floor(100000 + Math.random() * 900000).toString();
-    const codeExpiry = now + 900000; // 15 minutos
+    const codeExpiry = now + 900000; // 15 minutes
 
-    // Atualizar código no cache
+    // Cache code
     recoveryCodes.set(email, {
       code: recoveryCode,
       expires: codeExpiry,
       userId: user.id
     });
 
-    // Enviar email
     await sendPasswordRecoveryEmail(email, recoveryCode);
 
     res.json({
       success: true,
-      message: 'Novo código enviado com sucesso'
+      message: 'New code sent successfully'
     });
 
   } catch (error) {
-    console.error('Erro ao reenviar código:', error);
+    logger.error('Error resending code:', error);
     res.status(500).json({
       success: false,
-      message: 'Erro ao reenviar código'
+      message: 'Error resending code'
     });
   }
 };

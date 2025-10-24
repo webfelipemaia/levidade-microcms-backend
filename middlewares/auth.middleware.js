@@ -75,7 +75,8 @@ const authenticate = (req, res, next) => {
 
     if (err) return next(err);
     if (!user) {
-      // The 401 status has been changed to 200 to avoid automatic logging of HTTP requests with errors in the console.
+      // The 401 status was changed to 200 to prevent automatic logging of HTTP requests with errors in the console. 
+      // However, changing this status will allow access without authentication.
       return res.status(401).json({
         message: 'Unauthorized',
         ...(config.auth.debugMode && {
