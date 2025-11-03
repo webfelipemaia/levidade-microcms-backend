@@ -30,7 +30,7 @@ module.exports = validateRequest;
  *   res.send('Validation passed!');
  * });
  */
-function validateRequest(req, next, schema) {
+/* function validateRequest(req, next, schema) {
     const options = {
         abortEarly: false,
         allowUnknown: true,
@@ -43,4 +43,22 @@ function validateRequest(req, next, schema) {
         req.body = value;
         next();
     }
-}
+} */
+    function validateRequest(req, res, next, schema) {
+        const { error, value } = schema.validate(req.body, {
+            abortEarly: false,
+            allowUnknown: true,
+            stripUnknown: true
+        });
+        
+        if (error) {
+            const errorMessage = error.details.map(detail => detail.message).join(', ');
+            return res.status(422).json({
+                status: "error",
+                message: errorMessage
+            });
+        }
+    
+        req.body = value;
+        next();
+    }

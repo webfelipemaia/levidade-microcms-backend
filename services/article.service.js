@@ -68,9 +68,37 @@ async function getLastRegister() {
  * @returns {Promise<Object>} The created article.
  */
 async function create(params) {
-    const article = new db.Article(params);
-    await article.save();
-    return article;
+  
+  const article = new db.Article(params);
+  await article.save();
+  //return article;
+  return {
+    status: "success",
+    message: "Article created successfully",
+    data: article,
+  };
+
+/*   const existingArticle = await db.Article.findOne({
+    where: { title: params.title },
+  });
+  if (existingArticle) {
+    throw {
+      status: "error",
+      message: `Title "${params.title}" is already registered`,
+    };
+  }
+  
+
+  const article = new db.Article(params);
+  await article.save();
+  //return article;
+
+  return {
+    status: "success",
+    message: "Article created successfully",
+    data: article,
+  }; */
+    
 }
 
 /**

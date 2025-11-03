@@ -128,5 +128,5 @@ exports.updateSchema = (req, res, next) => {
             value: Joi.string()
         })
     );
-    validateRequest(req, next, schema);
+    validateRequest(req, res, next, schema);
 };

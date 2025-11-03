@@ -308,7 +308,7 @@ exports.createSchema = (req, res, next) => {
         path: Joi.string().optional(),
         id: Joi.number().integer().optional()
     });
-    validateRequest(req, next, schema);
+    validateRequest(req, res, next, schema);
 };
 
 /**
@@ -320,5 +320,5 @@ exports.updateSchema = (req, res, next) => {
         path: Joi.string().empty(''),
         categoryId: Joi.number().integer().empty('')
     });
-    validateRequest(req, next, schema);
+    validateRequest(req, res, next, schema);
 };

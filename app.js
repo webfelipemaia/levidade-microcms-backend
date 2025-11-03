@@ -34,6 +34,7 @@ const APP_NAME = process.env.APP_NAME || 'Express Levidade API';
 const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:8000';
 const RATE_LIMIT_MAX = parseInt(process.env.RATE_LIMIT_MAX) || 100;
 const RATE_LIMIT_WINDOW = parseInt(process.env.RATE_LIMIT_WINDOW) || 15;
+const UPLOAD_BASE_PATH = process.env.UPLOAD_BASE_PATH || 'storage/';
 
 
 // CORS Config 
@@ -114,7 +115,7 @@ app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
 
 // Static Files 
-app.use('/storage', express.static(path.join(__dirname, 'storage'), {
+app.use(UPLOAD_BASE_PATH, express.static(path.join(__dirname, 'storage'), {
   setHeaders: (res) => {
     res.set({
       'Access-Control-Allow-Origin': FRONTEND_URL,

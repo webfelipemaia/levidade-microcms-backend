@@ -98,7 +98,7 @@ exports.createSchema = (req, res, next) => {
         name: Joi.string().required(),
         parentId: Joi.number().integer().allow(null).optional()
     });
-    validateRequest(req, next, schema);
+    validateRequest(req, res, next, schema);
 };
 
 /**
@@ -114,7 +114,7 @@ exports.createWithSubcategoriesSchema = (req, res, next) => {
             name: Joi.string().required()
         })).required()
     });
-    validateRequest(req, next, schema);
+    validateRequest(req, res, next, schema);
 };
 
 /**
@@ -128,5 +128,5 @@ exports.updateSchema = (req, res, next) => {
         name: Joi.string().empty('').optional(),
         parentId: Joi.number().integer().allow(null).optional()
     });
-    validateRequest(req, next, schema);
+    validateRequest(req, res, next, schema);
 };

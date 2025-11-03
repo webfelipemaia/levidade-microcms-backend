@@ -101,7 +101,7 @@ exports.createSchema = (req, res, next) => {
         name: Joi.string().required(),
         value: Joi.number().required()
     });
-    validateRequest(req, next, schema);
+    validateRequest(req, res, next, schema);
 };
 
 /**
@@ -118,5 +118,5 @@ exports.updateSchema = (req, res, next) => {
         name: Joi.string().empty(''),
         value: Joi.number().required()
     });
-    validateRequest(req, next, schema);
+    validateRequest(req, res, next, schema);
 };

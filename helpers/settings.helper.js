@@ -20,6 +20,10 @@ let cacheTimestamp = 0;
  * @type {number}
  */
 const CACHE_TTL = 5 * 60 * 1000;
+const JWT_SECRET = process.env.JWT_SECRET;
+if (!JWT_SECRET && process.env.NODE_ENV === 'production') {
+  throw new Error('JWT_SECRET must be set in production');
+}
 
 module.exports = {
   initializeCache,
@@ -32,11 +36,10 @@ module.exports = {
   getSettingsByPrefix,
   auth: {
     debugMode: parseBool(process.env.AUTH_DEBUG),
-    jwtSecret: process.env.JWT_SECRET || 'your-secret-key',
+    jwtSecret: JWT_SECRET,
     tokenExpiration: process.env.JWT_EXPIRATION || '1h'
   }
 };
-
 
 /** Initialize the cache with default values */
 function initializeCache() {

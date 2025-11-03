@@ -134,7 +134,7 @@ exports.createSchema = (req, res, next) => {
         lastname: Joi.string().required(),
         role: Joi.string()
     });
-    validateRequest(req, next, schema);
+    validateRequest(req, res, next, schema);
 };
 
 /**
@@ -153,7 +153,7 @@ exports.updateSchema = (req, res, next) => {
         lastname: Joi.string().empty(''),
         roles: Joi.array().empty('')
     });
-    validateRequest(req, next, schema);
+    validateRequest(req, res, next, schema);
 };
 
 /**
@@ -173,5 +173,5 @@ exports.registerSchema = (req, res, next) => {
       name: Joi.string().required(),
       lastname: Joi.string().required(),
     });
-    validateRequest(req, next, schema);
+    validateRequest(req, res, next, schema);
 };

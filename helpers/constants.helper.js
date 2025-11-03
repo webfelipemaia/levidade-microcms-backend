@@ -1,8 +1,12 @@
+const path = require('path');
+const UPLOAD_BASE_PATH = process.env.UPLOAD_BASE_PATH || path.join(process.cwd(), 'storage');
+
 const UPLOAD_PATH = {
-    ROOT: '/storage/',                      // for any file
-    CONTENT: '/storage/content/',           // for files and images associated with an article    
-    PROFILE: '/storage/profile/',           // for files and images associated with a user
+  ROOT: UPLOAD_BASE_PATH,                           // for any file
+  CONTENT: path.join(UPLOAD_BASE_PATH, 'content'),  // for files and images associated with an article
+  PROFILE: path.join(UPLOAD_BASE_PATH, 'profile'),  // for files and images associated with a user
 };
+
 
 const UPLOAD_CONTENT_TYPE = {
     ARTICLE: 'article',                     // for articles and posts in general

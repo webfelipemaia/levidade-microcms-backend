@@ -105,7 +105,7 @@ exports.createSchema = (req, res, next) => {
     const schema = Joi.object({
         name: Joi.string().required()
     });
-    validateRequest(req, next, schema);
+    validateRequest(req, res, next, schema);
 };
 
 /**
@@ -116,7 +116,7 @@ exports.updateSchema = (req, res, next) => {
         name: Joi.string().empty(''),
         permissions: Joi.array().empty('')
     });
-    validateRequest(req, next, schema);
+    validateRequest(req, res, next, schema);
 };
 
 
@@ -180,5 +180,5 @@ exports.updatePermissionsSchema = (req, res, next) => {
     const schema = Joi.object({
         permissions: Joi.array().items(Joi.number().integer().min(1)).optional()
     });
-    validateRequest(req, next, schema);
+    validateRequest(req, res, next, schema);
 };

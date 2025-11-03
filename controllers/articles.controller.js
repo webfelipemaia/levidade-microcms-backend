@@ -157,7 +157,7 @@ exports.createSchema = (req, res, next) => {
         categoryId: Joi.number().integer().required(),
         fileId: Joi.number().optional(),
     });
-    validateRequest(req, next, schema);
+    validateRequest(req, res, next, schema);
 };
 
 /**
@@ -177,5 +177,5 @@ exports.updateSchema = (req, res, next) => {
         categoryId: Joi.number().integer().empty(''),
         fileId: Joi.number().optional(),
     });
-    validateRequest(req, next, schema);
+    validateRequest(req, res, next, schema);
 };

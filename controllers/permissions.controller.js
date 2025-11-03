@@ -124,7 +124,7 @@ exports.createSchema = (req, res, next) => {
     const schema = Joi.object({
         name: Joi.string().required()
     });
-    validateRequest(req, next, schema);
+    validateRequest(req, res, next, schema);
 };
 
 /**
@@ -134,5 +134,5 @@ exports.updateSchema = (req, res, next) => {
     const schema = Joi.object({
         name: Joi.string().empty('')
     });
-    validateRequest(req, next, schema);
+    validateRequest(req, res, next, schema);
 };
