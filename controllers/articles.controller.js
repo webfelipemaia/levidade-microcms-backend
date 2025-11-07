@@ -31,15 +31,27 @@ exports.getAll = (req, res, next) => {
 exports.getAllPaginated = async (req, res, next) => {
     try {
         const paginationSettings = await pagination();
-        const storedPageOrder =  paginationSettings.order;
-        const storedPageSize = parseInt(paginationSettings.pageSize);        
-        
-        const page = parseInt(req.query.page) || 1;
-        const pageSize = parseInt(req.query.pageSize) || storedPageSize;
-        const searchQuery = req.query.search || '';        
-        const order = req.query.order ? JSON.parse(req.query.order) : [storedPageOrder];
+        const storedPageOrder = paginationSettings.order;
+        const storedPageSize = parseInt(paginationSettings.pageSize);
 
-        const result = await articleService.getPaginatedArticles(page, pageSize, searchQuery, order);
+        const page = Math.max(parseInt(req.query.page) || 1, 1);
+        const pageSize = Math.max(parseInt(req.query.pageSize) || storedPageSize, 1);
+
+        const searchQuery = req.query.search || '';
+        const order = req.query.order ? JSON.parse(req.query.order) : [storedPageOrder];
+        const categoryId = req.query.categoryId || null;
+        const status = req.query.status || null;
+        const searchDate = req.query.date || null;
+
+        const result = await articleService.getPaginatedArticles(
+            page, 
+            pageSize, 
+            searchQuery, 
+            order, 
+            categoryId,
+            status,
+            searchDate
+        );
 
         return res.status(200).json(result);
     } catch (error) {

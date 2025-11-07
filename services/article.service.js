@@ -1,13 +1,13 @@
 const db = require('../helpers/db.helper');
 const Sequelize = require('sequelize');
 module.exports = {
-    getAll,
-    getById,
-    getLastRegister,
-    create,
-    update,
-    delete: _delete,
-    getPaginatedArticles,
+  getAll,
+  getPaginatedArticles,
+  getById,
+  getLastRegister,
+  create,
+  update,
+  delete: _delete
 };
 
 const { paginate } = require('../helpers/pagination.helper');
@@ -28,15 +28,43 @@ async function getAll() {
  * @param {Array} [order] - Sequelize order definition (e.g., [['createdAt', 'DESC']]).
  * @returns {Promise<{rows: Array<Object>, count: number}>} Paginated articles.
  */
-async function getPaginatedArticles(page, pageSize, searchQuery, order) {
-    return await paginate(db.Article, {
-        page,
-        pageSize,
-        searchQuery,
-        searchFields: ['title', 'subtitle'],
-        order
-    });
-}
+async function getPaginatedArticles(page, pageSize, searchQuery, order, categoryId, status, searchDate) {
+      // Campos pesquisáveis
+      const searchFields = ['title', 'subtitle', 'body', 'slug'];
+  
+      let where = {};
+  
+      // Filtros
+      if (searchQuery && searchFields.length > 0) {
+          where[Sequelize.Op.or] = searchFields.map(field => ({
+              [field]: { [Sequelize.Op.like]: `%${searchQuery}%` }
+          }));
+      }
+  
+      if (categoryId) {
+          where.categoryId = categoryId;
+      }
+  
+      if (status) {
+          where.status = status;
+      }
+  
+      if (searchDate) {
+          where.updatedAt = {
+              [Sequelize.Op.gte]: new Date(searchDate)
+          };
+      }
+  
+      return await paginate(db.Article, {
+          page,
+          pageSize,
+          searchQuery,
+          searchFields,
+          order,
+          where
+      });
+  }
+  
 
 /**
  * Get an article by its ID.
@@ -71,33 +99,12 @@ async function create(params) {
   
   const article = new db.Article(params);
   await article.save();
-  //return article;
+  
   return {
     status: "success",
     message: "Article created successfully",
     data: article,
   };
-
-/*   const existingArticle = await db.Article.findOne({
-    where: { title: params.title },
-  });
-  if (existingArticle) {
-    throw {
-      status: "error",
-      message: `Title "${params.title}" is already registered`,
-    };
-  }
-  
-
-  const article = new db.Article(params);
-  await article.save();
-  //return article;
-
-  return {
-    status: "success",
-    message: "Article created successfully",
-    data: article,
-  }; */
     
 }
 
