@@ -4,6 +4,7 @@ const auth = require("../../../middlewares/auth.middleware");
 
 const {
     getAll,
+    getAllPaginated,
     getUsersRoles,
     getById,
     create,
@@ -20,6 +21,7 @@ const {
 } = require("../../../controllers/users.controller");
 
 privateUserRouterV1.get("/", auth, getAll);
+privateUserRouterV1.get("/paginated", auth, getAllPaginated);
 privateUserRouterV1.get("/roles", auth, getUsersRoles);
 privateUserRouterV1.get("/:id", auth, getById);
 privateUserRouterV1.post("/", auth, createSchema, create);

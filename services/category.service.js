@@ -1,13 +1,17 @@
 const db = require('../helpers/db.helper');
+const Sequelize = require('sequelize');
 
 module.exports = {
     getAll,
+    getPaginatedCategories,
     getById,
     create,
     update,
     delete: _delete,
     createWithSubcategories
 };
+
+const { paginate } = require('../helpers/pagination.helper');
 
 /**
  * Get all categories with their subcategories.
@@ -103,3 +107,40 @@ async function getCategory(id) {
     if (!category) throw 'Category not found';
     return category;
 }
+
+// categoryService.js
+
+/**
+ * Get paginated categories with search and ordering
+ * @param {number} page - Page number
+ * @param {number} pageSize - Number of items per page
+ * @param {string} searchQuery - Search query for category name
+ * @param {Array} order - Ordering parameters
+ * @returns {Promise<Object>} Paginated categories result
+ */
+async function getPaginatedCategories(page, pageSize, searchQuery, order) {
+    // Campos pesquisáveis - apenas name para categories
+    const searchFields = ['name'];
+
+    let where = {};
+
+    // Filtros
+    if (searchQuery && searchFields.length > 0) {
+        where[Sequelize.Op.or] = searchFields.map(field => ({
+            [field]: { [Sequelize.Op.like]: `%${searchQuery}%` }
+        }));
+    }
+
+    return await paginate(db.Category, {
+        page,
+        pageSize,
+        searchQuery,
+        searchFields,
+        order,
+        where
+    });
+}
+
+module.exports = {
+    getPaginatedCategories
+};

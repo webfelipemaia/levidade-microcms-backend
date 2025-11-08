@@ -1,6 +1,8 @@
 ﻿const Joi = require('joi');
 const validateRequest = require('../middlewares/validateRequest.middleware');
 const userService = require('../services/user.service');
+const { pagination } = require("../services/setting.service");
+const logger = require("../config/logger");
 
 
 /**
@@ -44,6 +46,42 @@ exports.getAll = (req, res, next) => {
     userService.getAll()
         .then(users => res.json(users))
         .catch(next);
+};
+
+/**
+ * Fetches paginated users with optional search and order parameters.
+ *
+ * @route GET /users/paginated
+ * @param {number} [req.query.page] - Page number (default 1).
+ * @param {number} [req.query.pageSize] - Number of items per page.
+ * @param {string} [req.query.search] - Search query string.
+ * @param {string} [req.query.order] - JSON string array for sorting order.
+ * @returns {Promise<Object>} JSON object containing paginated users.
+ */
+exports.getAllPaginated = async (req, res, next) => {
+    try {
+        const paginationSettings = await pagination();
+        const storedPageOrder = paginationSettings.order;
+        const storedPageSize = parseInt(paginationSettings.pageSize);
+
+        const page = Math.max(parseInt(req.query.page) || 1, 1);
+        const pageSize = Math.max(parseInt(req.query.pageSize) || storedPageSize, 1);
+
+        const searchQuery = req.query.search || '';
+        const order = req.query.order ? JSON.parse(req.query.order) : [storedPageOrder];
+
+        const result = await userService.getPaginatedUsers(
+            page, 
+            pageSize, 
+            searchQuery, 
+            order
+        );
+
+        return res.status(200).json(result);
+    } catch (error) {
+        logger.error('Error fetching users:', error);
+        res.status(500).json({ error: 'Failed to fetch users' });
+    }
 };
 
 /**

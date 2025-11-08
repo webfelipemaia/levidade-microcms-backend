@@ -4,6 +4,7 @@ const authenticate = require("../../../middlewares/auth.middleware");
 
 const {
     getAll,
+    getAllPaginated,
     getAllRolesPermissions,
     getRolesPermissions,
     getById,
@@ -22,6 +23,7 @@ const {
 } = require("../../../controllers/roles.controller");
 
 privateRoleRouterV1.get("/", authenticate, getAll);
+privateRoleRouterV1.get("/paginated", authenticate, getAllPaginated);
 privateRoleRouterV1.get("/all", authenticate, getAllRolesPermissions);
 privateRoleRouterV1.get("/permissions", authenticate, getRolesPermissions);
 privateRoleRouterV1.get("/:id", authenticate, getById);

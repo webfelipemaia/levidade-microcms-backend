@@ -2,10 +2,13 @@
 const bcrypt = require("bcryptjs");
 require("dotenv").config();
 const db = require("../helpers/db.helper");
+const { paginate } = require('../helpers/pagination.helper');
 const logger = require("../config/logger");
+const Sequelize = require('sequelize');
 
 module.exports = {
   getAll,
+  getPaginatedUsers,
   getUsersRoles,
   getById,
   create,
@@ -23,6 +26,37 @@ async function getAll() {
     attributes: { exclude: ["password"] },
   });
   return users;
+}
+
+/**
+ * Get paginated users with search and ordering
+ * @param {number} page - Page number
+ * @param {number} pageSize - Number of items per page
+ * @param {string} searchQuery - Search query for user name or email
+ * @param {Array} order - Ordering parameters
+ * @returns {Promise<Object>} Paginated users result
+ */
+async function getPaginatedUsers(page, pageSize, searchQuery, order) {
+  
+  const searchFields = ['name', 'lastname', 'email'];
+
+  let where = {};
+
+  // Filtros
+  if (searchQuery && searchFields.length > 0) {
+      where[Sequelize.Op.or] = searchFields.map(field => ({
+          [field]: { [Sequelize.Op.like]: `%${searchQuery}%` }
+      }));
+  }
+
+  return await paginate(db.User, {
+      page,
+      pageSize,
+      searchQuery,
+      searchFields,
+      order,
+      where
+  });
 }
 
 /**

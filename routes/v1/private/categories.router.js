@@ -4,6 +4,7 @@ const authenticate = require("../../../middlewares/auth.middleware");
 
 const {
     getAllCategories,
+    getAllPaginated,
     getCategoryById,
     createCategory,
     createCategoryWithSubcategories,
@@ -17,6 +18,7 @@ const {
 } = require('../../../controllers/categories.controller');
 
 privateCategoryRouterV1.get('/', authenticate, getAllCategories);
+privateCategoryRouterV1.get("/paginated", authenticate, getAllPaginated);
 privateCategoryRouterV1.get('/:id', authenticate, getCategoryById);
 privateCategoryRouterV1.post('/', authenticate, createSchema, createCategory);
 privateCategoryRouterV1.post('/with-subcategories', authenticate, createWithSubcategoriesSchema, createCategoryWithSubcategories);

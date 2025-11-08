@@ -1,8 +1,11 @@
 const db = require('../helpers/db.helper');
 const logger = require("../config/logger");
+const Sequelize = require('sequelize');
+const { paginate } = require('../helpers/pagination.helper');
 
 module.exports = {
     getAll,
+    getPaginatedPermissions,
     getPermissionsRoles,
     getAllPermissionsRoles,
     getById,
@@ -19,6 +22,37 @@ module.exports = {
  */
 async function getAll() {
   return await db.Permission.findAll();
+}
+
+/**
+ * Get paginated permissions with search and ordering
+ * @param {number} page - Page number
+ * @param {number} pageSize - Number of items per page
+ * @param {string} searchQuery - Search query for permission name
+ * @param {Array} order - Ordering parameters
+ * @returns {Promise<Object>} Paginated permissions result
+ */
+async function getPaginatedPermissions(page, pageSize, searchQuery, order) {
+  // Campos pesquisáveis - apenas name para permissions
+  const searchFields = ['name'];
+
+  let where = {};
+
+  // Filtros
+  if (searchQuery && searchFields.length > 0) {
+      where[Sequelize.Op.or] = searchFields.map(field => ({
+          [field]: { [Sequelize.Op.like]: `%${searchQuery}%` }
+      }));
+  }
+
+  return await paginate(db.Permission, {
+      page,
+      pageSize,
+      searchQuery,
+      searchFields,
+      order,
+      where
+  });
 }
 
 /**

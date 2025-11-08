@@ -1,8 +1,11 @@
 const db = require('../helpers/db.helper');
+const { paginate } = require('../helpers/pagination.helper');
 const logger = require("../config/logger");
+const Sequelize = require('sequelize');
 
 module.exports = {
     getAll,
+    getPaginatedRoles,
     getRolesPermissions,
     getAllRolesPermissions,
     getById,
@@ -24,6 +27,37 @@ async function getAll() {
     logger.error(`[RoleService] Error in getAll: ${error.message}`);
     throw { status: "error", message: "Failed to retrieve roles." };
   }
+}
+
+/**
+ * Get paginated roles with search and ordering
+ * @param {number} page - Page number
+ * @param {number} pageSize - Number of items per page
+ * @param {string} searchQuery - Search query for role name
+ * @param {Array} order - Ordering parameters
+ * @returns {Promise<Object>} Paginated roles result
+ */
+async function getPaginatedRoles(page, pageSize, searchQuery, order) {
+  // Campos pesquisáveis - apenas name para roles
+  const searchFields = ['name'];
+
+  let where = {};
+
+  // Filtros
+  if (searchQuery && searchFields.length > 0) {
+      where[Sequelize.Op.or] = searchFields.map(field => ({
+          [field]: { [Sequelize.Op.like]: `%${searchQuery}%` }
+      }));
+  }
+
+  return await paginate(db.Role, {
+      page,
+      pageSize,
+      searchQuery,
+      searchFields,
+      order,
+      where
+  });
 }
 
 /**
