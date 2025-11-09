@@ -140,7 +140,3 @@ async function getPaginatedCategories(page, pageSize, searchQuery, order) {
         where
     });
 }
-
-module.exports = {
-    getPaginatedCategories
-};
