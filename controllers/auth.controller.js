@@ -61,6 +61,7 @@ exports.login = async (req, res) => {
     return res.status(200).json({
       status: "success",
       message: "Authentication successful",
+      token, // <-- ADICIONADO AQUI PARA MOBILE
       data: {
         id: user.id,
         name: user.name,
@@ -79,6 +80,7 @@ exports.login = async (req, res) => {
         expiresAt: new Date(decoded.exp * 1000)
       }
     });
+    
 
   } catch (err) {
     logger.error(err);
@@ -153,6 +155,7 @@ exports.register = async (req, res) => {
 
     res.status(201).json({
       message: "User registered and logged in successfully",
+      token,
       data: {
         id: newUser.id,
         email: newUser.email,
@@ -179,7 +182,7 @@ exports.register = async (req, res) => {
 };
 
 exports.checkSession = async (req, res) => {
-  const token = req.cookies.token;
+  const token = req.cookies.token || req.headers.authorization?.replace("Bearer ", "");
 
   if (!token) {
     return res.status(200).json({ authenticated: false, message: 'Token not found' });
@@ -208,7 +211,10 @@ exports.checkSession = async (req, res) => {
  */
 exports.getMe = async (req, res) => {
   try {
-    const token = req.cookies?.token;
+
+    const token = 
+      req.cookies?.token || 
+      req.headers.authorization?.replace("Bearer ", "");
 
     if (!token) return res.status(401).json({ message: 'Token not supplied' });
 
@@ -245,6 +251,7 @@ exports.getMe = async (req, res) => {
           type: file.type
         }))
       },
+      token,
       tokenInfo: {
         issuedAt: new Date(decoded.iat * 1000),
         expiresAt: new Date(decoded.exp * 1000)

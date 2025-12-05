@@ -38,12 +38,47 @@ const UPLOAD_BASE_PATH = process.env.UPLOAD_BASE_PATH || 'storage/';
 
 
 // CORS Config 
-const corsOptions = {
+/* const corsOptions = {
   origin: FRONTEND_URL,
   methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
   credentials: true,
   optionSuccessStatus: 200,
   allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
+}; */
+
+// CORS Config — Suporte Web + Mobile
+const allowedOrigins = [
+  FRONTEND_URL,                // Frontend Web oficial
+  "http://localhost:19006",    // Expo Web
+  "http://localhost:8081",     // React Native CLI (Metro bundler)
+  "http://127.0.0.1:19000",    // Expo Dev (Android/iOS)
+  "http://10.0.2.2:19000",     // Android Emulator (Expo)
+  "http://10.0.2.2:8081",      // Android Emulator CLI
+  "http://192.168.0.0/16"      // Redes locais (qualquer IP interno do celular)
+];
+
+/**
+ * Permitir mobile mesmo quando origin é undefined:
+ * - iOS/Android apps nativos muitas vezes enviam `origin: null`
+ */
+const corsOptions = {
+  origin: function (origin, callback) {
+    // Permitir requisições sem origin (Ex: apps nativos)
+    if (!origin) return callback(null, true);
+
+    const isAllowed = allowedOrigins.includes(origin) ||
+                      /^http:\/\/192\.168\./.test(origin) ||  // Rede local (Android/iOS físicos)
+                      /^http:\/\/10\./.test(origin) ||        // Rede corporativa / roteador
+                      /^http:\/\/172\./.test(origin);          // Outra faixa privada
+
+    if (isAllowed) return callback(null, true);
+
+    return callback(new Error("Not allowed by CORS: " + origin));
+  },
+
+  methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
+  credentials: true,
+  allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With"]
 };
 
 

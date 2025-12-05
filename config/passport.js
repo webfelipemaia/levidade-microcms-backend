@@ -1,35 +1,48 @@
 const { Strategy: JwtStrategy, ExtractJwt } = require('passport-jwt');
 const db = require('../helpers/db.helper');
-const jwt = require('jsonwebtoken');
 
-const cookieExtractor = function (req) {
-  let token = null;
+/**
+ * Extrator unificado:
+ * 1. Bearer Token (mobile / API)
+ * 2. Cookie 'jwt' (web)
+ */
+const unifiedJwtExtractor = function (req) {
+
+  //Debug
+  //console.log("Extractor :: cookies:", req.cookies);
+  //console.log("Extractor :: header:", req.headers.authorization);
+
+  // 1. Bearer Authorization Header (Mobile)
+  const tokenFromHeader = ExtractJwt.fromAuthHeaderAsBearerToken()(req);
+  if (tokenFromHeader) return tokenFromHeader;
+
+  // 2. Cookies (Web)
   if (req && req.cookies) {
-    token = req.cookies.token;
+    if (req.cookies.jwt) return req.cookies.jwt;
+    if (req.cookies.token) return req.cookies.token;
   }
-  return token;
+
+  return null;
 };
 
+
 const opts = {
-  jwtFromRequest: cookieExtractor,
-  secretOrKey: process.env.JWT_SECRET,
+  jwtFromRequest: unifiedJwtExtractor, // Custom extractor
+  secretOrKey: process.env.JWT_SECRET, // JWT Secret
+  //passReqToCallback: true // Add req at callback
 };
 
 module.exports = (passport) => {
-  passport.use(new JwtStrategy(opts, async (jwt_payload, done) => {
-    try {
-      const user = await db.User.findByPk(jwt_payload.id, {
-        include: db.Role
-      });
-
-      if (user) {
-        return done(null, user);
-      } else {
-        return done(null, false);
-      }
-
-    } catch (err) {
-      return done(err, false);
-    }
-  }));
+  passport.use(
+    new JwtStrategy(opts, (jwt_payload, done) => {
+      db.User.findByPk(jwt_payload.id, { include: db.Role })
+        .then(user => {
+          if (user) return done(null, user);
+          return done(null, false);
+        })
+        .catch(err => done(err, false));
+    })
+  );
+  
 };
+
