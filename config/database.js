@@ -1,16 +1,14 @@
 const env = process.env.NODE_ENV || 'development';
-if (env === 'test') {
-  require('dotenv').config({ path: '.env.test' });
-} else {
-  require('dotenv').config();
-}
+require('dotenv').config({
+    path: env === 'test' ? '.env.test' : '.env'
+});
 
 const config = require('./config.js')[env];
 const { Sequelize } = require('sequelize');
 
 const sequelize = new Sequelize(
   config.database,
-  config.user,
+  config.username,
   config.password,
   {
     host: config.host,

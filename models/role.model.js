@@ -1,6 +1,5 @@
 const { DataTypes } = require('sequelize');
 const sequelize = require('../config/database');
-const Sequelize = require('sequelize')
 
 const Role = sequelize.define('Role', {
   name: {
@@ -8,18 +7,13 @@ const Role = sequelize.define('Role', {
     allowNull: false,
     unique: true
   },
-  createdAt: {
-      type: DataTypes.DATE,
-      allowNull: true,
-      defaultValue: Sequelize.NOW
+  description: { 
+    type: DataTypes.TEXT, 
+    allowNull: true 
   },
-  updatedAt: {
-      type: DataTypes.DATE,
-      allowNull: true,
-      defaultValue: Sequelize.NOW
-  }
 }, {
-  sequelize, timestamps: true,
+  tableName: 'roles', 
+  timestamps: true,
 });
 
 module.exports = Role;

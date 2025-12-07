@@ -1,46 +1,44 @@
-
+// models/SystemSettings.js
 const { DataTypes } = require('sequelize');
 const sequelize = require('../config/database');
-const Sequelize = require('sequelize');
 
-// Nota:
-// ['settingName', 'value']: especifica as colunas do índice único
-// type: "string", "number", "boolean", "json"
-
-const SystemSettings = sequelize.define('System_Settings', {
-  settingName: {
-      type: DataTypes.STRING,
+const SystemSettings = sequelize.define(
+  'SystemSettings',
+  {
+    id: {
+      type: DataTypes.INTEGER,
+      primaryKey: true,
+      autoIncrement: true,
       allowNull: false,
-  },
-  value: {
+    },
+    setting_name: {
+      type: DataTypes.STRING(150),
+      allowNull: false,
+      unique: true,
+    },
+    setting_value: {
       type: DataTypes.TEXT,
       allowNull: false,
-  },
-  additionalValue: {
+    },
+    additional_value: {
       type: DataTypes.TEXT,
       allowNull: true,
-  },
-  description: {
-      type: DataTypes.STRING,
+    },
+    description: {
+      type: DataTypes.STRING(255),
       allowNull: true,
+    },
+    type: {
+      type: DataTypes.ENUM('string', 'number', 'boolean', 'json'),
+      allowNull: false,
+      defaultValue: 'string',
+    },
   },
-  type: {
-    type: DataTypes.STRING,
-    allowNull: true,
-  },
-  createdAt: {
-      type: DataTypes.DATE,
-      allowNull: true,
-      defaultValue: Sequelize.NOW,
-  },
-  updatedAt: {
-      type: DataTypes.DATE,
-      allowNull: true,
-      defaultValue: Sequelize.NOW,
-  },
-}, {
-  sequelize,
-  timestamps: true,
-});
+  {
+    tableName: 'system_settings',
+    timestamps: true,
+    underscored: true,
+  }
+);
 
 module.exports = SystemSettings;

@@ -5,7 +5,7 @@ module.exports = {
   
   async up (queryInterface, Sequelize) {
     const now = new Date();
-    await queryInterface.bulkInsert('Categories', [
+    await queryInterface.bulkInsert('categories', [
       { name: 'Categoria Principal', parentId: null, createdAt: now, updatedAt: now },
       { name: 'Subcategoria 1', parentId: 1, createdAt: now, updatedAt: now },
       { name: 'Subcategoria 2', parentId: 1, createdAt: now, updatedAt: now },
@@ -14,6 +14,6 @@ module.exports = {
   },
 
   async down (queryInterface, Sequelize) {
-    await queryInterface.bulkDelete('Categories', null, {});
+    await queryInterface.bulkDelete('categories', null, {});
   }
 };

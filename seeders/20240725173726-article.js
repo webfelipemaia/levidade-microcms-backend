@@ -3,7 +3,7 @@
 /** @type {import('sequelize-cli').Migration} */
 module.exports = {
   async up (queryInterface, Sequelize) {
-    await queryInterface.bulkInsert('Articles', [
+    await queryInterface.bulkInsert('articles', [
       {
         title: 'Article 1',
         subtitle: 'Subtitle 1',
@@ -12,8 +12,8 @@ module.exports = {
         categoryId: 1,
         status: 0,
         featured: 0,
-        createdAt: '2024-07-25 16:00:01',
-        updatedAt: '2024-07-25 16:00:01'
+        createdAt: new Date(),
+        updatedAt: new Date()
       },
       {
         title: 'Lorem ipsum',
@@ -23,13 +23,13 @@ module.exports = {
         categoryId: 2,
         status: 0,
         featured: 0,
-        createdAt: '2024-07-25 16:00:01',
-        updatedAt: '2024-07-25 16:00:01'
+        createdAt: new Date(),
+        updatedAt: new Date()
       }
     ], {});
   },
 
   async down (queryInterface, Sequelize) {
-    await queryInterface.bulkDelete('Articles', null, {});
+    await queryInterface.bulkDelete('articles', null, {});
   }
 };

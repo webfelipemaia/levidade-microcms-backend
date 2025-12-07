@@ -3,25 +3,18 @@
 /** @type {import('sequelize-cli').Migration} */
 module.exports = {
   async up (queryInterface, Sequelize) {
-    await queryInterface.bulkInsert('Files', [
+    await queryInterface.bulkInsert('files', [
       { 
-        name: 'example-image', 
-        path: 'path/to/image/', 
-        type: 'image',
-        createdAt: '2024-07-25 16:00:01', 
-        updatedAt: '2024-07-25 16:00:01' 
-      },
-      { 
-        name: 'example-video', 
-        path: 'path/to/video/', 
-        type: 'video',
-        createdAt: '2024-07-25 16:00:01', 
-        updatedAt: '2024-07-25 16:00:01' 
+        name: '32d29dbc70b526504748e419f4abb56f.jpg', 
+        path: 'storage/content/article/2025_07/32d29dbc70b526504748e419f4abb56f', 
+        type: 'image/jpeg',
+        createdAt: new Date(), 
+        updatedAt: new Date() 
       },
     ], {});
   },
 
   async down (queryInterface, Sequelize) {
-    await queryInterface.bulkDelete('Files', null, {});
+    await queryInterface.bulkDelete('files', null, {});
   }
 };

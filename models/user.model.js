@@ -1,6 +1,6 @@
+// models/user.model.js
 const { DataTypes } = require('sequelize');
 const sequelize = require('../config/database');
-const Sequelize = require('sequelize')
 
 const User = sequelize.define('User', {
   id: {
@@ -26,18 +26,33 @@ const User = sequelize.define('User', {
     type: DataTypes.STRING,
     allowNull: false
   },
-  createdAt: {
-      type: DataTypes.DATE,
-      allowNull: true,
-      defaultValue: Sequelize.NOW
+  avatarId: {
+    type: DataTypes.INTEGER,
+    allowNull: true,
+    references: {
+      model: 'files',
+      key: 'id'
+    }
   },
-  updatedAt: {
-      type: DataTypes.DATE,
-      allowNull: true,
-      defaultValue: Sequelize.NOW
-  }
 }, {
-  sequelize, timestamps: true,
+  tableName: 'users', 
+  timestamps: true,
+});
+
+// 1. Relacionamento 1:1 para o Avatar
+const File = require('./file.model'); 
+User.belongsTo(File, {
+    foreignKey: 'avatarId',
+    as: 'avatar'
+});
+
+// 2. Relacionamento N:M para arquivos adicionais
+const UsersFiles = require('./UsersFiles');
+User.belongsToMany(File, {
+    through: UsersFiles,
+    foreignKey: 'userId',
+    otherKey: 'fileId',
+    as: 'additionalFiles' // Um nome distinto para o alias
 });
 
 module.exports = User;

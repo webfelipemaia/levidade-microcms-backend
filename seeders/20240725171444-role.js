@@ -1,15 +1,26 @@
 'use strict';
 
-/** @type {import('sequelize-cli').Migration} */
 module.exports = {
-  async up (queryInterface, Sequelize) {
-    await queryInterface.bulkInsert('Roles', [
-      { name: 'Admin', createdAt: '2024-07-25 16:00:01', updatedAt: '2024-07-25 16:00:01' },
-      { name: 'User', createdAt: '2024-07-25 16:00:01', updatedAt: '2024-07-25 16:00:01' }
+  async up (queryInterface) {
+    await queryInterface.bulkInsert('roles', [      
+      {
+        name: 'Guest',
+        description: 'Usuário padrão com acesso limitado.',
+        createdAt: new Date(),
+        updatedAt: new Date()
+      },
+      {
+        name: 'Administrator',
+        description: 'O perfil de controle total e manutenção do sistema.',
+        createdAt: new Date(),
+        updatedAt: new Date()
+      }
     ], {});
   },
 
-  async down (queryInterface, Sequelize) {
-    await queryInterface.bulkDelete('Roles', null, {});
+  async down (queryInterface) {
+    await queryInterface.bulkDelete('roles', {
+      name: ['Guest','Administrator']
+    }, {});
   }
 };

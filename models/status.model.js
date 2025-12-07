@@ -1,6 +1,5 @@
 const { DataTypes } = require('sequelize');
 const sequelize = require('../config/database');
-const Sequelize = require('sequelize')
 
 const Status = sequelize.define('Status', {
     name: {
@@ -12,18 +11,13 @@ const Status = sequelize.define('Status', {
       type: DataTypes.DECIMAL,
       allowNull: false
     },
-    createdAt: {
-        type: DataTypes.DATE,
-        allowNull: true,
-        defaultValue: Sequelize.NOW
-    },
-    updatedAt: {
-        type: DataTypes.DATE,
-        allowNull: true,
-        defaultValue: Sequelize.NOW
+    description: {
+      type: DataTypes.TEXT,
+      allowNull: true
     }
   }, {
-    sequelize, timestamps: true,
+    tableName: 'statuses',
+    timestamps: true,
   });
   
   module.exports = Status;

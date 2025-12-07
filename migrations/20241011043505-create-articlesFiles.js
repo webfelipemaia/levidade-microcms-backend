@@ -2,7 +2,7 @@
 
 module.exports = {
   up: async (queryInterface, Sequelize) => {
-    await queryInterface.createTable('Articles_Files', {
+    await queryInterface.createTable('articles_files', {
       id: {
         type: Sequelize.INTEGER,
         allowNull: false,
@@ -13,7 +13,7 @@ module.exports = {
         type: Sequelize.INTEGER,
         allowNull: false,
         references: {
-          model: 'Articles',
+          model: 'articles',
           key: 'id'
         },
         onUpdate: 'CASCADE',
@@ -22,7 +22,7 @@ module.exports = {
         type: Sequelize.INTEGER,
         allowNull: false,
         references: {
-          model: 'Files',
+          model: 'files',
           key: 'id'
         },
         onUpdate: 'CASCADE',
@@ -41,6 +41,6 @@ module.exports = {
   },
 
   down: async (queryInterface, Sequelize) => {
-    await queryInterface.dropTable('Articles_Files');
+    await queryInterface.dropTable('articles_files');
   }
 };

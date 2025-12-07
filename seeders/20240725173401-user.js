@@ -3,27 +3,27 @@
 /** @type {import('sequelize-cli').Migration} */
 module.exports = {
   async up (queryInterface, Sequelize) {
-    await queryInterface.bulkInsert('Users', [
+    await queryInterface.bulkInsert('users', [
       {
         email: 'admin@example.com',
         password: 'password123',
         name: 'Admin',
         lastname: 'User',
-        createdAt: '2024-07-25 16:00:01',
-        updatedAt: '2024-07-25 16:00:01'
+        createdAt: new Date(),
+        updatedAt: new Date()
       },
       {
-        email: 'user@example.com',
+        email: 'guest@example.com',
         password: 'password123',
-        name: 'Regular',
+        name: 'Guest',
         lastname: 'User',
-        createdAt: '2024-07-25 16:00:01',
-        updatedAt: '2024-07-25 16:00:01'
+        createdAt: new Date(),
+        updatedAt: new Date()
       }
     ], {});
   },
 
   async down (queryInterface, Sequelize) {
-    await queryInterface.bulkDelete('Users', null, {});
+    await queryInterface.bulkDelete('users', null, {});
   }
 };

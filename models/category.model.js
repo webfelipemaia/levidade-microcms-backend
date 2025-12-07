@@ -1,33 +1,41 @@
 const { DataTypes } = require('sequelize');
 const sequelize = require('../config/database');
-const Sequelize = require('sequelize')
+const Article = require('./article.model');
 
-const Category = sequelize.define('Category', {
-  parentId: {
-    type: DataTypes.INTEGER,
-    allowNull: true,
-    references: {
-        model: 'Categories',
-        key: 'id',
+const Category = sequelize.define(
+  'Category',
+  {
+    id: {
+      type: DataTypes.INTEGER,
+      primaryKey: true,
+      autoIncrement: true,
     },
-    onDelete: 'CASCADE',
-  }, 
-  name: {
-      type: DataTypes.STRING,
-      allowNull: false
-  },
-  createdAt: {
-      type: DataTypes.DATE,
+
+    parentId: {
+      type: DataTypes.INTEGER,
       allowNull: true,
-      defaultValue: Sequelize.NOW
+      references: {
+        model: 'categories',
+        key: 'id',
+      },
+      onDelete: 'CASCADE',
+      onUpdate: 'CASCADE',
+    },
+
+    name: {
+      type: DataTypes.STRING(255),
+      allowNull: false,
+    },
   },
-  updatedAt: {
-      type: DataTypes.DATE,
-      allowNull: true,
-      defaultValue: Sequelize.NOW
+  {
+    tableName: 'categories',
+    timestamps: true,
   }
-}, {
-  sequelize, timestamps: true,
+);
+
+Category.hasMany(Article, {
+  foreignKey: 'categoryId',
+  as: 'articles'
 });
 
 module.exports = Category;

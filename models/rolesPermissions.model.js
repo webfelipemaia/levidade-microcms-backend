@@ -1,26 +1,33 @@
-
+// models/RolesPermissions.js
 const { DataTypes } = require('sequelize');
 const sequelize = require('../config/database');
-const Sequelize = require('sequelize')
 
-const RolesPermissions = sequelize.define('Roles_Permissions', {
-    id: {
-        type: DataTypes.INTEGER,
-        primaryKey: true,
-        autoIncrement: true
+const RolesPermissions = sequelize.define(
+  'RolesPermissions',
+  {
+    roleId: {
+      type: DataTypes.INTEGER,
+      primaryKey: true,
+      references: {
+        model: 'roles',
+        key: 'id',
+      },
+      onDelete: 'CASCADE',
     },
-    createdAt: {
-        type: DataTypes.DATE,
-        allowNull: true,
-        defaultValue: Sequelize.NOW
+    permissionId: {
+      type: DataTypes.INTEGER,
+      primaryKey: true,
+      references: {
+        model: 'permissions',
+        key: 'id',
+      },
+      onDelete: 'CASCADE',
     },
-    updatedAt: {
-        type: DataTypes.DATE,
-        allowNull: true,
-        defaultValue: Sequelize.NOW
-    }
-}, {
-    timestamps: true
-});
+  },
+  {
+    tableName: 'roles_permissions',
+    timestamps: true,
+  }
+);
 
 module.exports = RolesPermissions;

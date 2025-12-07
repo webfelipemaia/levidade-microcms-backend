@@ -3,13 +3,13 @@
 /** @type {import('sequelize-cli').Migration} */
 module.exports = {
   async up (queryInterface, Sequelize) {
-    await queryInterface.bulkInsert('Users_Roles', [
-      { userId: 1, roleId: 1, createdAt: '2024-07-25 16:00:01', updatedAt: '2024-07-25 16:00:01' },
-      { userId: 2, roleId: 2, createdAt: '2024-07-25 16:00:01', updatedAt: '2024-07-25 16:00:01' }
+    await queryInterface.bulkInsert('users_roles', [
+      { userId: 1, roleId: 1, createdAt: new Date(), updatedAt: new Date() },
+      { userId: 2, roleId: 2, createdAt: new Date(), updatedAt: new Date() }
     ], {});
   },
 
   async down (queryInterface, Sequelize) {
-    await queryInterface.bulkDelete('Users_Roles', null, {});
+    await queryInterface.bulkDelete('users_roles', null, {});
   }
 };

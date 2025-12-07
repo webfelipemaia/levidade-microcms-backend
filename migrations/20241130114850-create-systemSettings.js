@@ -2,22 +2,22 @@
 /** @type {import('sequelize-cli').Migration} */
 module.exports = {
   async up(queryInterface, Sequelize) {
-    await queryInterface.createTable('System_Settings', {
+    await queryInterface.createTable('system_settings', {
       id: {
         allowNull: false,
         autoIncrement: true,
         primaryKey: true,
         type: Sequelize.INTEGER
       },
-      settingName: {
+      setting_name: {
         type: Sequelize.STRING,
         allowNull: false,
       },
-      value: {
+      setting_value: {
         type: Sequelize.STRING,
         allowNull: false,
       },
-      additionalValue: {
+      additional_value: {
         type: Sequelize.STRING,
         allowNull: true,
       },
@@ -44,7 +44,7 @@ module.exports = {
       uniqueKeys: {
         unique_setting_name: {
           customIndex: true,
-          fields: ['settingName', 'value']
+          fields: ['setting_name', 'setting_value']
         }
       }
     }

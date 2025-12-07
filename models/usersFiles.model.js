@@ -1,28 +1,35 @@
-
+// models/UsersFiles.js (Corrigido)
 const { DataTypes } = require('sequelize');
 const sequelize = require('../config/database');
-const Sequelize = require('sequelize');
-const User = require('./user.model');
-const File = require('./file.model');
 
-const UsersFiles = sequelize.define('Users_Files', {
+const UsersFiles = sequelize.define('UsersFiles', {
+    
     id: {
         type: DataTypes.INTEGER,
         primaryKey: true,
         autoIncrement: true
     },
-    createdAt: {
-        type: DataTypes.DATE,
-        allowNull: true,
-        defaultValue: Sequelize.NOW
+    userId: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+        references: {
+            model: 'users',
+            key: 'id'
+        },
+        onDelete: 'CASCADE'
+    },    
+    fileId: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+        references: {
+            model: 'files',
+            key: 'id'
+        },
+        onDelete: 'CASCADE'
     },
-    updatedAt: {
-        type: DataTypes.DATE,
-        allowNull: true,
-        defaultValue: Sequelize.NOW
-    }
 }, {
-    sequelize, timestamps: true,
+    tableName: 'users_files', 
+    timestamps: true,
 });
 
 module.exports = UsersFiles;
