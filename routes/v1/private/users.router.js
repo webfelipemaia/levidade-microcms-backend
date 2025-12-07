@@ -12,6 +12,9 @@ const {
     _delete,
     authenticate,
     register,
+    setAvatar,
+    removeAvatar,
+    getAvatar
 } = require("../../../controllers/users.controller");
 
 const {
@@ -29,5 +32,8 @@ privateUserRouterV1.put("/:id", auth, updateSchema, update);
 privateUserRouterV1.delete("/:id", auth, _delete);
 privateUserRouterV1.post("/authenticate", auth, authenticate);
 privateUserRouterV1.post("/register", auth, registerSchema, register);
+privateUserRouterV1.put('/:id/avatar', authenticate, setAvatar);
+privateUserRouterV1.delete('/:id/avatar', authenticate, removeAvatar);
+privateUserRouterV1.get('/:id/avatar', authenticate, getAvatar);
 
 module.exports = privateUserRouterV1;

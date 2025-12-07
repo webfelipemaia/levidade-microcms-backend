@@ -23,6 +23,25 @@ exports.getAll = (req, res, next) => {
         .catch(next);
 };
 
+exports.getByStorageType = async (req, res, next) => {
+  try {
+      const { type } = req.params; // 'profile', 'article', 'page', etc.
+      const files = await fileService.getByStorageType(type);
+      res.json(files);
+  } catch (err) {
+      next(err);
+  }
+}
+
+exports.getProfileImages = async (req, res, next) => {
+  try {
+      const profileImages = await fileService.getProfileImages();
+      res.json(profileImages);
+  } catch (err) {
+      next(err);
+  }
+}
+
 /**
  * Retorna a URL para acessar um arquivo
  * @param {Object} req - Request object

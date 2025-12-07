@@ -155,6 +155,75 @@ exports._delete = (req, res, next) => {
 };
 
 /**
+ * Set user avatar
+ * @route PUT /api/v1/private/user/:id/avatar
+ */
+exports.setAvatar = async (req, res, next) => {
+    try {
+      const userId = req.params.id;
+      const { fileId } = req.body;
+      
+      if (!fileId) {
+        return res.status(400).json({
+          status: "error",
+          message: "fileId is required"
+        });
+      }
+      
+      const result = await userService.setUserAvatar(userId, fileId);
+      
+      if (result.status === "error") {
+        return res.status(400).json(result);
+      }
+      
+      res.json(result);
+    } catch (err) {
+      next(err);
+    }
+  }
+  
+  /**
+   * Remove user avatar
+   * @route DELETE /api/v1/private/user/:id/avatar
+   */
+  exports.removeAvatar = async (req, res, next) => {
+    try {
+      const userId = req.params.id;
+      const result = await userService.removeUserAvatar(userId);
+      
+      if (result.status === "error") {
+        return res.status(400).json(result);
+      }
+      
+      res.json(result);
+    } catch (err) {
+      next(err);
+    }
+  }
+  
+  /**
+   * Get user avatar
+   * @route GET /api/v1/private/user/:id/avatar
+   */
+  exports.getAvatar = async (req, res, next) => {
+    try {
+      const userId = req.params.id;
+      const result = await userService.getUserWithAvatar(userId);
+      
+      if (result.status === "error") {
+        return res.status(404).json(result);
+      }
+      
+      res.json({
+        status: "success",
+        avatar: result.data.avatar
+      });
+    } catch (err) {
+      next(err);
+    }
+  }
+
+/**
  * Validation schema for creating a user.
  *
  * Requires `email`, `password`, `confirmPassword`, `name`, `lastname`, and optionally `role`.

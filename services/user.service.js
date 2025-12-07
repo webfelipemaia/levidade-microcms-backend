@@ -15,6 +15,9 @@ module.exports = {
   update,
   delete: _delete,
   authenticate,
+  setUserAvatar,
+  getUserWithAvatar,
+  removeUserAvatar,
 };
 
 /**
@@ -151,12 +154,9 @@ async function addRoleToUser(user) {
 }
 
 /**
- * Updates a user's information, including roles.
+ * Update user information including avatar
  * @param {number} id - User ID.
  * @param {Object} params - Data to update.
- * @param {string} params.name - User first name.
- * @param {string} params.lastname - User last name.
- * @param {Array<Object>} params.roles - Roles to update.
  * @returns {Promise<Object>} Operation status.
  */
 async function update(id, params) {
@@ -165,15 +165,19 @@ async function update(id, params) {
       return { status: "error", message: "Name and lastname are required." };
     }
 
-    const [rowsUpdated] = await db.User.update(
-      {
-        name: params.name,
-        lastname: params.lastname,
-      },
-      {
-        where: { id: id },
-      }
-    );
+    const updateData = {
+      name: params.name,
+      lastname: params.lastname,
+    };
+    
+    // Se um avatarId foi fornecido, atualizar
+    if (params.avatarId !== undefined) {
+      updateData.avatarId = params.avatarId;
+    }
+
+    const [rowsUpdated] = await db.User.update(updateData, {
+      where: { id: id },
+    });
 
     const user = await db.User.findByPk(id);
 
@@ -181,23 +185,26 @@ async function update(id, params) {
       return { status: "error", message: "User not found." };
     }
 
-    const rolesByRoleId = await db.UsersRoles.findAll({
-      where: {
-        userId: user.id,
-      },
-    });
+    // Atualizar roles se fornecidas
+    if (params.roles && Array.isArray(params.roles)) {
+      const rolesByRoleId = await db.UsersRoles.findAll({
+        where: {
+          userId: user.id,
+        },
+      });
 
-    params.roles.forEach((role) => {
-      if (role.isChecked === "unchecked") {
-        user.removeRoles(role.data.id);
-      } else {
-        user.addRoles(role.data.id);
-      }
-    });
+      params.roles.forEach((role) => {
+        if (role.isChecked === "unchecked") {
+          user.removeRoles(role.data.id);
+        } else {
+          user.addRoles(role.data.id);
+        }
+      });
+    }
 
     return {
       status: "success",
-      message: "User and roles updated successfully.",
+      message: "User updated successfully.",
     };
   } catch (error) {
     logger.error(error);
@@ -271,7 +278,13 @@ async function authenticate(email, password) {
     include: [
       {
         model: db.Role,
-        attributes: ['id', 'name']
+        attributes: ['id', 'name'],
+        through: { attributes: [] }
+      },
+      {
+        model: db.File,
+        as: 'avatar',
+        attributes: ['id', 'name', 'path', 'type', 'createdAt', 'updatedAt']
       },
       {
         model: db.File,
@@ -295,12 +308,158 @@ async function authenticate(email, password) {
     name: user.name,
     lastname: user.lastname,
     email: user.email,
+    avatar: user.avatar ? {
+      id: user.avatar.id,
+      name: user.avatar.name,
+      path: user.avatar.path,
+      type: user.avatar.type,
+      fullPath: `${user.avatar.path}${user.avatar.name}`
+    } : null,
     roles: user.Roles?.map((role) => role.name),
     files: user.Files?.map((file) => ({
       id: file.id,
       name: file.name,
       path: file.path,
-      type: file.type
+      type: file.type,
+      fullPath: `${file.path}${file.name}`
     })),
   };
 } 
+
+/**
+ * Get user with avatar information
+ * @param {number} id - User ID
+ * @returns {Promise<Object>} User with avatar
+ */
+async function getUserWithAvatar(id) {
+  const user = await db.User.findByPk(id, {
+    include: [
+      {
+        model: db.Role,
+        attributes: ['id', 'name'],
+        through: { attributes: [] }
+      },
+      {
+        model: db.File,
+        as: 'avatar',
+        attributes: ['id', 'name', 'path', 'type', 'createdAt', 'updatedAt']
+      }
+    ],
+    attributes: { exclude: ["password"] }
+  });
+  
+  if (!user) {
+    return {
+      status: "error",
+      message: "User not found"
+    };
+  }
+  
+  return {
+    status: "success",
+    data: user
+  };
+}
+
+/**
+ * Set user avatar
+ * @param {number} userId - User ID
+ * @param {number} fileId - File ID to set as avatar
+ * @returns {Promise<Object>} Operation result
+ */
+async function setUserAvatar(userId, fileId) {
+  try {
+    // Verificar se o usuário existe
+    const user = await db.User.findByPk(userId);
+    if (!user) {
+      return {
+        status: "error",
+        message: "User not found"
+      };
+    }
+    
+    // Verificar se o arquivo existe
+    const file = await db.File.findByPk(fileId);
+    if (!file) {
+      return {
+        status: "error",
+        message: "File not found"
+      };
+    }
+    
+    // Verificar se é uma imagem
+    if (!file.type.startsWith('image/')) {
+      return {
+        status: "error",
+        message: "File is not an image"
+      };
+    }
+    
+    // Atualizar o avatar do usuário
+    user.avatarId = fileId;
+    await user.save();
+    
+    // Adicionar também à tabela de junção Users_Files (se não existir)
+    const existingAssociation = await db.UsersFiles.findOne({
+      where: {
+        userId: userId,
+        fileId: fileId
+      }
+    });
+    
+    if (!existingAssociation) {
+      await user.addFile(file);
+    }
+    
+    return {
+      status: "success",
+      message: "Avatar updated successfully",
+      data: {
+        user: {
+          id: user.id,
+          email: user.email,
+          name: user.name,
+          lastname: user.lastname
+        },
+        avatar: file
+      }
+    };
+  } catch (error) {
+    logger.error("Error setting user avatar:", error);
+    return {
+      status: "error",
+      message: "Error setting avatar: " + error.message
+    };
+  }
+}
+
+/**
+ * Remove user avatar
+ * @param {number} userId - User ID
+ * @returns {Promise<Object>} Operation result
+ */
+async function removeUserAvatar(userId) {
+  try {
+    const user = await db.User.findByPk(userId);
+    if (!user) {
+      return {
+        status: "error",
+        message: "User not found"
+      };
+    }
+    
+    user.avatarId = null;
+    await user.save();
+    
+    return {
+      status: "success",
+      message: "Avatar removed successfully"
+    };
+  } catch (error) {
+    logger.error("Error removing user avatar:", error);
+    return {
+      status: "error",
+      message: "Error removing avatar: " + error.message
+    };
+  }
+}

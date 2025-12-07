@@ -1,7 +1,9 @@
+// services/file.service.js
 const db = require('../helpers/db.helper');
 const fs = require('fs');
 const path = require('path');
 const logger = require("../config/logger");
+const { Op } = require('sequelize'); // Importe o Op para consultas
 
 module.exports = {
     getAll,
@@ -10,6 +12,8 @@ module.exports = {
     update,
     delete: _delete,
     renameAndUpdateFile,
+    getByStorageType, // Nova função
+    getProfileImages, // Função específica para imagens de perfil
 };
 
 /**
@@ -18,6 +22,29 @@ module.exports = {
  */
 async function getAll() {
     return await db.File.findAll();
+}
+
+/**
+ * Get files by storage type/path
+ * @param {string} storagePath - Path pattern to search (e.g., 'profile', 'article', 'page')
+ * @returns {Promise<Array<Object>>} List of files in the specified storage
+ */
+async function getByStorageType(storagePath) {
+    return await db.File.findAll({
+        where: {
+            path: {
+                [Op.like]: `%${storagePath}%`
+            }
+        }
+    });
+}
+
+/**
+ * Get profile images specifically
+ * @returns {Promise<Array<Object>>} List of profile images
+ */
+async function getProfileImages() {
+    return await getByStorageType('profile');
 }
 
 /**
@@ -38,7 +65,7 @@ async function getById(id) {
  * @param {number} [fileData.size] - File size (in bytes).
  * @returns {Promise<Object>} The created file.
  */
-async function create(fileData,  userId = null) {
+async function create(fileData, userId = null) {
     try {
         const file = await db.File.create(fileData);
 

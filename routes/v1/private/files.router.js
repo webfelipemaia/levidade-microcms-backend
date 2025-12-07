@@ -13,6 +13,8 @@ const {
     _delete,
     getFileUrl,
     getFileById,
+    getByStorageType,
+    getProfileImages,
 } = require('../../../controllers/files.controller');
 
 const {
@@ -30,5 +32,7 @@ privateFileRouterV1.get('/last', authenticate, getLastRegister);
 privateFileRouterV1.post('/', authenticate, createSchema, create);
 privateFileRouterV1.put('/:id', authenticate, updateSchema, update);
 privateFileRouterV1.delete('/:id', authenticate, _delete);
+privateFileRouterV1.get('/storage/:type', authenticate, getByStorageType);
+privateFileRouterV1.get('/profile-images', authenticate, getProfileImages);
 
 module.exports = privateFileRouterV1;
