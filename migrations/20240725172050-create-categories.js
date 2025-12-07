@@ -2,7 +2,7 @@
 
 module.exports = {
   async up(queryInterface, Sequelize) {
-    // 1. Cria a tabela 'categories' sem a coluna parentId
+    
     await queryInterface.createTable('categories', {
       id: {
         type: Sequelize.INTEGER,
@@ -28,12 +28,12 @@ module.exports = {
       },
     });
 
-    // 2. Adiciona a coluna parentId com a referência de chave estrangeira
+    // Adiciona a coluna parentId
     await queryInterface.addColumn('categories', 'parentId', {
       type: Sequelize.INTEGER,
       allowNull: true,
-      references: { // <-- A chave estrangeira deve estar aqui
-        model: 'categories', // Use 'model' para tabelas
+      references: {
+        model: 'categories',
         key: 'id',
       },
       onUpdate: 'CASCADE',
@@ -42,7 +42,6 @@ module.exports = {
   },
 
   async down(queryInterface) {
-    // Opcional: Remova a coluna antes de dropar a tabela
     await queryInterface.removeColumn('categories', 'parentId');
     await queryInterface.dropTable('categories');
   },

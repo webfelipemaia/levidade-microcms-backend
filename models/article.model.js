@@ -1,6 +1,8 @@
 const { DataTypes } = require('sequelize');
 const sequelize = require('../config/database');
 const Category = require('./category.model');
+const File = require('./file.model');
+const ArticlesFiles = require('./articlesFiles.model');
 
 const Article = sequelize.define(
   'Article',
@@ -53,20 +55,18 @@ const Article = sequelize.define(
   }
 );
 
-// Associação
+// Associações
+
 Article.belongsTo(Category, {
   foreignKey: 'categoryId',
   as: 'category'
 });
 
-// Adicionar em article.model.js
-const File = require('./file.model'); // Importar File
-const ArticlesFiles = require('./ArticlesFiles'); // Importar a tabela intermediária
 
 Article.belongsToMany(File, {
-    through: ArticlesFiles, // A model de junção
-    foreignKey: 'articleId', // A chave de Article na tabela de junção
-    otherKey: 'fileId', // A chave do outro lado (File)
+    through: ArticlesFiles,
+    foreignKey: 'articleId',
+    otherKey: 'fileId',
     as: 'files'
 });
 

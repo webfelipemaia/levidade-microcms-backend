@@ -12,8 +12,8 @@ module.exports = {
     update,
     delete: _delete,
     renameAndUpdateFile,
-    getByStorageType, // Nova função
-    getProfileImages, // Função específica para imagens de perfil
+    getByStorageType,
+    getProfileImages,
 };
 
 /**
