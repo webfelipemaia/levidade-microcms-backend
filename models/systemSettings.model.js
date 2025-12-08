@@ -14,7 +14,6 @@ const SystemSettings = sequelize.define(
     setting_name: {
       type: DataTypes.STRING(150),
       allowNull: false,
-      unique: true,
     },
     setting_value: {
       type: DataTypes.TEXT,

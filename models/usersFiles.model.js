@@ -28,6 +28,7 @@ const UsersFiles = sequelize.define('UsersFiles', {
         onDelete: 'CASCADE'
     },
 }, {
+    id: false,
     tableName: 'users_files', 
     timestamps: true,
 });

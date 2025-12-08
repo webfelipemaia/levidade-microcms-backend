@@ -26,9 +26,9 @@ initialize();
 async function initialize() {
 
     // Create DB if not exists (development-friendly)
-    const { host, port, user, password, database } = config.development;
-    const connection = await mysql.createConnection({ host, port, user, password });
-    await connection.query(`CREATE DATABASE IF NOT EXISTS \`${database}\`;`);
+    const { host, port, username, password, database } = config.development;
+    /* const connection = await mysql.createConnection({ host, port, username, password });
+    await connection.query(`CREATE DATABASE IF NOT EXISTS \`${database}\`;`); */
 
     // ---------------------------------------------------------------------
     // ASSOCIAÇÕES

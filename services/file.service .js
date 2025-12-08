@@ -3,7 +3,7 @@ const db = require('../helpers/db.helper');
 const fs = require('fs');
 const path = require('path');
 const logger = require("../config/logger");
-const { Op } = require('sequelize'); // Importe o Op para consultas
+const { Op } = require('sequelize');
 
 module.exports = {
     getAll,

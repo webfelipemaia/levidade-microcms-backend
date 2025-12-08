@@ -1,8 +1,5 @@
 const { DataTypes } = require('sequelize');
 const sequelize = require('../config/database');
-const Category = require('./category.model');
-const File = require('./file.model');
-const ArticlesFiles = require('./articlesFiles.model');
 
 const Article = sequelize.define(
   'Article',
@@ -54,20 +51,5 @@ const Article = sequelize.define(
     timestamps: true
   }
 );
-
-// Associações
-
-Article.belongsTo(Category, {
-  foreignKey: 'categoryId',
-  as: 'category'
-});
-
-
-Article.belongsToMany(File, {
-    through: ArticlesFiles,
-    foreignKey: 'articleId',
-    otherKey: 'fileId',
-    as: 'files'
-});
 
 module.exports = Article;
