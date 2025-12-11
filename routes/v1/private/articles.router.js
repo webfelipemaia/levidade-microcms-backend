@@ -1,7 +1,6 @@
 const express = require("express");
 const privateArticleRouterV1 = express.Router();
 const authenticate = require("../../../middlewares/auth.middleware");
-const loadSettings = require("../../../middlewares/setting.middleware");
 
 const {
   getAll,
@@ -23,7 +22,7 @@ privateArticleRouterV1.get("/", authenticate, getAll);
 privateArticleRouterV1.get("/last", authenticate, getLastRegister);
 privateArticleRouterV1.get("/paginated", authenticate, getAllPaginated);
 privateArticleRouterV1.get("/:id", authenticate, getById);
-privateArticleRouterV1.post("/", authenticate, loadSettings, createSchema, create);
+privateArticleRouterV1.post("/", authenticate, createSchema, create);
 privateArticleRouterV1.post("/create-with-return",  authenticate,  createSchema,  createAndReturnId);
 privateArticleRouterV1.patch("/:id", authenticate, updateSchema, update);
 privateArticleRouterV1.delete("/:id", authenticate, _delete);

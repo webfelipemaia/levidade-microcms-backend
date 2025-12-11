@@ -1,6 +1,5 @@
 const rateLimit = require("express-rate-limit");
 const { ipKeyGenerator } = require('express-rate-limit');
-const logger = require("../config/logger");
 
 /**
  * Creates a rate limiter middleware using express-rate-limit.
@@ -38,7 +37,7 @@ function createLimiter({ max, windowMs }) {
     legacyHeaders: false,
     message: "Too many requests. Please try again later.",
     handler: (req, res, next, options) => {
-      logger.info(`IP blocked (public): ${req.ip}`);
+      req.appLogger.info(`IP blocked (public): ${req.ip}`);
       res.status(options.statusCode).send(options.message);
     },
   });

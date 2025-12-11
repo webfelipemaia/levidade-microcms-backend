@@ -1,5 +1,5 @@
 const db = require('../helpers/db.helper');
-const settingsHelper = require('../helpers/settings.helper');
+const settingsHelper = require('../helpers/settings2.helper');
 const logger = require("../config/logger");
 
 module.exports = {

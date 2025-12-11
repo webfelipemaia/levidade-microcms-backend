@@ -4,7 +4,6 @@ const fs = require('fs');
 const path = require('path');
 const crypto = require("crypto");
 const { FILESIZES, UPLOAD_PATH, UPLOAD_CONTENT_TYPE } = require('../helpers/constants.helper');
-const logger = require("../config/logger");
 
 const maxSize = FILESIZES["2 MB"];
 const uploadLimit = 3;
@@ -20,7 +19,7 @@ const productDir = UPLOAD_CONTENT_TYPE.PRODUCT;
 function ensureDirectoryExistence(dirPath) {
   if (!fs.existsSync(dirPath)) {
     fs.mkdirSync(dirPath, { recursive: false });
-    logger.info(`Directory created: ${dirPath}`);
+    req.appLogger.info(`Directory created: ${dirPath}`);
   }
 }
 
@@ -54,7 +53,7 @@ let storage = multer.diskStorage({
       ensureDirectoryExistence(uploadPath);
 
     } else {
-      logger.info('Upload file to default content folder.');
+      req.appLogger.info('Upload file to default content folder.');
     }
 
     cb(null, uploadPath);
@@ -70,7 +69,7 @@ let storage = multer.diskStorage({
   filename: (req, file, cb) => {
     const ext = path.extname(file.originalname);
     const uniqueName = crypto.randomBytes(16).toString('hex') + ext;
-    logger.info("Original file name: " + file.originalname, "extension file: " + ext, "Generated file name: " + uniqueName);
+    req.appLogger.info("Original file name: " + file.originalname, "extension file: " + ext, "Generated file name: " + uniqueName);
     cb(null, uniqueName);
   },
 });

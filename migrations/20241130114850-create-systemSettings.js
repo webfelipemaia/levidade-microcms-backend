@@ -1,56 +1,47 @@
 'use strict';
-/** @type {import('sequelize-cli').Migration} */
+
 module.exports = {
   async up(queryInterface, Sequelize) {
-    await queryInterface.createTable('system_settings', {
+    await queryInterface.createTable('settings', {
       id: {
-        allowNull: false,
+        type: Sequelize.INTEGER.UNSIGNED,
         autoIncrement: true,
         primaryKey: true,
-        type: Sequelize.INTEGER
+        allowNull: false
       },
-      setting_name: {
-        type: Sequelize.STRING,
+      key: {
+        type: Sequelize.STRING(255),
         allowNull: false,
-      },
-      setting_value: {
-        type: Sequelize.STRING,
-        allowNull: false,
-      },
-      additional_value: {
-        type: Sequelize.STRING,
-        allowNull: true,
-      },
-      description: {
-        type: Sequelize.STRING,
-        allowNull: true,
+        unique: true
       },
       type: {
-        type: Sequelize.STRING,
-        allowNull: true,
+        type: Sequelize.ENUM('string', 'number', 'boolean', 'array', 'json'),
+        allowNull: false,
+        defaultValue: 'string'
+      },
+      category: {
+        type: Sequelize.STRING(100),
+        allowNull: false
+      },
+      description: {
+        type: Sequelize.TEXT
+      },
+      value: {
+        type: Sequelize.TEXT('long'),
+        allowNull: false
       },
       createdAt: {
-        allowNull: false,
         type: Sequelize.DATE,
-        defaultValue: Sequelize.NOW
+        allowNull: false
       },
       updatedAt: {
-        allowNull: false,
         type: Sequelize.DATE,
-        defaultValue: Sequelize.NOW
-      },
-    },
-    {
-      uniqueKeys: {
-        unique_setting_name: {
-          customIndex: true,
-          fields: ['setting_name', 'setting_value']
-        }
+        allowNull: false
       }
-    }
-  );
+    });
   },
-  async down(queryInterface, Sequelize) {
-    await queryInterface.dropTable('System_Settings');
+
+  async down(queryInterface) {
+    await queryInterface.dropTable('settings');
   }
 };

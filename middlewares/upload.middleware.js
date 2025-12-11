@@ -4,7 +4,7 @@ const fs = require("fs");
 const { fromBuffer } = require("file-type");
 const path = require("path");
 const crypto = require("crypto");
-const settingsHelper = require("../helpers/settings.helper");
+const settingsHelper = require("../helpers/settings2.helper");
 const {
   UPLOAD_CONTENT_TYPE,
   ALLOWED_MIME_TYPES,

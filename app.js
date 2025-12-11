@@ -12,11 +12,13 @@ const rateLimit = require('express-rate-limit');
 const compression = require('compression');
 const swaggerUi = require('swagger-ui-express');
 const YAML = require('yamljs');
+const { loadSettings } = require('./helpers/settings2.helper');
 
 const errorHandler = require('./middlewares/errorHandler.middleware');
 const injectLogger = require('./middlewares/logger.middleware');
 const morganMiddleware = require('./middlewares/morgan.middleware');
 const initPassportStrategy = require('./config/passport');
+const injectSettings = require('./middlewares/settings.middleware');
 const authMiddleware = require('./middlewares/auth.middleware');
 const { publicLimiter, privateLimiter } = require("./middlewares/rateLimiter.middleware");
 
@@ -27,6 +29,11 @@ const swaggerDocument = YAML.load('./docs/swagger.yaml');
 
 // Express App 
 const app = express();
+
+// Load global settings at startup
+(async () => {
+  global.settings = await loadSettings();
+})();
 
 
 // Environment variables 
@@ -103,10 +110,18 @@ app.use(express.urlencoded({ extended: true }));
 initPassportStrategy(passport);
 app.use(passport.initialize());
 
-
 // Logger 
 const appLogger = injectLogger(app);
+app.use((req, res, next) => {
+  req.appLogger = appLogger;
+  next();
+});
+
+// Morgan
 app.use(morganMiddleware());
+
+// Settings
+app.use(injectSettings);
 
 
 // Routes

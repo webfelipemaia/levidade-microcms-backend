@@ -1,6 +1,5 @@
 const passport = require('passport');
 const config = require('../helpers/settings.helper');
-const logger = require("../config/logger");
 
 /**
  * Express middleware for JWT authentication using Passport.js.
@@ -37,22 +36,22 @@ const logger = require("../config/logger");
  * });
  */
 const authenticate = (req, res, next) => {
-  logger.info('Incoming cookies:', req.cookies);
-  logger.info('Token no cookie:', req.cookies?.token);
+  req.appLogger.info('Incoming cookies:', req.cookies);
+  req.appLogger.info('Token no cookie:', req.cookies?.token);
 
-  logger.info(`[Auth] Attempt at ${new Date().toISOString()} from ${req.ip}`);
+  req.appLogger.info(`[Auth] Attempt at ${new Date().toISOString()} from ${req.ip}`);
   
   passport.authenticate('jwt', { session: false }, (err, user, info) => {
     
-    logger.info(`[Auth] Result: ${user ? 'SUCCESS' : 'FAILED'}`);
+    req.appLogger.info(`[Auth] Result: ${user ? 'SUCCESS' : 'FAILED'}`);
 
     if (config.auth.debugMode) {
       
-      logger.debug('\n=== DEBUG AUTH INFORMATION ===');
-      logger.debug('Timestamp:', new Date().toISOString());
-      logger.debug('Client IP:', req.ip);
-      logger.debug('Request Path:', req.path);
-      logger.debug('Headers:', {
+      req.appLogger.debug('\n=== DEBUG AUTH INFORMATION ===');
+      req.appLogger.debug('Timestamp:', new Date().toISOString());
+      req.appLogger.debug('Client IP:', req.ip);
+      req.appLogger.debug('Request Path:', req.path);
+      req.appLogger.debug('Headers:', {
         ...req.headers,
         authorization: req.headers.authorization 
         ? `Bearer ***${req.headers.authorization.length - 7} chars` 
@@ -61,16 +60,16 @@ const authenticate = (req, res, next) => {
       });
 
       if (err) {
-        logger.debug('Error Stack:', err.stack || 'No stack available');
+        req.appLogger.debug('Error Stack:', err.stack || 'No stack available');
       }
 
-      logger.debug('Passport Info:', {
+      req.appLogger.debug('Passport Info:', {
         ...info,
         message: info?.message,
         name: info?.name
       });
-      logger.debug('User:', user ? { id: user.id } : 'none');
-      logger.debug('==============================\n');
+      req.appLogger.debug('User:', user ? { id: user.id } : 'none');
+      req.appLogger.debug('==============================\n');
     }
 
     if (err) return next(err);

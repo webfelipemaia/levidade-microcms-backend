@@ -16,7 +16,7 @@ const Status = require('../models/status.model.js');
 const File = require('../models/file.model');
 const UsersFiles = require('../models/usersFiles.model.js');
 const ArticlesFiles = require('../models/articlesFiles.model.js');
-const SystemSettings = require('../models/systemSettings.model.js');
+const Settings = require('../models/systemSettings.model.js');
 
 // Exported object
 module.exports = db = {};
@@ -27,15 +27,11 @@ async function initialize() {
 
     // Create DB if not exists (development-friendly)
     const { host, port, username, password, database } = config.development;
-    /* const connection = await mysql.createConnection({ host, port, username, password });
-    await connection.query(`CREATE DATABASE IF NOT EXISTS \`${database}\`;`); */
-
-    // ---------------------------------------------------------------------
-    // ASSOCIAÇÕES
-    // ---------------------------------------------------------------------
 
 
-    // USER <-> ROLE (Many-to-Many)
+    // Associations
+
+    // USER <-> ROLE
 
     User.belongsToMany(Role, { 
         through: UsersRoles,
@@ -51,7 +47,7 @@ async function initialize() {
 
 
 
-    // ROLE <-> PERMISSION (Many-to-Many)
+    // ROLE <-> PERMISSION
 
     Role.belongsToMany(Permission, { 
         through: RolesPermissions,
@@ -81,13 +77,13 @@ async function initialize() {
 
 
 
-    // ARTICLE -> CATEGORY (One-to-Many)
+    // ARTICLE -> CATEGORY
 
     Article.belongsTo(Category, { foreignKey: 'categoryId' });
 
 
 
-    // ARTICLE <-> FILE (Many-to-Many)
+    // ARTICLE <-> FILE
 
     Article.belongsToMany(File, { 
         through: ArticlesFiles,
@@ -103,7 +99,7 @@ async function initialize() {
 
 
 
-    // USER <-> FILE (Many-to-Many)
+    // USER <-> FILE
 
     User.belongsToMany(File, { 
         through: UsersFiles,
@@ -119,7 +115,7 @@ async function initialize() {
 
 
 
-    // USER -> FILE (One-to-One Avatar)
+    // USER -> FILE (Avatar)
 
     User.belongsTo(File, { 
         as: 'avatar', 
@@ -132,9 +128,8 @@ async function initialize() {
     });
 
 
-    // ---------------------------------------------------------------------
     // Adiciona os models ao objeto db
-    // ---------------------------------------------------------------------
+    
     db.User = User;
     db.Role = Role;
     db.UsersRoles = UsersRoles;
@@ -146,12 +141,11 @@ async function initialize() {
     db.File = File;
     db.UsersFiles = UsersFiles;
     db.ArticlesFiles = ArticlesFiles;
-    db.SystemSettings = SystemSettings;
+    db.SystemSettings = Settings;
 
 
-    // ---------------------------------------------------------------------
     // Synchronize Database
-    // ---------------------------------------------------------------------
+    
     await syncDatabase();
 }
 
@@ -165,7 +159,7 @@ async function syncDatabase() {
             logger.info('Database synchronized (production mode).');
         } else {
             // Pode usar alter em modo Dev/test
-            await sequelize.sync({ alter: true });
+            await sequelize.sync({ alter: false });
             logger.info('Database synchronized with `alter: true` (dev/test mode).');
         }
 

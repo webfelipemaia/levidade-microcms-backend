@@ -1,5 +1,4 @@
 const db = require('../helpers/db.helper');
-const logger = require("../config/logger");
 
 /**
  * Middleware generator to check if the authenticated user has a specific permission.
@@ -50,7 +49,7 @@ function checkPermission(permissionName) {
 
       next();
     } catch (err) {
-      logger.error(err);
+      req.appLogger.error(err);
       return res.status(500).json({ error: 'Error checking permissions' });
     }
   };
