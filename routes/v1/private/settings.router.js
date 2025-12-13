@@ -3,6 +3,7 @@ const privateSettingRouterV1 = express.Router();
 const authenticate = require("../../../middlewares/auth.middleware");
 const { checkPermission } = require('../../../middlewares/checkPermission.middleware');
 const { reloadACL } = require("../../../helpers/acl.helper");
+const { invalidateSettingsCache } = require("../../../helpers/settings2.helper");
 
 const {
     getAll,
@@ -24,6 +25,7 @@ privateSettingRouterV1.get("/filesize", authenticate, getFilesizeSettings);
 //privateSettingRouterV1.get("/:id", authenticate, getById);
 privateSettingRouterV1.put("/update", authenticate, updateSchema, update);
 privateSettingRouterV1.get('/:id', authenticate, checkPermission('settings_read'), getById);
+
 privateSettingRouterV1.post(
   "/reload-acl",
   checkPermission("settings_manage"),
@@ -33,5 +35,12 @@ privateSettingRouterV1.post(
   }
 );
 
+privateSettingRouterV1.post("/invalidate-cache",
+  authenticate, 
+  checkPermission('settings_manage'),
+  (req, res) => {
+  invalidateSettingsCache();
+  res.json({ message: "Cache de settings invalidado com sucesso!" });
+});
 
 module.exports = privateSettingRouterV1;
