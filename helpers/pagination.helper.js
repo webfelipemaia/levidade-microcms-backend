@@ -13,9 +13,9 @@ const Sequelize = require('sequelize');
  */
 async function paginate(model, { 
     page = 1, 
-    pageSize = global.settings.pagination.pagesize || 10, 
+    pageSize = global.settings.pagination.page_size || 10, 
     where = {},
-    order = [global.settings.pagination.orderby || ['createdAt', 'DESC']] 
+    order = [global.settings.pagination.order || ['createdAt', 'DESC']] 
 }) {
     
     const limit = pageSize;

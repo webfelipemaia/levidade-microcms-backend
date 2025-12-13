@@ -1,56 +1,59 @@
-const db = require('../helpers/db.helper');
+const { getACL } = require("../helpers/acl.helper");
+const logger = require("../config/logger");
 
 /**
- * Middleware generator to check if the authenticated user has a specific permission.
- *
- * @function checkPermission
- * @param {string} permissionName - The name of the permission to be checked against the user's role.
- * @returns {Function} An Express middleware function.
- *
- * @example
- * // Protect a route by requiring the 'edit_article' permission
- * app.get('/articles/:id/edit', checkPermission('edit_article'), (req, res) => {
- *   res.send('You can edit this article!');
- * });
- *
- * @middleware
- * - Expects `req.user` to be populated (e.g., by authentication middleware).
- * - Queries the database to fetch the user, their role, and associated permissions.
- * - Responds with:
- *   - `401 Unauthorized` if the user is not authenticated.
- *   - `403 Forbidden` if the user lacks the required permission.
- *   - Calls `next()` if the user has the permission.
- *
- * @throws {Error} Responds with `500 Internal Server Error` if there is a database or server issue.
+ * permissionRules can be:
+ * - "edit_article"
+ * - ["edit_article", "delete_article"]
+ * - { any: ["a", "b"] }
+ * - { all: ["a", "b"] }
  */
-function checkPermission(permissionName) {
+function checkPermission(permissionRules) {
   return async (req, res, next) => {
     try {
-      const userId = req.user?.id;
-      if (!userId) return res.status(401).json({ error: 'Not authenticated' });
+      const user = req.user;
+      if (!user) return res.status(401).json({ error: "Not authenticated" });
 
-      // Loads the user with the role and permissions
-      const user = await db.User.findByPk(userId, {
-        include: {
-          model: db.Role,
-          include: {
-            model: db.Permission,
-            where: { name: permissionName },
-            required: false // to allow filter even if you don't have permission
-          }
-        }
-      });
+      const acl = await getACL();
+      const userRoles = user.roles || [];
 
-      const hasPermission = user?.Role?.Permissions?.length > 0;
+      // Coletar TODAS as permissões do usuário
+      const userPermissions = new Set();
+      for (const role of userRoles) {
+        const perms = acl[role] || [];
+        perms.forEach(p => userPermissions.add(p));
+      }
 
-      if (!hasPermission) {
-        return res.status(403).json({ error: 'Permission denied' });
+      const has = perm => userPermissions.has(perm);
+
+      let authorized = false;
+
+      if (typeof permissionRules === "string") {
+        // Regra simples: precisa ter a permissão
+        authorized = has(permissionRules);
+
+      } else if (Array.isArray(permissionRules)) {
+        // Regra AND implícito: precisa de todas
+        authorized = permissionRules.every(has);
+
+      } else if (permissionRules.any) {
+        // Regra OR
+        authorized = permissionRules.any.some(has);
+
+      } else if (permissionRules.all) {
+        // Regra AND explícito
+        authorized = permissionRules.all.every(has);
+      }
+
+      if (!authorized) {
+        return res.status(403).json({ error: "Permission denied" });
       }
 
       next();
+
     } catch (err) {
-      req.appLogger.error(err);
-      return res.status(500).json({ error: 'Error checking permissions' });
+      logger.error(`[checkPermission] ${err.message}`);
+      return res.status(500).json({ error: "Error checking permission" });
     }
   };
 }

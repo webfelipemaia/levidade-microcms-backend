@@ -1,36 +1,117 @@
 'use strict';
 
 module.exports = {
-  async up (queryInterface, Sequelize) {
+  async up(queryInterface) {
     await queryInterface.bulkInsert('permissions', [
-      { 
-        name: 'CREATE_USER',
-        description: 'Permite criar novos usuários no sistema.',
+
+
+      // USERS
+
+      {
+        name: 'user_create',
+        description: 'Allows creating new users.',
         createdAt: new Date(),
         updatedAt: new Date()
       },
-      { 
-        name: 'EDIT_USER',
-        description: 'Permite editar informações de qualquer usuário.',
+      {
+        name: 'user_read',
+        description: 'Allows viewing users list and user details.',
         createdAt: new Date(),
         updatedAt: new Date()
       },
-      { 
-        name: 'VIEW_USERS',
-        description: 'Permite visualizar a lista de usuários e detalhes básicos.',
+      {
+        name: 'user_update',
+        description: 'Allows updating user information.',
         createdAt: new Date(),
         updatedAt: new Date()
       },
-      { 
-        name: 'DELETE_USERS',
-        description: 'Permite excluir contas de usuários.',
+      {
+        name: 'user_delete',
+        description: 'Allows deleting user accounts.',
+        createdAt: new Date(),
+        updatedAt: new Date()
+      },
+
+
+      // ROLES
+      {
+        name: 'roles_create',
+        description: 'Allows creating new roles.',
+        createdAt: new Date(),
+        updatedAt: new Date()
+      },
+      {
+        name: 'roles_read',
+        description: 'Allows viewing roles and their permissions.',
+        createdAt: new Date(),
+        updatedAt: new Date()
+      },
+      {
+        name: 'roles_update',
+        description: 'Allows creating and editing roles and permissions.',
+        createdAt: new Date(),
+        updatedAt: new Date()
+      },
+      {
+        name: 'roles_delete',
+        description: 'Allows deleting roles.',
+        createdAt: new Date(),
+        updatedAt: new Date()
+      },
+
+
+      // PERMISSIONS
+      {
+        name: 'permissions_create',
+        description: 'Allows creating new permissions.',
+        createdAt: new Date(),
+        updatedAt: new Date()
+      },
+      {
+        name: 'permissions_read',
+        description: 'Allows viewing permissions list.',
+        createdAt: new Date(),
+        updatedAt: new Date()
+      },
+      {
+        name: 'permissions_update',
+        description: 'Allows creating and editing permissions.',
+        createdAt: new Date(),
+        updatedAt: new Date()
+      },
+      {
+        name: 'permissions_delete',
+        description: 'Allows deleting permissions.',
+        createdAt: new Date(),
+        updatedAt: new Date()
+      },
+
+
+      // SETTINGS
+
+      {
+        name: 'settings_read',
+        description: 'Allows reading system settings.',
+        createdAt: new Date(),
+        updatedAt: new Date()
+      },
+      {
+        name: 'settings_update',
+        description: 'Allows updating system settings.',
+        createdAt: new Date(),
+        updatedAt: new Date()
+      },
+      {
+        name: 'settings_reload',
+        description: 'Allows manually reloading cached system settings.',
         createdAt: new Date(),
         updatedAt: new Date()
       }
-    ], {});
+
+    ]);
   },
 
-  async down (queryInterface, Sequelize) {
+  async down(queryInterface) {
     await queryInterface.bulkDelete('permissions', null, {});
   }
 };

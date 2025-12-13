@@ -55,13 +55,14 @@ async function fileSize() {
  */
 async function getAll() {
   try {
-    const settings = await db.SystemSettings.findAll();
+    const settings = await settingsHelper.loadSettings();
     return { status: "success", data: settings };
   } catch (error) {
     logger.error(`[SettingService] Error in getAll: ${error.message}`);
     throw { status: "error", message: "Failed to retrieve settings." };
   }
 }
+
 
 /**
  * Get setting by ID
@@ -87,6 +88,10 @@ async function update(id, params) {
       };
     }
 
+    // Após atualizar, recarrega o cache global
+    await settingsHelper.clearCache();
+    global.settings = await settingsHelper.loadSettings();
+
     return {
       id,
       status: "success",
@@ -97,6 +102,7 @@ async function update(id, params) {
     throw { status: "error", message: `Failed to update setting with ID ${id}.` };
   }
 }
+
 
 /**
  * Helper: Get setting by ID

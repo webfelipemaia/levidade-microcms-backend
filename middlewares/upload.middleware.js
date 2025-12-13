@@ -4,7 +4,6 @@ const fs = require("fs");
 const { fromBuffer } = require("file-type");
 const path = require("path");
 const crypto = require("crypto");
-const settingsHelper = require("../helpers/settings2.helper");
 const {
   UPLOAD_CONTENT_TYPE,
   ALLOWED_MIME_TYPES,
@@ -32,17 +31,16 @@ function ensureDirectoryExistence(dirPath) {
  * @throws Will throw an error if contentType is missing, invalid, or not configured.
  */
 async function getUploadPath(contentType) {
-  const settings = await settingsHelper.loadSettings();
 
   if (!contentType || !Object.values(UPLOAD_CONTENT_TYPE).includes(contentType)) {
     throw new Error("Invalid, missing, or disallowed content type");
   }
 
-  if (!settings.uploadContentType) {
+  if (!global.settings.upload_content_type) {
     throw new Error("Upload Content Type configuration not found in the database.");
   }
 
-  const contentTypePaths = settings.uploadContentType;
+  const contentTypePaths = settings.upload_content_type;
   let matchedContentType;
 
   if (Array.isArray(contentTypePaths)) {
@@ -77,8 +75,8 @@ const storage = multer.diskStorage({
   destination: async (req, file, cb) => {
     try {
       const contentType = `${req.body?.contentType || ""}`.trim().toLowerCase();
-      const settings = await settingsHelper.loadSettings();
-      const basePath = settings.uploadPathContent[0]?.value;
+      //const settings = await settingsHelper.loadSettings();
+      const basePath = req.settings.upload_path.content;
 
       if (!basePath || typeof basePath !== "string") {
         throw new Error("Invalid upload path in settings");
@@ -129,17 +127,16 @@ const uploadFile = multer({
   },
   limits: {
     fileSize: async () => {
-      const settings = await settingsHelper.loadSettings();
-      const maxFileSize = settings.uploadMaxFileSize.value;
-      return parseInt(settings.filesize[maxFileSize].value);
+      const maxFileSize = req.settings.uploadmaxfilesize.default;
+      return parseInt(req.settings.filesize['2_mb'].bytes);
     },
   },
 }).fields([
   {
     name: "file",
     maxCount: async () => {
-      const settings = await settingsHelper.loadSettings();
-      return parseInt(settings.uploadLimit.value);
+      //const settings = await settingsHelper.loadSettings();
+      return parseInt(req.settings.upload.limit);
     },
   },
 ]);

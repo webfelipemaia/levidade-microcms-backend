@@ -8,46 +8,46 @@ module.exports = {
 
       // Básicos do Site
       {
-        key: 'sitename.default',
+        key: 'site_name',
         type: 'string',
-        category: 'siteName',
+        category: 'Site Identity',
         description: 'O nome do site',
         value: 'Levidade Micro CMS',
         createdAt: now,
         updatedAt: now
       },
       {
-        key: 'sitedescription.default',
+        key: 'site_description',
         type: 'string',
-        category: 'siteDescription',
+        category: 'Site Identity',
         description: 'Uma descrição sucinta para o site',
         value: 'Um pequeno gerenciador de conteúdo.',
         createdAt: now,
         updatedAt: now
       },
       {
-        key: 'siteaddress.default',
+        key: 'site_address',
         type: 'string',
-        category: 'siteAddress',
+        category: 'Site Identity',
         description: 'O endereço do site',
         value: 'http://localhost:8000',
         createdAt: now,
         updatedAt: now
       },
       {
-        key: 'sitecontact.default',
+        key: 'site_contact',
         type: 'string',
-        category: 'siteContact',
+        category: 'Site Contact',
         description: 'E-mail de contato para assuntos gerais',
         value: 'contact@localhost.com',
         createdAt: now,
         updatedAt: now
       },
       {
-        key: 'adminemail.default',
+        key: 'admin_email',
         type: 'string',
-        category: 'adminEmail',
-        description: 'E-mail para assuntos admnistrativos do site',
+        category: 'Site Contact',
+        description: 'E-mail para assuntos administrativos do site',
         value: 'admin@localhost.com',
         createdAt: now,
         updatedAt: now
@@ -55,27 +55,27 @@ module.exports = {
 
       // Upload Paths
       {
-        key: 'uploadpathroot.default',
+        key: 'upload_path.root',
         type: 'string',
-        category: 'uploadPathRoot',
+        category: 'Upload Path',
         description: 'Diretório raiz para o armazenamento de arquivos enviados',
         value: '/storage/',
         createdAt: now,
         updatedAt: now
       },
       {
-        key: 'uploadpathcontent.default',
+        key: 'upload_path.content',
         type: 'string',
-        category: 'uploadPathContent',
+        category: 'Upload Path',
         description: 'Caminho para o diretório onde os arquivos relacionados ao conteúdo são armazenados.',
         value: '/storage/content/',
         createdAt: now,
         updatedAt: now
       },
       {
-        key: 'uploadpathprofile.default',
+        key: 'upload_path.profile',
         type: 'string',
-        category: 'uploadPathProfile',
+        category: 'Upload Path',
         description: 'Caminho para o diretório onde as imagens de perfil são armazenadas',
         value: '/storage/profile/',
         createdAt: now,
@@ -84,36 +84,36 @@ module.exports = {
 
       // Upload Content Types
       {
-        key: 'uploadcontenttype.article',
+        key: 'upload_content_type.article',
         type: 'string',
-        category: 'uploadContentType',
+        category: 'Upload Content Type',
         description: 'Para artigos e postagens em geral',
         value: 'article',
         createdAt: now,
         updatedAt: now
       },
       {
-        key: 'uploadcontenttype.page',
+        key: 'upload_content_type.page',
         type: 'string',
-        category: 'uploadContentType',
+        category: 'Upload Content Type',
         description: 'Para páginas estáticas do site',
         value: 'page',
         createdAt: now,
         updatedAt: now
       },
       {
-        key: 'uploadcontenttype.product',
+        key: 'upload_content_type.product',
         type: 'string',
-        category: 'uploadContentType',
+        category: 'Upload Content Type',
         description: 'Para produtos e páginas relacionadas',
         value: 'product',
         createdAt: now,
         updatedAt: now
       },
       {
-        key: 'uploadcontenttype.profile',
+        key: 'upload_content_type.rofile',
         type: 'string',
-        category: 'uploadContentType',
+        category: 'Upload Content Type',
         description: 'Para perfis de usuários',
         value: 'profile',
         createdAt: now,
@@ -139,7 +139,7 @@ module.exports = {
       ].map(([suffix, bytes, label]) => ({
         key: `filesize.${suffix}`,
         type: 'number',
-        category: 'filesize',
+        category: 'Filesize',
         description: 'Tamanho do arquivo em bytes',
         value: JSON.stringify({ bytes, label }),
         createdAt: now,
@@ -150,7 +150,7 @@ module.exports = {
       {
         key: 'filetype.image',
         type: 'string',
-        category: 'filetype',
+        category: 'Filetype',
         description: 'Formatos permitidos para upload de imagens',
         value: '{"pattern":"/jpeg|jpg|png|gif|ico|webp/"}',
         createdAt: now,
@@ -159,7 +159,7 @@ module.exports = {
       {
         key: 'filetype.video',
         type: 'string',
-        category: 'filetype',
+        category: 'Filetype',
         description: 'Formatos permitidos para upload de vídeos',
         value: '{"pattern":"/avi|wmv|mov|mkv|mp4/"}',
         createdAt: now,
@@ -168,7 +168,7 @@ module.exports = {
       {
         key: 'filetype.text',
         type: 'string',
-        category: 'filetype',
+        category: 'Filetype',
         description: 'Formatos permitidos para upload de documentos e arquivos de texto',
         value: '{"pattern":"/txt|doc|docx|ppt|pptx|xls|xlsx|odt|pdf/"}',
         createdAt: now,
@@ -177,7 +177,7 @@ module.exports = {
       {
         key: 'filetype.compressed',
         type: 'string',
-        category: 'filetype',
+        category: 'Filetype',
         description: 'Formatos permitidos para upload de arquivos compactados',
         value: '{"pattern":"/zip|7z|gz/"}',
         createdAt: now,
@@ -188,16 +188,16 @@ module.exports = {
       {
         key: 'pagination.order',
         type: 'json',
-        category: 'pagination',
+        category: 'Pagination',
         description: 'Ordenação padrão para paginação, baseada na data de criação em ordem decrescente',
         value: '["createdAt","DESC"]',
         createdAt: now,
         updatedAt: now
       },
       {
-        key: 'pagination.pagesize',
+        key: 'pagination.page_size',
         type: 'number',
-        category: 'pagination',
+        category: 'Pagination',
         description: 'Número de itens exibidos por página na paginação',
         value: '10',
         createdAt: now,
@@ -206,43 +206,79 @@ module.exports = {
 
       // Outros
       {
-        key: 'uploadlimit.default',
+        key: 'upload.limit',
         type: 'number',
-        category: 'uploadLimit',
+        category: 'Upload Limit',
         description: 'Número de uploads simultâneos permitidos',
         value: '3',
         createdAt: now,
         updatedAt: now
       },
       {
-        key: 'uploadmaxfilesize.default',
+        key: 'upload.max_file_size',
         type: 'number',
-        category: 'uploadMaxFileSize',
+        category: 'Upload Limit',
         description: 'Tamanho máximo de upload',
         value: '2097152', // 2 MB em bytes
         createdAt: now,
         updatedAt: now
       },
       {
-        key: 'uploadrequired.default',
+        key: 'upload.required',
         type: 'boolean',
-        category: 'uploadRequired',
+        category: 'Upload Limit',
         description: 'Habilita ou desabilita o upload na criação de artigo. Habilitado por padrão.',
         value: 'true',
         createdAt: now,
         updatedAt: now
       },
       {
-        key: 'maxavatarupload.default',
+        key: 'max_avatar_upload',
         type: 'number',
-        category: 'maxAvatarUpload',
+        category: 'Upload Limit',
         description: 'Limitar para os últimos N avatares. 5 por padrão.',
         value: '5',
         createdAt: now,
         updatedAt: now
+      },
+      {
+        key: 'rate_limit.public.max',
+        type: 'number',
+        category: 'Rate Limit',
+        description: 'Máximo de requisições públicas por período',
+        value: '2',
+        createdAt: now,
+        updatedAt: now
+      },
+      {
+        key: 'rate_limit.public.window',
+        type: 'number',
+        category: 'Rate Limit',
+        description: 'Janela de tempo para rate limit público (em minutos)',
+        value: '15',
+        createdAt: now,
+        updatedAt: now
+      },
+      {
+        key: 'rate_limit.private.max',
+        type: 'number',
+        category: 'Rate Limit',
+        description: 'Máximo de requisições privadas por período',
+        value: '5',
+        createdAt: now,
+        updatedAt: now
+      },
+      {
+        key: 'rate_limit.private.window',
+        type: 'number',
+        category: 'Rate Limit',
+        description: 'Janela de tempo para rate limit privado (em minutos)',
+        value: '15',
+        createdAt: now,
+        updatedAt: now
       }
 
-    ], {});
+    ], {});   
   },
 
   async down(queryInterface, Sequelize) {

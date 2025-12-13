@@ -20,7 +20,7 @@ const morganMiddleware = require('./middlewares/morgan.middleware');
 const initPassportStrategy = require('./config/passport');
 const injectSettings = require('./middlewares/settings.middleware');
 const authMiddleware = require('./middlewares/auth.middleware');
-const { publicLimiter, privateLimiter } = require("./middlewares/rateLimiter.middleware");
+const { publicLimiter, privateLimiter } = require("./middlewares/rateLimit.middleware");
 
 
 // Swagger 

@@ -1,6 +1,9 @@
 const Joi = require('joi');
 const validateRequest = require('../middlewares/validateRequest.middleware');
 const settingService = require('../services/setting.service');
+const settingsHelper = require('../helpers/settings2.helper');
+const logger = require('../config/logger');
+
 
 /**
  * Fetch all system settings.
@@ -113,6 +116,36 @@ exports.getFilesizeSettings = (req, res, next) => {
     .then(settings => res.json(settings))
     .catch(next);
 };
+
+exports.reloadAll = async (req, res) => {
+    try {
+      const before = Date.now();
+
+      await settingsHelper.clearCache();     // limpa cache
+      const newSettings = await settingsHelper.loadSettings();  // recarrega tudo
+      global.settings = newSettings;         // atualiza global
+
+      const duration = Date.now() - before;
+
+      logger.info(`Settings recarregados manualmente em ${duration}ms`, {
+        user: req.user?.id || null,
+      });
+
+      return res.json({
+        status: "success",
+        message: "Settings recarregados com sucesso.",
+        durationMs: duration,
+        categories: Object.keys(newSettings)
+      });
+    } catch (err) {
+      logger.error("Erro ao recarregar settings manualmente", err);
+      return res.status(500).json({
+        status: "error",
+        message: "Erro ao recarregar settings.",
+        error: err.message,
+      });
+    }
+  }
 
 /**
  * Validation schema for updating settings.
