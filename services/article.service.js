@@ -1,4 +1,4 @@
-const db = require('../helpers/db.helper');
+const { Article } = require('../models');
 const Sequelize = require('sequelize');
 module.exports = {
   getAll,
@@ -17,7 +17,7 @@ const { paginate } = require('../helpers/pagination.helper');
  * @returns {Promise<Array<Object>>} List of all articles.
  */
 async function getAll() {
-    return await db.Article.findAll();
+    return await Article.findAll();
 }
 
 /**
@@ -55,7 +55,7 @@ async function getPaginatedArticles(page, pageSize, searchQuery, order, category
           };
       }
   
-      return await paginate(db.Article, {
+      return await paginate(Article, {
           page,
           pageSize,
           searchQuery,
@@ -82,7 +82,7 @@ async function getById(id) {
  * @throws {Error} If no article is found.
  */
 async function getLastRegister() {
-    const article = await db.Article.findOne({
+    const article = await Article.findOne({
         order: [['createdAt', 'DESC']]
     });
 
@@ -97,7 +97,7 @@ async function getLastRegister() {
  */
 async function create(params) {
   
-  const article = new db.Article(params);
+  const article = new Article(params);
   await article.save();
   
   return {
@@ -129,7 +129,7 @@ async function update(id, params) {
  */
 async function _delete(id) {
   try {
-    const result = await db.Article.destroy({ where: { id: id } });
+    const result = await Article.destroy({ where: { id: id } });
 
     if (result > 0) {
       return { status: "success", message: "Article successfully deleted" };
@@ -150,7 +150,7 @@ async function _delete(id) {
  * @throws {Error} If the article is not found.
  */
 async function getArticle(id) {
-    const article = await db.Article.findByPk(id);
+    const article = await Article.findByPk(id);
     if (!article) throw 'Article not found';
     return article;
 }

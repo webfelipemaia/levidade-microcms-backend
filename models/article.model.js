@@ -38,17 +38,12 @@ const Article = sequelize.define(
     categoryId: {
       type: DataTypes.INTEGER,
       allowNull: true,
-      references: {
-        model: 'categories',
-        key: 'id'
-      },
-      onUpdate: 'CASCADE',
-      onDelete: 'SET NULL'
     }
   },
   {
     tableName: 'articles',
-    timestamps: true
+    timestamps: true,
+    freezeTableName: true 
   }
 );
 

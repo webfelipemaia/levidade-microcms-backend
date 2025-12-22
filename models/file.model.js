@@ -25,7 +25,8 @@ const File = sequelize.define(
   },
   {
     tableName: 'files',
-    timestamps: true
+    timestamps: true,
+    freezeTableName: true 
   }
 );
 

@@ -1,4 +1,4 @@
-const db = require('../helpers/db.helper');
+const { SystemSettings } = require('../models');
 const settingsHelper = require('../helpers/settings2.helper');
 const logger = require("../config/logger");
 
@@ -76,7 +76,7 @@ async function getById(id) {
  */
 async function update(id, params) {
   try {
-    const [rowsUpdated] = await db.SystemSettings.update(
+    const [rowsUpdated] = await SystemSettings.update(
       { value: params.value },
       { where: { id } }
     );
@@ -109,7 +109,7 @@ async function update(id, params) {
  */
 async function getName(id) {
   try {
-    const setting = await db.SystemSettings.findByPk(id);
+    const setting = await SystemSettings.findByPk(id);
     if (!setting) {
       return { status: "error", message: "Setting not found" };
     }

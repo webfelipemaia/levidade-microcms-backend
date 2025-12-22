@@ -9,26 +9,27 @@ const Category = sequelize.define(
       primaryKey: true,
       autoIncrement: true,
     },
-
     parentId: {
       type: DataTypes.INTEGER,
       allowNull: true,
       references: {
         model: 'categories',
-        key: 'id',
-      },
-      onDelete: 'CASCADE',
-      onUpdate: 'CASCADE',
-    },
-
+        key: 'id'
+      }
+    },    
     name: {
       type: DataTypes.STRING(255),
       allowNull: false,
     },
+    description: {
+      type: DataTypes.TEXT,
+      allowNull: true
+    }
   },
   {
     tableName: 'categories',
     timestamps: true,
+    freezeTableName: true 
   }
 );
 

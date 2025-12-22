@@ -1,4 +1,4 @@
-const db = require('./db.helper');
+const { SystemSettings } = require('../models');
 const { Sequelize } = require("sequelize");
 const logger = require("../config/logger");
 
@@ -109,7 +109,7 @@ async function loadSettings() {
   if (!isCacheValid()) {
     logger.info('Loading system settings...');
 
-    const rows = await db.SystemSettings.findAll();
+    const rows = await SystemSettings.findAll();
     const settings = {};
 
     for (const row of rows) {
@@ -151,7 +151,7 @@ async function getSettingsByName(settingName) {
  */
 async function getSettingsByPrefix(prefix) {
   try {
-    const rows = await db.SystemSettings.findAll({
+    const rows = await SystemSettings.findAll({
       where: {
         key: {
           [Sequelize.Op.like]: `${prefix}%`

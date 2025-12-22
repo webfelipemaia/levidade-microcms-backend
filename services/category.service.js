@@ -1,4 +1,4 @@
-const db = require('../helpers/db.helper');
+const { Category } = require('../models');
 const Sequelize = require('sequelize');
 
 module.exports = {
@@ -18,9 +18,9 @@ const { paginate } = require('../helpers/pagination.helper');
  * @returns {Promise<Array<Object>>} List of categories with subcategories.
  */
 async function getAll() {
-    return await db.Category.findAll({ 
+    return await Category.findAll({ 
         include: [{
-            model: db.Category,
+            model: Category,
             as: 'children'
         }]
     });
@@ -44,7 +44,7 @@ async function getById(id) {
  * @returns {Promise<void>}
  */
 async function create(params) {
-    const category = new db.Category(params);
+    const category = new Category(params);
     await category.save();
 }
 
@@ -80,7 +80,7 @@ async function _delete(id) {
  * @returns {Promise<Object>} The created category with subcategories.
  */
 async function createWithSubcategories(params) {
-    const category = await db.Category.create({
+    const category = await Category.create({
         name: params.name,
         Subcategories: params.subcategories
     }, {
@@ -98,9 +98,9 @@ async function createWithSubcategories(params) {
  * @throws {Error} If the category is not found.
  */
 async function getCategory(id) {
-    const category = await db.Category.findByPk(id, { 
+    const category = await Category.findByPk(id, { 
         include: [{
-            model: db.Category,
+            model: Category,
             as: 'children'
         }]
     });
@@ -131,7 +131,7 @@ async function getPaginatedCategories(page, pageSize, searchQuery, order) {
         }));
     }
 
-    return await paginate(db.Category, {
+    return await paginate(Category, {
         page,
         pageSize,
         searchQuery,

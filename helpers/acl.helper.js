@@ -1,5 +1,5 @@
 // helpers/acl.helper.js
-const db = require('./db.helper');
+const { Role, Permission } = require('../models');
 const logger = require('../config/logger');
 
 let ACL_CACHE = null;
@@ -10,25 +10,26 @@ const TTL = (Number(process.env.CACHE_TTL_MINUTES) || 5) * 60 * 1000; // 5 minut
 /**
  * Loads the entire ACL from the database and converts it to:
  * {
- *    admin: ["create_article", "delete_user", ...],
- *    editor: ["edit_article"]
+ *    admin: ["articles:create", "users:delete", ...],
+ *    editor: ["articles:edit"]
  * }
  */
 async function loadACL() {
   logger.info("[ACL] Reloading ACL from database...");
 
-  const roles = await db.Role.findAll({
-    include: [{ model: db.Permission }]
+  const roles = await Role.findAll({
+    include: [{ model: Permission , as: 'permissions' }]
   });
 
   const acl = {};
 
-  for (const role of roles) {
-    const roleSlug = role.slug;
-    const permissions = role.Permissions ? role.Permissions.map(p => p.name) : [];
+  for (const role of roles) {    
+    const roleSlug = role.slug;    
+    const permsArray = role.permissions || role.Permissions || [];    
+    const permissions = permsArray.map(p => p.slug);
     acl[roleSlug] = permissions;
   }
-
+  
   ACL_CACHE = acl;
   ACL_LAST_LOAD = Date.now();
 
@@ -37,7 +38,7 @@ async function loadACL() {
 }
 
 /**
- * Retorna ACL do cache, recarrega se TTL expirou.
+ * Returns ACL from cache, reloads if TTL has expired.
  */
 async function getACL() {
   if (!ACL_CACHE || Date.now() - ACL_LAST_LOAD > TTL) {

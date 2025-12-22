@@ -1,4 +1,4 @@
-const db = require('../helpers/db.helper');
+const { Permission, Role } = require('../models');
 const { paginate } = require('../helpers/pagination.helper');
 const logger = require("../config/logger");
 const Sequelize = require('sequelize');
@@ -22,7 +22,7 @@ module.exports = {
  */
 async function getAll() {
   try {
-    return await db.Role.findAll();
+    return await Role.findAll();
   } catch (error) {
     logger.error(`[RoleService] Error in getAll: ${error.message}`);
     throw { status: "error", message: "Failed to retrieve roles." };
@@ -50,7 +50,7 @@ async function getPaginatedRoles(page, pageSize, searchQuery, order) {
       }));
   }
 
-  return await paginate(db.Role, {
+  return await paginate(Role, {
       page,
       pageSize,
       searchQuery,
@@ -65,10 +65,11 @@ async function getPaginatedRoles(page, pageSize, searchQuery, order) {
  */
 async function getRolesPermissions() {
   try {
-    return await db.Role.findAll({
+    return await Role.findAll({
       include: [
         {
-          model: db.Permission,
+          model: Permission,
+          as: 'permissions',
           attributes: ["id", "name"],
           through: { attributes: [] }
         },
@@ -85,12 +86,17 @@ async function getRolesPermissions() {
  */
 async function getAllRolesPermissions() {
   try {
-    return await db.Role.findAll({
-      include: [{ model: db.Permission }],
+    return await Role.findAll({
+      include: [{ model: Permission, as: "permissions" }],
     });
   } catch (error) {
-    logger.error(`[RoleService] Error in getAllRolesPermissions: ${error.message}`);
-    throw { status: "error", message: "Failed to retrieve roles with full permissions." };
+    logger.error(
+      `[RoleService] Error in getAllRolesPermissions: ${error.message}`
+    );
+    throw {
+      status: "error",
+      message: "Failed to retrieve roles with full permissions.",
+    };
   }
 }
 
@@ -106,11 +112,11 @@ async function getById(id) {
  */
 async function create(params) {
   try {
-    if (await db.Role.findOne({ where: { name: params.name } })) {
+    if (await Role.findOne({ where: { name: params.name } })) {
       throw { status: "error", message: `"${params.name}" is already registered` };
     }
 
-    const role = new db.Role(params);
+    const role = new Role(params);
     await role.save();
 
     return { status: "success", message: "Role created successfully.", data: role };
@@ -125,7 +131,7 @@ async function create(params) {
  */
 async function update(id, params) {
   try {
-    const [rowsUpdated] = await db.Role.update(
+    const [rowsUpdated] = await Role.update(
       { name: params.name },
       { where: { id } }
     );
@@ -134,7 +140,8 @@ async function update(id, params) {
       return { status: "error", message: "Role not found." };
     }
 
-    const role = await db.Role.findByPk(id);
+    const role = await Role.findByPk(id, { model: Permission, as: 'permissions' });
+    
     if (!role) {
       return { status: "error", message: "Role not found." };
     }
@@ -160,7 +167,7 @@ async function update(id, params) {
  */
 async function _delete(id) {
   try {
-    const result = await db.Role.destroy({ where: { id } });
+    const result = await Role.destroy({ where: { id } });
 
     if (result > 0) {
       return { status: "success", message: "Role successfully deleted." };
@@ -178,7 +185,7 @@ async function _delete(id) {
  */
 async function getRole(id) {
   try {
-    const role = await db.Role.findByPk(id);
+    const role = await Role.findByPk(id, { model: Permission, as: 'permissions' });
     if (!role) {
       return { status: "error", message: "Role not found." };
     }
@@ -194,13 +201,14 @@ async function getRole(id) {
  */
 async function createRoleWithPermissions(params) {
   try {
-    if (await db.Role.findOne({ where: { name: params.name } })) {
+    if (await Role.findOne({ where: { name: params.name } })) {
       throw { status: "error", message: `"${params.name}" is already registered` };
     }
 
-    const role = await db.Role.create({ name: params.name });
-    const permissions = await db.Permission.findAll({
-      where: { name: params.permissions }
+    const role = await Role.create({ name: params.name });
+    const permissions = await Permission.findAll({
+      where: { name: params.permissions },
+      include: [{ model: Role, as: 'roles' }]
     });
 
     await role.setPermissions(permissions);
@@ -221,14 +229,19 @@ async function createRoleWithPermissions(params) {
 async function updateRolePermissions(roleId, permissionIds) {
   try {
       // 1. Encontrar o role com suas associações
-      const role = await db.Role.findByPk(roleId);
+      const role = await Role.findByPk(roleId, {
+        include: [{ 
+          model: Permission, 
+          as: 'permissions'
+        }]
+      });
       if (!role) {
           throw { status: "error", message: "Role not found." };
       }
 
       // 2. Validar permissões (se fornecidas)
       if (permissionIds && permissionIds.length > 0) {
-          const permissions = await db.Permission.findAll({
+          const permissions = await Permission.findAll({
               where: { id: permissionIds }
           });
           
@@ -273,10 +286,11 @@ async function updateRolePermissions(roleId, permissionIds) {
 */
 async function getRolePermissions(roleId) {
   try {
-      const role = await db.Role.findByPk(roleId, {
+      const role = await Role.findByPk(roleId, {
           include: [{
-              model: db.Permission,
-              through: { attributes: [] } // Não incluir dados da tabela de junção
+              model: Permission,
+              as: 'permissions',
+              through: { attributes: [] }
           }]
       });
 

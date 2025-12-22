@@ -1,4 +1,4 @@
-const db = require('../helpers/db.helper');
+const { Role, Permission, RolesPermissions } = require('../models');
 const logger = require("../config/logger");
 
 module.exports = {
@@ -13,7 +13,7 @@ module.exports = {
  */
 async function getAll() {
   try {
-    const settings = await db.RolesPermissions.findAll();
+    const settings = await RolesPermissions.findAll();
     return { status: "success", data: settings };
   } catch (error) {
     logger.error(`[SettingService] Error in getAll: ${error.message}`);
@@ -28,8 +28,18 @@ async function getAll() {
  */
 async function getRolePermissions(roleId) {
   try {
-    const rolePermissions = await db.RolesPermissions.findAll({
+    const rolePermissions = await RolesPermissions.findAll({
       where: { roleId: roleId },
+      include: [
+        {
+          model: Role,
+          as: 'roles',
+        },
+        {
+          model: Permission,
+          as: 'permissions',
+        }
+      ],
       attributes: ['permissionId']
     });
     
@@ -51,7 +61,7 @@ async function updateRolePermissions(roleId, permissionIds) {
   
   try {
     // Validar se o role existe
-    const role = await db.Role.findByPk(roleId);
+    const role = await Role.findByPk(roleId);
     if (!role) {
       await transaction.rollback();
       throw { status: "error", message: "Role not found." };
@@ -59,7 +69,7 @@ async function updateRolePermissions(roleId, permissionIds) {
 
     // Validar se as permissões existem
     if (permissionIds && permissionIds.length > 0) {
-      const permissions = await db.Permission.findAll({
+      const permissions = await Permission.findAll({
         where: { id: permissionIds }
       });
       
@@ -70,7 +80,7 @@ async function updateRolePermissions(roleId, permissionIds) {
     }
 
     // Remover permissões existentes
-    await db.RolesPermissions.destroy({
+    await RolesPermissions.destroy({
       where: { roleId: roleId },
       transaction: transaction
     });
@@ -82,7 +92,7 @@ async function updateRolePermissions(roleId, permissionIds) {
         permissionId: permissionId
       }));
 
-      await db.RolesPermissions.bulkCreate(rolePermissionsData, {
+      await RolesPermissions.bulkCreate(rolePermissionsData, {
         transaction: transaction
       });
     }

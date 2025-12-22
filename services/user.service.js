@@ -1,7 +1,7 @@
 ﻿const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
 require("dotenv").config();
-const db = require("../helpers/db.helper");
+const { User, Role, File, UsersRoles, UsersFiles } = require("../models");
 const { paginate } = require('../helpers/pagination.helper');
 const logger = require("../config/logger");
 const Sequelize = require('sequelize');
@@ -25,7 +25,7 @@ module.exports = {
  * @returns {Promise<Array<Object>>} Lista de usuários.
  */
 async function getAll() {
-  const users = await db.User.findAll({
+  const users = await User.findAll({
     attributes: { exclude: ["password"] },
   });
   return users;
@@ -52,7 +52,7 @@ async function getPaginatedUsers(page, pageSize, searchQuery, order) {
       }));
   }
 
-  return await paginate(db.User, {
+  return await paginate(User, {
       page,
       pageSize,
       searchQuery,
@@ -67,8 +67,13 @@ async function getPaginatedUsers(page, pageSize, searchQuery, order) {
  * @returns {Promise<Array<Object>>} List of users with roles.
  */
 async function getUsersRoles() {
-  return await db.User.findAll({
-    include: db.Role,
+  return await User.findAll({
+    include: [
+      {
+        model: Role,
+        as: 'roles',
+        attributes: ['id', 'slug'],
+      }],
     through: {
       attributes: [],
     },
@@ -95,8 +100,12 @@ async function getById(id) {
  * @returns {Promise<Object>} Operation status and created user data.
  */
 async function create(params) {
-  const existingUser = await db.User.findOne({
+  const existingUser = await User.findOne({
     where: { email: params.email },
+    include: [{ 
+      model: Role, 
+      as: 'roles'
+    }]
   });
   if (existingUser) {
     throw {
@@ -106,7 +115,7 @@ async function create(params) {
   }
   const hashedPassword = await bcrypt.hash(params.password, 10);
 
-  const user = await db.User.create({
+  const user = await User.create({
     email: params.email,
     name: params.name,
     lastname: params.lastname,
@@ -133,14 +142,14 @@ async function create(params) {
  * @returns {Promise<Object>} Operation status.
  */
 async function addRoleToUser(user) {
-  if (await db.User.findOne({ where: { email: user.email } })) {
+  if (await User.findOne({ where: { email: user.email }, include: [{ model: Role, as: 'roles' }] })) {
     throw {
       status: "error",
       message: 'Email "' + user.email + '" is already registered',
     };
   }
 
-  const role = await db.Role.findOne({ where: { name: user.role } });
+  const role = await Role.findOne({ where: { name: user.role }, include: [{ model: Role, as: 'roles' }] });
   if (!role) {
     throw {
       status: "error",
@@ -175,11 +184,11 @@ async function update(id, params) {
       updateData.avatarId = params.avatarId;
     }
 
-    const [rowsUpdated] = await db.User.update(updateData, {
+    const [rowsUpdated] = await User.update(updateData, {
       where: { id: id },
     });
 
-    const user = await db.User.findByPk(id);
+    const user = await User.findByPk(id);
 
     if (!user) {
       return { status: "error", message: "User not found." };
@@ -187,10 +196,11 @@ async function update(id, params) {
 
     // Atualizar roles se fornecidas
     if (params.roles && Array.isArray(params.roles)) {
-      const rolesByRoleId = await db.UsersRoles.findAll({
+      const rolesByRoleId = await UsersRoles.findAll({
         where: {
           userId: user.id,
         },
+        include: [{ model: Role, as: 'roles' }] 
       });
 
       params.roles.forEach((role) => {
@@ -222,7 +232,7 @@ async function update(id, params) {
  */
 async function _delete(id) {
   try {
-    const result = await db.User.destroy({
+    const result = await User.destroy({
       where: { id: id },
     });
 
@@ -251,7 +261,7 @@ async function _delete(id) {
  * @returns {Promise<Object>} User found or error message.
  */
 async function getUser(id) {
-  const user = await db.User.findByPk(id);
+  const user = await User.findByPk(id);
   if (!user) {
     return {
       status: "error",
@@ -273,24 +283,19 @@ async function getUser(id) {
  * @throws {Object} Error if user is not found or password is incorrect.
  */
 async function authenticate(email, password) {
-  const user = await db.User.findOne({
+  const user = await User.findOne({
     where: { email },
     include: [
       {
-        model: db.Role,
-        attributes: ['id', 'name'],
-        through: { attributes: [] }
+        model: Role,
+        as: 'roles',
+        attributes: ['id', 'slug'],
       },
       {
-        model: db.File,
+        model: File,
         as: 'avatar',
-        attributes: ['id', 'name', 'path', 'type', 'createdAt', 'updatedAt']
+        attributes: ['id', 'name', 'path', 'type']
       },
-      {
-        model: db.File,
-        attributes: ['id', 'name', 'path', 'type'],
-        through: { attributes: [] }
-      }
     ],
   });
 
@@ -315,8 +320,8 @@ async function authenticate(email, password) {
       type: user.avatar.type,
       fullPath: `${user.avatar.path}${user.avatar.name}`
     } : null,
-    roles: user.Roles?.map((role) => role.name),
-    files: user.Files?.map((file) => ({
+    roles: user.roles?.map((role) => role.slug),
+    files: user.files?.map((file) => ({
       id: file.id,
       name: file.name,
       path: file.path,
@@ -332,17 +337,17 @@ async function authenticate(email, password) {
  * @returns {Promise<Object>} User with avatar
  */
 async function getUserWithAvatar(id) {
-  const user = await db.User.findByPk(id, {
+  const user = await User.findByPk(id, {
     include: [
       {
-        model: db.Role,
-        attributes: ['id', 'name'],
-        through: { attributes: [] }
+        model: Role,
+        as: 'roles',
+        attributes: ['id', 'slug'],
       },
       {
-        model: db.File,
+        model: File,
         as: 'avatar',
-        attributes: ['id', 'name', 'path', 'type', 'createdAt', 'updatedAt']
+        attributes: { exclude: ['updatedAt']}
       }
     ],
     attributes: { exclude: ["password"] }
@@ -370,7 +375,7 @@ async function getUserWithAvatar(id) {
 async function setUserAvatar(userId, fileId) {
   try {
     // Verificar se o usuário existe
-    const user = await db.User.findByPk(userId);
+    const user = await User.findByPk(userId);
     if (!user) {
       return {
         status: "error",
@@ -379,7 +384,7 @@ async function setUserAvatar(userId, fileId) {
     }
     
     // Verificar se o arquivo existe
-    const file = await db.File.findByPk(fileId);
+    const file = await File.findByPk(fileId);
     if (!file) {
       return {
         status: "error",
@@ -400,7 +405,7 @@ async function setUserAvatar(userId, fileId) {
     await user.save();
     
     // Adicionar também à tabela de junção Users_Files (se não existir)
-    const existingAssociation = await db.UsersFiles.findOne({
+    const existingAssociation = await UsersFiles.findOne({
       where: {
         userId: userId,
         fileId: fileId
@@ -440,7 +445,7 @@ async function setUserAvatar(userId, fileId) {
  */
 async function removeUserAvatar(userId) {
   try {
-    const user = await db.User.findByPk(userId);
+    const user = await User.findByPk(userId);
     if (!user) {
       return {
         status: "error",

@@ -1,6 +1,6 @@
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
-const db = require("../helpers/db.helper");
+const { User, Role, File } = require("../models");
 const logger = require("../config/logger");
 const { sendPasswordRecoveryEmail } = require ("../services/email.service");
 //const recentRequests = new Map();
@@ -18,17 +18,18 @@ const recentRequests = new Map();
 exports.login = async (req, res) => {
   try {
     const { email, password } = req.body;
-    const user = await db.User.findOne({
+    const user = await User.findOne({
       where: { email },
       include: [
         {
-          model: db.Role,
+          model: Role,
+          as: 'roles',
           attributes: ['id', 'name']
         },
         {
-          model: db.File,
-          attributes: ['id', 'name', 'path', 'type'],
-          through: { attributes: [] }
+          model: File,
+          as: 'avatar',
+          attributes: ['id', 'name', 'path', 'type']
         }
       ]
     });
@@ -36,13 +37,14 @@ exports.login = async (req, res) => {
     if (!user || !(await bcrypt.compare(password, user.password))) {
       return res.status(401).json({ message: "Invalid credentials" });
     }
-
+    
+    const roleNames = user.roles?.map((r) => r.name) || [];
     const payload = {
       id: user.id,
       email: user.email,
       name: user.name,
       lastname: user.lastname,
-      roles: user.Roles?.map((r) => r.name)
+      roles: roleNames
     };
 
     const token = jwt.sign(payload, process.env.JWT_SECRET, {
@@ -53,7 +55,7 @@ exports.login = async (req, res) => {
 
     res.cookie('token', token, {
       httpOnly: true,
-      secure: false,
+      secure: false, // mude para true se usar HTTPS
       sameSite: 'Lax',
       maxAge: 60 * 60 * 1000 
     });
@@ -61,30 +63,24 @@ exports.login = async (req, res) => {
     return res.status(200).json({
       status: "success",
       message: "Authentication successful",
-      token, // <-- ADICIONADO AQUI PARA MOBILE
+      token,
       data: {
         id: user.id,
         name: user.name,
         lastname: user.lastname,
         email: user.email,
-        roles: user.Roles?.map(r => r.name),
-        files: user.Files?.map(file => ({
-          id: file.id,
-          name: file.name,
-          path: file.path,
-          type: file.type
-        }))
+        roles: roleNames,
+        avatar: user.avatar
       },
       tokenInfo: {
         issuedAt: new Date(decoded.iat * 1000),
         expiresAt: new Date(decoded.exp * 1000)
       }
     });
-    
 
   } catch (err) {
     logger.error(err);
-    res.status(500).json({ message: "Internal server error" });
+    res.status(500).json({ message: "Internal server error", error: err.message });
   }
 };
 
@@ -101,14 +97,14 @@ exports.register = async (req, res) => {
   try {
     const { email, password, name, lastname } = req.body;
 
-    const existingUser = await db.User.findOne({ where: { email } });
+    const existingUser = await User.findOne({ where: { email } });
     if (existingUser) {
       return res.status(400).json({ message: "Email is already registered" });
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    const user = new db.User({
+    const user = new User({
       email,
       password: hashedPassword,
       name: name,
@@ -117,16 +113,17 @@ exports.register = async (req, res) => {
 
     await user.save();
 
-    const newUser = await db.User.findByPk(user.id, {
+    const newUser = await User.findByPk(user.id, {
       include: [
         {
-          model: db.Role,
+          model: Role,
+          as: 'roles',
           attributes: ['id', 'name']
         },
         {
-          model: db.File,
+          model: File,
+          as: 'avatar',
           attributes: ['id', 'name', 'path', 'type'],
-          through: { attributes: [] }
         }
       ],
       attributes: { exclude: ['password'] }
@@ -138,7 +135,7 @@ exports.register = async (req, res) => {
         email: newUser.email,
         name: newUser.name,
         lastname: newUser.lastname,
-        roles: newUser.Roles?.map(r => r.name) || []
+        roles: newuser.roles?.map(r => r.name) || []
       },
       process.env.JWT_SECRET,
       { expiresIn: process.env.JWT_EXPIRES_IN || "1h" }
@@ -161,8 +158,8 @@ exports.register = async (req, res) => {
         email: newUser.email,
         name: newUser.name,
         lastname: newUser.lastname,
-        roles: newUser.Roles?.map(r => r.name) || [],
-        files: newUser.Files?.map(file => ({
+        roles: newuser.roles?.map(r => r.name) || [],
+        files: newuser.files?.map(file => ({
           id: file.id,
           name: file.name,
           path: file.path,
@@ -211,7 +208,6 @@ exports.checkSession = async (req, res) => {
  */
 exports.getMe = async (req, res) => {
   try {
-
     const token = 
       req.cookies?.token || 
       req.headers.authorization?.replace("Bearer ", "");
@@ -220,16 +216,18 @@ exports.getMe = async (req, res) => {
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
-    const user = await db.User.findByPk(decoded.id, {
+    const user = await User.findByPk(decoded.id, {
       include: [
         {
-          model: db.Role,
-          attributes: ['id', 'name']
+          model: Role,
+          as: 'roles',
+          attributes: ['id', 'name'],
+          //through: { attributes: [] }
         },
         {
-          model: db.File,
-          attributes: ['id', 'name', 'path', 'type'],
-          through: { attributes: [] }
+          model: File,
+          as: 'avatar', // Alias definido no index.js
+          attributes: ['id', 'name', 'path', 'type']
         }
       ],
       attributes: { exclude: ['password'] }
@@ -243,13 +241,19 @@ exports.getMe = async (req, res) => {
         email: user.email,
         name: user.name,
         lastname: user.lastname,
-        roles: user.Roles?.map(r => r.name),
-        files: user.Files?.map(file => ({
+        roles: user.roles?.map(r => r.name) || [],
+        avatar: user.avatar ? {
+          id: user.avatar.id,
+          name: user.avatar.name,
+          path: user.avatar.path,
+          type: user.avatar.type
+        } : null,
+        userFiles: user.userFiles?.map(file => ({
           id: file.id,
           name: file.name,
           path: file.path,
           type: file.type
-        }))
+        })) || []
       },
       token,
       tokenInfo: {
@@ -260,7 +264,7 @@ exports.getMe = async (req, res) => {
 
   } catch (error) {
     if (error instanceof jwt.JsonWebTokenError) {
-      return res.status(200).json({
+      return res.status(401).json({
         message: 'Invalid token',
         details: error.message
       });
@@ -317,7 +321,7 @@ exports.forgotPassword = async (req, res) => {
     
     recentRequests.set(email, now);
 
-    const user = await db.User.findOne({ where: { email } });
+    const user = await User.findOne({ where: { email } });
     
     if (!user) {
       return res.json({
@@ -449,7 +453,7 @@ exports.resetPasswordWithCode = async (req, res) => {
       });
     }
 
-    const user = await db.User.findByPk(storedData.userId);
+    const user = await User.findByPk(storedData.userId);
     if (!user) {
       return res.status(400).json({
         success: false,
@@ -491,7 +495,7 @@ exports.resendRecoveryCode = async (req, res) => {
     }
 
     recentRequests.set(email, now);
-    const user = await db.User.findOne({ where: { email } });
+    const user = await User.findOne({ where: { email } });
     
     if (!user) {
       return res.json({

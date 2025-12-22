@@ -14,6 +14,11 @@ const Permission = sequelize.define(
       allowNull: false,
       unique: true
     },
+    slug: {
+      type: DataTypes.STRING,
+      allowNull: false,
+      unique: true
+    },
     description: {
       type: DataTypes.TEXT,
       allowNull: true
@@ -21,7 +26,8 @@ const Permission = sequelize.define(
   },
   {
     tableName: 'permissions',
-    timestamps: true
+    timestamps: true,
+    freezeTableName: true 
   }
 );
 

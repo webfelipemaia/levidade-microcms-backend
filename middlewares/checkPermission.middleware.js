@@ -3,57 +3,80 @@ const logger = require("../config/logger");
 
 /**
  * permissionRules can be:
- * - "edit_article"
- * - ["edit_article", "delete_article"]
+ * - "articles:edit"
+ * - ["articles:edit", "articles:delete"]
  * - { any: ["a", "b"] }
  * - { all: ["a", "b"] }
  */
+
 function checkPermission(permissionRules) {
   return async (req, res, next) => {
     try {
+      // No permission rules defined
+      if (!permissionRules) {
+        logger.warn(
+          `[ACL] Rota bloqueada: Nenhuma regra de permissão definida para ${req.originalUrl}`
+        );
+        return res
+          .status(403)
+          .json({
+            error: "Access denied: No permission rules defined for this route.",
+          });
+      }
+
       const user = req.user;
       if (!user) return res.status(401).json({ error: "Not authenticated" });
 
       const acl = await getACL();
-      const userRoles = user.roles || [];
 
-      // Coletar TODAS as permissões do usuário
+      const rawRoles = user.roles || user.Roles || [];
+      const userRoleSlugs = rawRoles
+        .map((role) => {
+          if (typeof role === "string") return role.toLowerCase();
+          return (
+            role.slug ||
+            (role.dataValues && role.dataValues.slug) ||
+            ""
+          ).toLowerCase();
+        })
+        .filter((s) => !!s);
+
+      // Get permissions
       const userPermissions = new Set();
-      for (const role of userRoles) {
-        const perms = acl[role] || [];
-        perms.forEach(p => userPermissions.add(p));
+      for (const roleSlug of userRoleSlugs) {
+        const perms = acl[roleSlug] || [];
+        perms.forEach((p) => userPermissions.add(p));
       }
 
-      const has = perm => userPermissions.has(perm);
-
+      const has = (perm) => userPermissions.has(perm);
       let authorized = false;
 
+      // Validate rules
       if (typeof permissionRules === "string") {
-        // Regra simples: precisa ter a permissão
         authorized = has(permissionRules);
-
       } else if (Array.isArray(permissionRules)) {
-        // Regra AND implícito: precisa de todas
         authorized = permissionRules.every(has);
-
-      } else if (permissionRules.any) {
-        // Regra OR
+      } else if (permissionRules && permissionRules.any) {
         authorized = permissionRules.any.some(has);
-
-      } else if (permissionRules.all) {
-        // Regra AND explícito
+      } else if (permissionRules && permissionRules.all) {
         authorized = permissionRules.all.every(has);
       }
 
       if (!authorized) {
+        logger.warn(
+          `[ACL] Acesso negado para User ID ${user.id} na rota ${
+            req.originalUrl
+          }. Regra: ${JSON.stringify(permissionRules)}`
+        );
         return res.status(403).json({ error: "Permission denied" });
       }
 
       next();
-
     } catch (err) {
-      logger.error(`[checkPermission] ${err.message}`);
-      return res.status(500).json({ error: "Error checking permission" });
+      logger.error(`[checkPermission Error] ${err.stack}`);
+      return res
+        .status(500)
+        .json({ error: "Internal server error during permission check." });
     }
   };
 }

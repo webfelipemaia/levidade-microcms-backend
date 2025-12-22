@@ -1,5 +1,5 @@
 // services/file.service.js
-const db = require('../helpers/db.helper');
+const { File, User } = require('../models');
 const fs = require('fs');
 const path = require('path');
 const logger = require("../config/logger");
@@ -21,7 +21,7 @@ module.exports = {
  * @returns {Promise<Array<Object>>} List of all files.
  */
 async function getAll() {
-    return await db.File.findAll();
+    return await File.findAll();
 }
 
 /**
@@ -30,7 +30,7 @@ async function getAll() {
  * @returns {Promise<Array<Object>>} List of files in the specified storage
  */
 async function getByStorageType(storagePath) {
-    return await db.File.findAll({
+    return await File.findAll({
         where: {
             path: {
                 [Op.like]: `%${storagePath}%`
@@ -67,10 +67,10 @@ async function getById(id) {
  */
 async function create(fileData, userId = null) {
     try {
-        const file = await db.File.create(fileData);
+        const file = await File.create(fileData);
 
         if (userId) {
-            const user = await db.User.findByPk(userId);
+            const user = await User.findByPk(userId);
             if (user) {
                 await user.addFile(file);
                 logger.info(`File ${file.id} associated with user ${userId}`);
@@ -164,7 +164,7 @@ async function _delete(id) {
  * @throws {Error} If the file is not found.
  */
 async function getFile(id) {
-    const file = await db.File.findByPk(id);
+    const file = await File.findByPk(id);
     if (!file) throw 'File not found';
     return file;
 }

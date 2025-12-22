@@ -1,4 +1,4 @@
-const db = require('../helpers/db.helper');
+const { Status } = require('../models');
 const logger = require("../config/logger");
 
 module.exports = {
@@ -14,7 +14,7 @@ module.exports = {
  */
 async function getAll() {
   try {
-    const statuses = await db.Status.findAll();
+    const statuses = await Status.findAll();
     return { status: "success", data: statuses };
   } catch (error) {
     logger.error(`[StatusService] Error in getAll: ${error.message}`);
@@ -34,12 +34,12 @@ async function getById(id) {
  */
 async function create(params) {
   try {
-    const exists = await db.Status.findOne({ where: { name: params.name } });
+    const exists = await Status.findOne({ where: { name: params.name } });
     if (exists) {
       return { status: "error", message: `${params.name} is already registered.` };
     }
 
-    const status = new db.Status(params);
+    const status = new Status(params);
     await status.save();
 
     return { status: "success", message: "Status created successfully.", data: status };
@@ -54,7 +54,7 @@ async function create(params) {
  */
 async function update(id, params) {
   try {
-    const [rowsUpdated] = await db.Status.update(
+    const [rowsUpdated] = await Status.update(
       { name: params.name, value: params.value },
       { where: { id } }
     );
@@ -75,7 +75,7 @@ async function update(id, params) {
  */
 async function _delete(id) {
   try {
-    const result = await db.Status.destroy({ where: { id } });
+    const result = await Status.destroy({ where: { id } });
 
     if (result > 0) {
       return { status: "success", message: "Status successfully deleted." };
@@ -93,7 +93,7 @@ async function _delete(id) {
  */
 async function getName(id) {
   try {
-    const status = await db.Status.findByPk(id);
+    const status = await Status.findByPk(id);
     if (!status) {
       return { status: "error", message: "Status not found." };
     }

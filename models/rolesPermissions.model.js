@@ -7,26 +7,17 @@ const RolesPermissions = sequelize.define(
   {
     roleId: {
       type: DataTypes.INTEGER,
-      primaryKey: true,
-      references: {
-        model: 'roles',
-        key: 'id',
-      },
-      onDelete: 'CASCADE',
+      references: { model: 'roles', key: 'id' }
     },
     permissionId: {
       type: DataTypes.INTEGER,
-      primaryKey: true,
-      references: {
-        model: 'permissions',
-        key: 'id',
-      },
-      onDelete: 'CASCADE',
-    },
+      references: { model: 'permissions', key: 'id' }
+    }
   },
   {
     tableName: 'roles_permissions',
     timestamps: true,
+    freezeTableName: true 
   }
 );
 

@@ -38,7 +38,9 @@ const Settings = sequelize.define('Settings', {
     allowNull: false
   }
 }, {
-  tableName: 'settings'
+  tableName: 'settings',
+  timestamps: true,
+  freezeTableName: true 
 });
 
 module.exports = Settings;

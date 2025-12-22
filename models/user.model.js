@@ -29,14 +29,12 @@ const User = sequelize.define('User', {
   avatarId: {
     type: DataTypes.INTEGER,
     allowNull: true,
-    references: {
-      model: 'files',
-      key: 'id'
-    }
+    field: 'avatarId'
   },
 }, {
   tableName: 'users', 
   timestamps: true,
+  freezeTableName: true
 });
 
 module.exports = User;

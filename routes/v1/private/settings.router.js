@@ -18,13 +18,13 @@ const {
   updateSchema,
 } = require("../../../controllers/settings.controller");
 
-privateSettingRouterV1.get("/", authenticate, checkPermission('settings_read'), getAll);
+privateSettingRouterV1.get("/", authenticate, checkPermission('settings:read-nao-existe'), getAll);
 privateSettingRouterV1.get("/pagination", authenticate, getPaginationSettings);
 privateSettingRouterV1.get("/uploadpath", authenticate, getUploadpathSettings);
 privateSettingRouterV1.get("/filesize", authenticate, getFilesizeSettings);
 //privateSettingRouterV1.get("/:id", authenticate, getById);
 privateSettingRouterV1.put("/update", authenticate, updateSchema, update);
-privateSettingRouterV1.get('/:id', authenticate, checkPermission('settings_read'), getById);
+privateSettingRouterV1.get('/:id', authenticate, checkPermission('settings:read'), getById);
 
 privateSettingRouterV1.post(
   "/reload-acl",

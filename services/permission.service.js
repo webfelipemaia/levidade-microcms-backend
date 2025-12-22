@@ -1,4 +1,4 @@
-const db = require('../helpers/db.helper');
+const { Permission, Role } = require('../models');
 const logger = require("../config/logger");
 const Sequelize = require('sequelize');
 const { paginate } = require('../helpers/pagination.helper');
@@ -21,7 +21,7 @@ module.exports = {
  * @returns {Promise<Array<Object>>} List of all permissions.
  */
 async function getAll() {
-  return await db.Permission.findAll();
+  return await Permission.findAll();
 }
 
 /**
@@ -45,7 +45,7 @@ async function getPaginatedPermissions(page, pageSize, searchQuery, order) {
       }));
   }
 
-  return await paginate(db.Permission, {
+  return await paginate(Permission, {
       page,
       pageSize,
       searchQuery,
@@ -60,10 +60,10 @@ async function getPaginatedPermissions(page, pageSize, searchQuery, order) {
  * @returns {Promise<Array<Object>>} List of permissions with role associations.
  */
 async function getPermissionsRoles() {
-  return await db.Permission.findAll({
+  return await Permission.findAll({
     include: [
       {
-        model: db.Role,
+        model: Role,
         attributes: ["id", "name"],
         through: { attributes: [] },
       },
@@ -76,10 +76,10 @@ async function getPermissionsRoles() {
  * @returns {Promise<Array<Object>>} List of permissions with full role associations.
  */
 async function getAllPermissionsRoles() {
-  return await db.Permission.findAll({
+  return await Permission.findAll({
     include: [
       {
-        model: db.Role,
+        model: Role,
       },
     ],
   });
@@ -103,14 +103,14 @@ async function getById(id) {
  * @throws {Object} If the permission name is already registered.
  */
 async function create(params) {
-  if (await db.Permission.findOne({ where: { name: params.name } })) {
+  if (await Permission.findOne({ where: { name: params.name } })) {
     throw {
       status: 'error',
       message: params.name + ' is already registered',
     };
   }
 
-  const permission = new db.Permission(params);
+  const permission = new Permission(params);
   await permission.save();
 }
 
@@ -125,7 +125,7 @@ async function update(id, params) {
   const permission = await getPermission(id);
   const nameChanged = params.name && permission.name !== params.name;
 
-  if (nameChanged && await db.Permission.findOne({ where: { name: params.name } })) {
+  if (nameChanged && await Permission.findOne({ where: { name: params.name } })) {
     throw {
       status: 'error',
       message: 'Permission "' + params.name + '" is already registered',
@@ -133,7 +133,7 @@ async function update(id, params) {
   }
 
   try {
-    const [rowsUpdated] = await db.Permission.update(
+    const [rowsUpdated] = await Permission.update(
       { name: params.name },
       { where: { id: id } }
     );
@@ -156,7 +156,7 @@ async function update(id, params) {
  */
 async function _delete(id) {
   try {
-    const result = await db.Permission.destroy({ where: { id: id } });
+    const result = await Permission.destroy({ where: { id: id } });
 
     if (result > 0) {
       return { status: "success", message: "Permission successfully deleted" };
@@ -176,7 +176,7 @@ async function _delete(id) {
  * @throws {Object} If no permission is found.
  */
 async function getPermission(id) {
-  const permission = await db.Permission.findByPk(id);
+  const permission = await Permission.findByPk(id);
   if (!permission) throw {
     status: "error",
     message: "No permission found with the given criteria",
@@ -192,12 +192,12 @@ async function getPermission(id) {
  * @throws {Object} If role or permission is not found.
  */
 async function addPermissionToRole(roleName, permissionName) {
-  const role = await db.Role.findOne({ where: { name: roleName } });
+  const role = await Role.findOne({ where: { name: roleName } });
   if (!role) {
     throw { status: 'error', message: 'Role not found' };
   }
 
-  const permission = await db.Permission.findOne({ where: { name: permissionName } });
+  const permission = await Permission.findOne({ where: { name: permissionName } });
   if (!permission) {
     throw { status: 'error', message: 'Permission not found' };
   }

@@ -10,24 +10,15 @@ const ArticlesFiles = sequelize.define('ArticlesFiles', {
     articleId: {
         type: DataTypes.INTEGER,
         allowNull: false,
-        references: {
-            model: 'articles',
-            key: 'id'
-        },
-        onDelete: 'CASCADE'
     },
     fileId: {
         type: DataTypes.INTEGER,
         allowNull: false,
-        references: {
-            model: 'files',
-            key: 'id'
-        },
-        onDelete: 'CASCADE'
     },
 }, {
     tableName: 'articles_files',
     timestamps: true,
+    freezeTableName: true 
 })
 
 module.exports = ArticlesFiles;
