@@ -69,43 +69,35 @@ function setCache(data) {
  */
 function normalizeSetting(row) {
   let value = row.value;
-
   try {
+    // Normaliza para minúsculo antes de comparar
+    const category = row.category ? row.category.toLowerCase() : "";
 
-    /* filesize (bytes + label) */
-    if (row.category === "filesize") {
-      const parsed = JSON.parse(row.value); // { bytes: "512000", label: "500 KB" }
+    if (category === "filesize") {
+      const parsed = typeof value === 'string' ? JSON.parse(value) : value;
       return {
         bytes: Number(parsed.bytes),
         label: parsed.label
       };
     }
 
-    // Traditional types
     switch (row.type) {
-      case "number":
-        return Number(value);
-
-      case "boolean":
-        return value === "true" || value === "1";
-
+      case "number": return Number(value);
+      case "boolean": return value === "true" || value === "1" || value === true;
       case "json":
-      case "array":
-        return JSON.parse(value);
-
-      default:
-        return value; // string
+      case "array": return typeof value === 'string' ? JSON.parse(value) : value;
+      default: return value;
     }
   } catch (err) {
     logger.error(`Erro ao converter setting ${row.key}`, err);
-    return value; // fallback seguro
+    return value;
   }
 }
 
 /**
  * Load settings from DB and process into nested object structure
  */
-async function loadSettings() {
+/* async function loadSettings() {
   if (!isCacheValid()) {
     logger.info('Loading system settings...');
 
@@ -128,8 +120,31 @@ async function loadSettings() {
   }
 
   return getCache();
-}
+} */
 
+  async function loadSettings() {
+    if (!isCacheValid()) {
+      logger.info('Loading system settings...');
+  
+      const rows = await SystemSettings.findAll();
+      const settings = {};
+  
+      for (const row of rows) {
+        if (!row.key || row.key.trim() === "") continue;
+  
+        const settingData = {
+          id: row.id,
+          value: normalizeSetting(row)
+        };
+  
+        setNested(settings, row.key, settingData);
+      }
+  
+      setCache(settings);
+    }
+  
+    return getCache();
+  }
 
 /**
  * Returns a flat object containing only the keys inside the given prefix.
@@ -151,26 +166,20 @@ async function getSettingsByName(settingName) {
  */
 async function getSettingsByPrefix(prefix) {
   try {
-    const rows = await SystemSettings.findAll({
-      where: {
-        key: {
-          [Sequelize.Op.like]: `${prefix}%`
-        }
+    
+    const settings = await loadSettings();
+    const parts = prefix.split('.');
+    let result = settings;
+
+    for (const part of parts) {
+      if (result && result[part]) {
+        result = result[part];
+      } else {
+        return {};
       }
-    });
-
-    const output = {};
-
-    for (const row of rows) {
-      output[row.key] = {
-        value: normalizeSetting(row),
-        type: row.type,
-        category: row.category
-      };
     }
 
-    return output;
-
+    return result;
   } catch (error) {
     logger.error("Error searching for settings by prefix:", error);
     throw error;

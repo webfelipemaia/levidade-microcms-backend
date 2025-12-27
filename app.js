@@ -29,6 +29,7 @@ const swaggerDocument = YAML.load('./docs/swagger.yaml');
 
 // Express App 
 const app = express();
+app.set('trust proxy', 1); // Essencial para capturar o IP correto em redes mobile/proxy
 
 // Load global settings at startup
 (async () => {
@@ -96,10 +97,10 @@ app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 app.use(helmet());
 app.use(compression());
-app.use(rateLimit({
+/* app.use(rateLimit({
   windowMs: RATE_LIMIT_WINDOW * 60 * 1000, // minutos → ms
   max: RATE_LIMIT_MAX,
-}));
+})); */
 app.use(cors(corsOptions));
 app.use(cookieParser());
 app.use(express.json());

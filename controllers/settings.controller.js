@@ -2,6 +2,7 @@ const Joi = require('joi');
 const validateRequest = require('../middlewares/validateRequest.middleware');
 const settingService = require('../services/setting.service');
 const settingsHelper = require('../helpers/settings2.helper');
+const policy = require('../policies/settings.policy');
 const logger = require('../config/logger');
 
 
@@ -18,6 +19,33 @@ exports.getAll = (req, res, next) => {
         .then(settings => res.json(settings))
         .catch(next);
 };
+
+exports.getByKey = async (req, res) => {
+    const settingService = await service.getSetting(req.params.key);
+    if (!settingService) return res.status(404).json({ message: "Configuração não encontrada" });
+    
+    res.json(settingService);
+  };
+  
+exports.updateSetting = async (req, res) => {
+    const { key } = req.params;
+    const { value } = req.body;
+  
+    if (!policy.canUpdateSetting(req.user, key)) {
+      return res.status(403).json({ 
+        message: `A configuração '${key}' é crítica e só pode ser alterada por administradores.` 
+      });
+    }
+  
+    try {
+      const updated = await service.updateSetting(key, value);
+      if (updated[0] === 0) return res.status(404).json({ message: "Chave não encontrada" });
+      
+      res.json({ message: "Configuração atualizada com sucesso!" });
+    } catch (error) {
+      res.status(500).json({ message: error.message });
+    }
+  };
 
 /**
  * Fetch a single setting by ID.
@@ -47,6 +75,15 @@ exports.getById = (req, res, next) => {
 exports.update = async (req, res, next) => {
     try {
         let updates = req.body;
+        const ids = updates.map(u => u.id);
+        const settingsFromDb = await settingService.getSettingKey(ids);
+        
+        if (!policy.canUpdateSettings(req.user, settingsFromDb)) {
+            return res.status(403).json({ 
+                status: 'error', 
+                message: 'Acesso negado: Você tentou alterar configurações críticas restritas a administradores.' 
+            });
+        }
 
         const validUpdates = updates.filter(({ id, value }) => id && value !== undefined);
         if (validUpdates.length === 0) {
@@ -54,9 +91,7 @@ exports.update = async (req, res, next) => {
         }
 
         const results = await Promise.allSettled(
-            validUpdates.map(({ id, value }) =>
-                settingService.update(id, { value })
-            )
+            validUpdates.map(({ id, value }) => settingService.update(id, { value }))
         );
 
         const successes = results.filter(result => result.status === 'fulfilled');
@@ -121,9 +156,9 @@ exports.reloadAll = async (req, res) => {
     try {
       const before = Date.now();
 
-      await settingsHelper.clearCache();     // limpa cache
-      const newSettings = await settingsHelper.loadSettings();  // recarrega tudo
-      global.settings = newSettings;         // atualiza global
+      await settingsHelper.clearCache();
+      const newSettings = await settingsHelper.loadSettings();
+      global.settings = newSettings;
 
       const duration = Date.now() - before;
 
@@ -157,8 +192,8 @@ exports.reloadAll = async (req, res) => {
 exports.updateSchema = (req, res, next) => {
     const schema = Joi.array().items(
         Joi.object({
-            id: Joi.number(),
-            value: Joi.string()
+            id: Joi.number().required(),
+            value: Joi.any().required() 
         })
     );
     validateRequest(req, res, next, schema);

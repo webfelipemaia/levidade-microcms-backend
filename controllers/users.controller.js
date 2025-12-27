@@ -125,19 +125,20 @@ exports.create = (req, res, next) => {
         .then(user => res.json(user))
         .catch(next);
 };
-
 /**
  * Update an existing user by ID.
  *
  * @route PUT /users/:id
- * @param {import('express').Request} req - Body can include `{ email?, name?, lastname?, roles? }`.
- * @param {import('express').Response} res
- * @returns {Promise<Object>} JSON confirmation with success message
  */
+// No seu Controller (update)
 exports.update = (req, res, next) => {
-    userService.update(req.params.id, req.body)
-        .then(() => res.json({ status: 'success',  message: 'User updated' }))
-        .catch(next);
+  
+  const { id } = req.params;
+  const data = req.body;
+
+  userService.update(id, data)
+      .then(result => res.json(result))
+      .catch(next);
 };
 
 /**
@@ -258,7 +259,8 @@ exports.updateSchema = (req, res, next) => {
         email: Joi.string().email().empty(''),
         name: Joi.string().empty(''),
         lastname: Joi.string().empty(''),
-        roles: Joi.array().empty('')
+        avatarId: Joi.number().allow(null),
+        roleIds: Joi.array().items(Joi.number())
     });
     validateRequest(req, res, next, schema);
 };

@@ -162,54 +162,38 @@ async function addRoleToUser(user) {
   return { status: "success", message: role };
 }
 
-/**
- * Update user information including avatar
- * @param {number} id - User ID.
- * @param {Object} params - Data to update.
- * @returns {Promise<Object>} Operation status.
- */
 async function update(id, params) {
   try {
-    if (!params.name || !params.lastname) {
+    const name = params.name;
+    const lastname = params.lastname;
+    const email = params.email;
+    const avatarId = params.avatarId;
+    
+    const roleIdsParaSincronizar = params.roleIds;
+
+    if (!name || !lastname) {
       return { status: "error", message: "Name and lastname are required." };
     }
 
-    const updateData = {
-      name: params.name,
-      lastname: params.lastname,
-    };
-    
-    // Se um avatarId foi fornecido, atualizar
-    if (params.avatarId !== undefined) {
-      updateData.avatarId = params.avatarId;
-    }
+    await User.update(
+      { name, lastname, email, avatarId },
+      { where: { id: id } }
+    );
 
-    const [rowsUpdated] = await User.update(updateData, {
-      where: { id: id },
-    });
+    const userInstance = await User.findByPk(id);
 
-    const user = await User.findByPk(id);
-
-    if (!user) {
+    if (!userInstance) {
       return { status: "error", message: "User not found." };
     }
 
-    // Atualizar roles se fornecidas
-    if (params.roles && Array.isArray(params.roles)) {
-      const rolesByRoleId = await UsersRoles.findAll({
-        where: {
-          userId: user.id,
-        },
-        include: [{ model: Role, as: 'roles' }] 
-      });
+    if (Array.isArray(roleIdsParaSincronizar)) {
+      await userInstance.setRoles(roleIdsParaSincronizar);
+      console.log(`[Service] Roles sincronizadas para o user ${id}:`, roleIdsParaSincronizar);
+    }
 
-      params.roles.forEach((role) => {
-        if (role.isChecked === "unchecked") {
-          user.removeRoles(role.data.id);
-        } else {
-          user.addRoles(role.data.id);
-        }
-      });
+    if (Array.isArray(params.roleIds)) {
+        const rolesToSync = params.roleIds.length > 0 ? params.roleIds : [1]; 
+        await userInstance.setRoles(rolesToSync);
     }
 
     return {
@@ -217,10 +201,10 @@ async function update(id, params) {
       message: "User updated successfully.",
     };
   } catch (error) {
-    logger.error(error);
+    console.error("Erro detalhado no update do service:", error);
     return {
       status: "error",
-      message: "An error occurred while updating the user.",
+      message: `Internal error: ${error.message}`,
     };
   }
 }

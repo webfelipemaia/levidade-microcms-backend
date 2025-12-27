@@ -1,5 +1,6 @@
 const { SystemSettings } = require('../models');
 const settingsHelper = require('../helpers/settings2.helper');
+const policy = require('../policies/settings.policy');
 const logger = require("../config/logger");
 
 module.exports = {
@@ -9,6 +10,7 @@ module.exports = {
     pagination,
     uploadPath,
     fileSize,
+    getSettingKey,
 };
 
 /**
@@ -25,11 +27,11 @@ async function pagination() {
 }
 
 /**
- * Get uploadPath settings
+ * Get upload path settings
  */
 async function uploadPath() {
   try {
-    const data = await settingsHelper.getSettingsByPrefix('uploadPath');
+    const data = await settingsHelper.getSettingsByPrefix('upload_path');
     return { status: "success", data };
   } catch (error) {
     logger.error(`[SettingService] Error in uploadPath: ${error.message}`);
@@ -38,11 +40,11 @@ async function uploadPath() {
 }
 
 /**
- * Get fileSize settings
+ * Get filesize settings. 
  */
 async function fileSize() {
   try {
-    const data = await settingsHelper.getSettingsByName('filesize');
+    const data = await settingsHelper.getSettingsByPrefix('filesize');
     return { status: "success", data };
   } catch (error) {
     logger.error(`[SettingService] Error in fileSize: ${error.message}`);
@@ -76,15 +78,24 @@ async function getById(id) {
  */
 async function update(id, params) {
   try {
+
+    let valueToSave = params.value;
+    
+    if (valueToSave !== null && typeof valueToSave === "object") {
+      valueToSave = JSON.stringify(valueToSave);
+    } else if (valueToSave !== undefined) {
+      valueToSave = String(valueToSave);
+    }
+
     const [rowsUpdated] = await SystemSettings.update(
-      { value: params.value },
+      { value: valueToSave },
       { where: { id } }
     );
 
     if (rowsUpdated === 0) {
       return {
         status: "error",
-        message: `Setting with ID ${id} not found or not updated.`
+        message: `Setting with ID ${id} not found or not updated.`,
       };
     }
 
@@ -95,11 +106,14 @@ async function update(id, params) {
     return {
       id,
       status: "success",
-      message: `Setting with ID ${id} updated successfully.`
+      message: `Setting with ID ${id} updated successfully.`,
     };
   } catch (error) {
-    logger.error(`[SettingService] Error in update (ID: ${id}): ${error.message}`);
-    throw { status: "error", message: `Failed to update setting with ID ${id}.` };
+    logger.error(
+      `[SettingService] Error in update (ID: ${id}): ${error.message}`
+    );
+    
+    throw new Error(`Failed to update setting with ID ${id}: ${error.message}`);
   }
 }
 
@@ -116,6 +130,21 @@ async function getName(id) {
     return { status: "success", data: setting };
   } catch (error) {
     logger.error(`[SettingService] Error in getName (ID: ${id}): ${error.message}`);
+    throw { status: "error", message: "Failed to retrieve setting." };
+  }
+}
+
+/**
+ * Helper: Get setting key by array of ID's
+ */
+async function getSettingKey(ids) {
+  try {
+    return await SystemSettings.findAll({
+      where: { id: ids },
+      attributes: ['id', 'key']
+  });
+  } catch (error) {
+    logger.error(`[SettingService] Error in getName (ID: ${ids}): ${error.message}`);
     throw { status: "error", message: "Failed to retrieve setting." };
   }
 }
