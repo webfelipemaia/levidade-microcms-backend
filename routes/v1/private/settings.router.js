@@ -13,10 +13,12 @@ const {
     getFilesizeSettings,
     getById,
     update,
+    updateSetting,
 } = require("../../../controllers/settings.controller");
 
 const {
   updateSchema,
+  validateUpdateSetting,
 } = require("../../../controllers/settings.controller");
 
 /* privateSettingRouterV1.get("/", authenticate, checkPermission('settings_read'), getAll);
@@ -36,6 +38,7 @@ privateSettingRouterV1.get("/filesize", authenticate, checkPermission(policy.PER
 
 // Update (Protegido por permissão de escrita)
 privateSettingRouterV1.put("/update", authenticate, checkPermission(policy.PERMS.UPDATE), updateSchema, update);
+privateSettingRouterV1.put("/update/:key", authenticate, checkPermission(policy.PERMS.UPDATE), validateUpdateSetting, updateSetting);
 
 // Get Individual
 privateSettingRouterV1.get('/:id', authenticate, checkPermission(policy.PERMS.READ), getById);

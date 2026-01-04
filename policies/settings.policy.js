@@ -16,7 +16,11 @@ const SETTINGS_POLICY = {
       const isSuperAdmin = roles.includes('administrator');
       
       // 2. Chaves críticas
-      const criticalKeys = ['rate_limit.public.max', 'upload_path.root'];
+      const criticalKeys = [ 
+        'upload_path.root',
+        'upload_path.content',
+        'upload_path.profile',
+      ];
   
       // 3. Verificação das chaves (Sequelize retorna objetos {id, key})
       const hasCritical = updateArray.some(u => {

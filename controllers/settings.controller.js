@@ -27,25 +27,67 @@ exports.getByKey = async (req, res) => {
     res.json(settingService);
   };
   
+
 exports.updateSetting = async (req, res) => {
-    const { key } = req.params;
-    const { value } = req.body;
-  
-    if (!policy.canUpdateSetting(req.user, key)) {
-      return res.status(403).json({ 
-        message: `A configuração '${key}' é crítica e só pode ser alterada por administradores.` 
+
+  const { key } = req.params;
+  const updateData = req.body;
+
+  if (!key) {
+      return res.status(400).json({ 
+          success: false, 
+          message: "Parâmetro 'key' é obrigatório" 
       });
-    }
-  
-    try {
-      const updated = await service.updateSetting(key, value);
-      if (updated[0] === 0) return res.status(404).json({ message: "Chave não encontrada" });
+  }
+
+  if (!updateData || Object.keys(updateData).length === 0) {
+      return res.status(400).json({ 
+          success: false, 
+          message: "Nenhum dado para atualizar fornecido" 
+      });
+  }
+
+  try {
+      const setting = await settingService.findByKey(key);
       
-      res.json({ message: "Configuração atualizada com sucesso!" });
-    } catch (error) {
-      res.status(500).json({ message: error.message });
-    }
-  };
+      if (!setting) {
+          return res.status(404).json({ 
+              success: false, 
+              message: `Configuração com key '${key}' não encontrada` 
+          });
+      }
+
+      if (!policy.canUpdateSettings(req.user, [setting])) {
+          return res.status(403).json({ 
+              success: false, 
+              message: 'Acesso negado: Configuração restrita a administradores.' 
+          });
+      }
+
+      const updatedSetting = await settingService.updateItem(setting.id, updateData);
+      
+      res.json({ 
+          success: true,
+          message: "Configuração atualizada com sucesso!",
+          data: updatedSetting
+      });
+      
+  } catch (error) {
+      console.error('Error in updateSetting:', error);
+      
+      if (error.message.includes('not found')) {
+          return res.status(404).json({ 
+              success: false, 
+              message: error.message 
+          });
+      }
+      
+      res.status(500).json({ 
+          success: false, 
+          message: error.message || "Erro ao atualizar configuração" 
+      });
+  }
+};
 
 /**
  * Fetch a single setting by ID.
@@ -198,3 +240,24 @@ exports.updateSchema = (req, res, next) => {
     );
     validateRequest(req, res, next, schema);
 };
+
+
+const updateSettingSchema = Joi.object({
+    value: Joi.any(),
+    description: Joi.string().max(500),
+    type: Joi.string().valid('string', 'number', 'boolean', 'array', 'json'),
+    category: Joi.string().max(100)
+}).min(1);
+
+exports.validateUpdateSetting = (req, res, next) => {
+    const { error } = updateSettingSchema.validate(req.body);
+    
+    if (error) {
+        return res.status(400).json({
+            success: false,
+            message: error.details[0].message
+        });
+    }
+    
+    next();
+}

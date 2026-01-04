@@ -7,10 +7,12 @@ module.exports = {
     getAll,
     getById,
     update,
+    updateItem,
     pagination,
     uploadPath,
     fileSize,
     getSettingKey,
+    findByKey,
 };
 
 /**
@@ -19,10 +21,10 @@ module.exports = {
 async function pagination() {
   try {
     const data = await settingsHelper.getSettingsByPrefix('pagination');
-    return { status: "success", data };
+    return data;
   } catch (error) {
     logger.error(`[SettingService] Error in pagination: ${error.message}`);
-    throw { status: "error", message: "Failed to load pagination settings." };
+    throw error;
   }
 }
 
@@ -32,10 +34,10 @@ async function pagination() {
 async function uploadPath() {
   try {
     const data = await settingsHelper.getSettingsByPrefix('upload_path');
-    return { status: "success", data };
+    return data;
   } catch (error) {
     logger.error(`[SettingService] Error in uploadPath: ${error.message}`);
-    throw { status: "error", message: "Failed to load uploadPath settings." };
+    throw error;
   }
 }
 
@@ -45,10 +47,10 @@ async function uploadPath() {
 async function fileSize() {
   try {
     const data = await settingsHelper.getSettingsByPrefix('filesize');
-    return { status: "success", data };
+    return data;
   } catch (error) {
     logger.error(`[SettingService] Error in fileSize: ${error.message}`);
-    throw { status: "error", message: "Failed to load filesize settings." };
+    throw error;
   }
 }
 
@@ -58,10 +60,10 @@ async function fileSize() {
 async function getAll() {
   try {
     const settings = await settingsHelper.loadSettings();
-    return { status: "success", data: settings };
+    return settings;
   } catch (error) {
     logger.error(`[SettingService] Error in getAll: ${error.message}`);
-    throw { status: "error", message: "Failed to retrieve settings." };
+    throw error;
   }
 }
 
@@ -103,11 +105,7 @@ async function update(id, params) {
     await settingsHelper.clearCache();
     global.settings = await settingsHelper.loadSettings();
 
-    return {
-      id,
-      status: "success",
-      message: `Setting with ID ${id} updated successfully.`,
-    };
+    return rowsUpdated;
   } catch (error) {
     logger.error(
       `[SettingService] Error in update (ID: ${id}): ${error.message}`
@@ -117,6 +115,124 @@ async function update(id, params) {
   }
 }
 
+/**
+ * Update an item by ID, allowing you to update multiple fields.
+ */
+async function updateItem(id, updateData) {
+  try {
+
+      if (!id || Array.isArray(id)) {
+          throw new Error('ID must be a single value, not an array');
+      }
+
+      if (!updateData || typeof updateData !== 'object' || Array.isArray(updateData)) {
+          throw new Error('Update data must be an object');
+      }
+
+      const allowedFields = ['value', 'description', 'type', 'category'];
+      const fieldsToUpdate = {};
+      
+      Object.keys(updateData).forEach(field => {
+          if (allowedFields.includes(field) && updateData[field] !== undefined) {
+              fieldsToUpdate[field] = updateData[field];
+          }
+      });
+
+      if (Object.keys(fieldsToUpdate).length === 0) {
+          throw new Error('Nenhum campo válido para atualizar. Campos permitidos: ' + allowedFields.join(', '));
+      }
+
+      const existingSetting = await SystemSettings.findByPk(id);
+      
+      if (!existingSetting) {
+          throw new Error(`Setting with ID ${id} not found.`);
+      }
+
+      if (fieldsToUpdate.value !== undefined) {
+          fieldsToUpdate.value = processValueByType(
+              fieldsToUpdate.value, 
+              existingSetting.type || fieldsToUpdate.type
+          );
+      }
+
+      const [rowsUpdated] = await SystemSettings.update(
+          fieldsToUpdate,
+          { where: { id } }
+      );
+
+      if (rowsUpdated === 0) {
+          throw new Error(`Setting with ID ${id} found but not updated.`);
+      }
+
+      const updatedSetting = await SystemSettings.findByPk(id);
+      
+      // Recarrega o cache global
+      await settingsHelper.clearCache();
+      global.settings = await settingsHelper.loadSettings();
+
+      return updatedSetting.get({ plain: true });
+      
+  } catch (error) {
+      logger.error(
+          `[SettingService] Error in updateItem (ID: ${id}): ${error.message}`
+      );
+      throw error;
+  }
+}
+
+/**
+* Processes value according to type.
+*/
+function processValueByType(value, type) {
+  
+  if (value === null) return null;
+  
+  if (value === undefined) return value;
+  
+  switch (type) {
+      case 'string':
+          return String(value);
+          
+      case 'number':
+          const num = Number(value);
+          if (isNaN(num)) {
+              throw new Error(`Valor '${value}' não é um número válido para o tipo 'number'`);
+          }
+          return String(num);
+          
+      case 'boolean':
+          if (typeof value === 'string') {
+              const lowerValue = value.toLowerCase();
+              if (lowerValue === 'true' || lowerValue === '1') return 'true';
+              if (lowerValue === 'false' || lowerValue === '0') return 'false';
+              throw new Error(`Valor '${value}' não é um booleano válido`);
+          }
+          return value ? 'true' : 'false';
+          
+      case 'array':
+          if (!Array.isArray(value)) {
+              throw new Error(`Para o tipo 'array', o valor deve ser um array`);
+          }
+          return JSON.stringify(value);
+          
+      case 'json':
+          if (typeof value !== 'object' && value !== null) {
+              throw new Error(`Para o tipo 'json', o valor deve ser um objeto ou array`);
+          }
+          try {
+              if (typeof value === 'string') {
+                  JSON.parse(value);
+                  return value;
+              }
+              return JSON.stringify(value);
+          } catch (err) {
+              throw new Error(`JSON inválido: ${err.message}`);
+          }
+          
+      default:
+          return String(value);
+  }
+}
 
 /**
  * Helper: Get setting by ID
@@ -127,10 +243,10 @@ async function getName(id) {
     if (!setting) {
       return { status: "error", message: "Setting not found" };
     }
-    return { status: "success", data: setting };
+    return setting;
   } catch (error) {
     logger.error(`[SettingService] Error in getName (ID: ${id}): ${error.message}`);
-    throw { status: "error", message: "Failed to retrieve setting." };
+    throw error;
   }
 }
 
@@ -145,6 +261,26 @@ async function getSettingKey(ids) {
   });
   } catch (error) {
     logger.error(`[SettingService] Error in getName (ID: ${ids}): ${error.message}`);
-    throw { status: "error", message: "Failed to retrieve setting." };
+    throw error;
+  }
+}
+
+/**
+ * Find a setting by key.
+ */
+async function findByKey(key) {
+  try {
+      const setting = await SystemSettings.findOne({ 
+          where: { key } 
+      });
+      
+      if (!setting) {
+          throw new Error(`Setting with key '${key}' not found`);
+      }
+      
+      return setting.get({ plain: true });
+  } catch (error) {
+      logger.error(`[SettingService] Error finding by key '${key}': ${error.message}`);
+      throw error;
   }
 }
